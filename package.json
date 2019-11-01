@@ -33,7 +33,7 @@
     "nunjucks": "^3.2.0",
     "pmx": "^1.6.7",
     "sanitize-html": "^1.20.0",
-    "sequelize": "^5.2.11",
+    "sequelize": "^5.15.1",
     "umzug": "^2.2.0",
     "useragent": "^2.3.0"
   },
