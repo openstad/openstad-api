@@ -191,7 +191,10 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 		budget: {
 			type         : DataTypes.INTEGER,
-			allowNull    : true
+			allowNull    : true,
+			set: function (value) {
+				this.setDataValue('budget', parseInt(value));
+			}
 		},
 
 		extraData: {
