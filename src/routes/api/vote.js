@@ -243,7 +243,7 @@ router.route('/*')
 		return next(createError(400, 'Aantal ideeen klopt niet'));
 	})
 
-  // validaties voor voteType=budgeting
+  // validaties voor voteType=budgeting: klopt het budget
 	.post(function(req, res, next) {
 		if (req.site.config.votes.voteType != 'budgeting') return next();
 		let budget = 0;
@@ -257,7 +257,7 @@ router.route('/*')
 		return next(createError(400, 'Budget klopt niet'));
 	})
 
-  // validaties voor voteType=budgeting-per-theme
+  // validaties voor voteType=budgeting-per-theme: klopt het budget
 	.post(function(req, res, next) {
 		if (req.site.config.votes.voteType != 'budgeting-per-theme') return next();
     let budget = 0;
@@ -280,6 +280,18 @@ router.route('/*')
     });
 		return next( isOk ? null : createError(400, 'Budget klopt niet') );
 	})
+
+  // validaties voor voteType=budgeting en budgeting-per-theme: klopt het aantal
+	.post(function(req, res, next) {
+		if (req.site.config.votes.voteType != 'budgeting' && req.site.config.votes.voteType != 'budgeting-per-theme') return next();
+    if (req.site.config.votes.minIdeas && req.votes.length < req.site.config.votes.minIdeas) {
+		  return next(createError(400, 'Je moet minimaal ' + req.site.config.votes.minIdeas + ' ideeën kiezen'));
+    }
+    if (req.site.config.votes.maxIdeas && req.votes.length > req.site.config.votes.maxIdeas) {
+		  return next(createError(400, 'Je mag maximaal ' + req.site.config.votes.maxIdeas + ' ideeën kiezen'));
+    }
+    return next();
+  })
 
 	.post(function(req, res, next) {
 
