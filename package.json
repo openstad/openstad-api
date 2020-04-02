@@ -15,7 +15,7 @@
     "config": "^3.0.1",
     "connect-session-sequelize": "^6.0.0",
     "cookie-parser": "^1.4.4",
-    "cron": "^1.7.0",
+    "cron": "^1.8.2",
     "express": "^4.16.4",
     "express-brute": "^1.0.1",
     "express-promise-router": "^3.0.3",
