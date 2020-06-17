@@ -2,3 +2,6 @@
 /config/local.*
 /html/stemvanniels
 *.css
+
+### Exclude project files for Jetbrains users ###
+.idea
