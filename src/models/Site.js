@@ -48,7 +48,7 @@ module.exports = function( db, sequelize, DataTypes ) {
         viewableBy: 'admin',
       },
 		},
-		
+
 		areaId: {
 			type: DataTypes.INTEGER,
 			allowNull: true,
@@ -60,7 +60,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		return {
 			defaultScope: {
 			},
-			
+
 			withArea: {
 				include: [{
 					model: db.Area
@@ -593,7 +593,7 @@ module.exports = function( db, sequelize, DataTypes ) {
     listableBy: 'all',
     viewableBy: 'all',
     createableBy: 'admin',
-    updateableBy: 'admin',
+    updateableBy: ['admin'],
     deleteableBy: 'admin',
   }
 

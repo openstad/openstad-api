@@ -9,7 +9,9 @@ module.exports = function can(action, user, self) {
 
   // use function defined on model
   let functionName = 'can' + action[0].toUpperCase() + action.slice(1);
+  console.log('self.auth', self.auth)
   if (self.auth && typeof self.auth[functionName] == 'function') return self.auth[functionName](user, self);
+  console.log('self action', action);
 
   // or fallback to default
   switch (action) {
