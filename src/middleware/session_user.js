@@ -28,14 +28,22 @@ module.exports = function getSessionUser( req, res, next ) {
 
 	let userId = req.session[uidProperty];
 	let isFixedUser = false;
+	console.log('req.path', req.path);
+
+	console.log('req.headers', req.headers);
 
 	if (req.headers['x-authorization']) {
 
 		// jwt overrules other settings
 		if (req.headers['x-authorization'].match(/^bearer /i)) {
+
 			// jwt overrules other settings
 			let token = req.headers['x-authorization'].replace(/^bearer /i, '');
-			let data = jwt.verify(token, config.authorization['jwt-secret'])
+			console.log('req.token', token);
+
+			let data = jwt.verify(token, config.authorization['jwt-secret']);
+			console.log('req.data', data);
+
 			if (data && data.userId) {
 				userId = data.userId
 			}
@@ -56,8 +64,13 @@ module.exports = function getSessionUser( req, res, next ) {
 
 	let which = req.session.useOauth || 'default';
 	let siteOauthConfig = ( req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which] ) || {};;
-	getUserInstance(userId || 1, siteOauthConfig, isFixedUser)
+	console.log('userIduserId', userId);
+
+
+	getUserInstance(userId, siteOauthConfig, isFixedUser)
 		.then(function( user ) {
+			console.log('useruser', user.id, req.headers)
+
 			req.user = user;
 			// Pass user entity to template view.
 			res.locals.user = user;

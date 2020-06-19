@@ -9,9 +9,8 @@ module.exports = function can(action, user, self) {
 
   // use function defined on model
   let functionName = 'can' + action[0].toUpperCase() + action.slice(1);
-  console.log('self.auth', self.auth)
   if (self.auth && typeof self.auth[functionName] == 'function') return self.auth[functionName](user, self);
-  console.log('self action', action);
+
 
   // or fallback to default
   switch (action) {
@@ -29,6 +28,11 @@ module.exports = function can(action, user, self) {
       break;
 
     case 'update':
+    //  console.log('self.auth', self.auth)
+      console.log('self action', action);
+      console.log('self user', user.id);
+      console.log('self allowed has role', hasRole(user, self.auth && self.auth.updateableBy, self.userId));
+
       return hasRole(user, self.auth && self.auth.updateableBy, self.userId);
       break;
 
