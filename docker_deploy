@@ -1,5 +1,5 @@
 #!/bin/bash
-docker login -u toshkoevoets -p ${DOCKER_PASSWORD};
+echo "$DOCKER_PASSWORD" | docker login -u toshkoevoets --password-stdin;
 docker push toshkoevoets/${DOCKER_IMAGE_NAME}:${TRAVIS_BUILD_ID}
 echo "Pushing: toshkoevoets/${DOCKER_IMAGE_NAME}:${TRAVIS_BUILD_ID}"
 echo "User password: ${DOCKER_USERNAME} ${DOCKER_PASSWORD}"
