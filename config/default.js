@@ -303,6 +303,7 @@ let defaultConfig = {
 
 // use env vars
 defaultConfig.url = process.env.API_URL || defaultConfig.url;
+defaultConfig.ignoreBruteForce = process.env.IGNORE_BRUTE_FORCE_IP ? [process.env.IGNORE_BRUTE_FORCE_IP] : defaultConfig.ignoreBruteForce;
 defaultConfig.hostname = process.env.API_HOSTNAME || defaultConfig.hostname;
 defaultConfig.database.user = process.env.API_DATABASE_USER || defaultConfig.database.user;
 defaultConfig.database.password = process.env.API_DATABASE_PASSWORD || defaultConfig.database.password;
@@ -323,6 +324,9 @@ defaultConfig.authorization['jwt-secret'] = process.env.API_AUTHORIZATION_JWTSEC
 defaultConfig.authorization['auth-server-url'] = process.env.AUTH_API_URL || defaultConfig.authorization['auth-server-url'];
 defaultConfig.authorization["auth-client-id"] = process.env.USER_API_CLIENT_ID || defaultConfig.authorization["auth-client-id"];
 defaultConfig.authorization["auth-client-secret"] = process.env.USER_API_CLIENT_SECRET || defaultConfig.authorization["auth-client-secret"];
+
+
+console.log('defaultConfig.ignoreBruteForce ', defaultConfig.ignoreBruteForce );
 
 try {
   defaultConfig.authorization['fixed-auth-tokens'] = JSON.parse(process.env.API_AUTHORIZATION_FIXEDAUTHTOKENS) || defaultConfig.authorization['fixed-auth-tokens'];
