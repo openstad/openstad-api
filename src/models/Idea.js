@@ -13,6 +13,7 @@ const merge = require('merge');
 
 var argVoteThreshold = config.ideas && config.ideas.argumentVoteThreshold;
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
+const roles = require('../lib/sequelize-authorization/lib/roles');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
 
 
@@ -117,6 +118,31 @@ module.exports = function (db, sequelize, DataTypes) {
       defaultValue: 1
     },
 
+    typeId: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      auth:  {
+        updateableBy: 'editor',
+        authorizeData: function(data, action, user, self, site) {
+          if (!self) return;
+          site = site || self.site;
+          if (!site) return; // todo: die kun je ophalen als eea. async is
+          let value = data || self.typeId;
+          let config = site.config.ideas.types;
+          if (!config || !Array.isArray(config) || !config[0] || !config[0].id) return null; // no config; this field is not used
+          let defaultValue = config[0].id;
+
+          let valueConfig = config.find( type => type.id == value );
+          if (!valueConfig) return self.typeId || defaultValue; // non-existing value; fallback to the current value
+          let requiredRole = self.rawAttributes.typeId.auth[action+'ableBy'] || 'all';
+          if (!valueConfig.auth) return userHasRole(user, requiredRole) ? value : ( self.typeId || defaultValue ); // no auth defined for this value; use field.auth
+          requiredRole = valueConfig.auth[action+'ableBy'] || requiredRole;
+          if ( userHasRole(user, requiredRole) ) return value; // user has requiredRole; value accepted
+          return self.typeId || defaultValue;
+        },
+      },
+    },
+
     status: {
       type: DataTypes.ENUM('OPEN', 'CLOSED', 'ACCEPTED', 'DENIED', 'BUSY', 'DONE'),
       auth:  {
@@ -124,6 +150,15 @@ module.exports = function (db, sequelize, DataTypes) {
       },
       defaultValue: 'OPEN',
       allowNull: false
+    },
+
+    viewableByRole: {
+      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      defaultValue: 'all',
+      auth:  {
+        updateableBy: ['editor', 'owner'],
+      },
+      allowNull: true,
     },
 
     title: {
@@ -364,9 +399,13 @@ module.exports = function (db, sequelize, DataTypes) {
         }
       },
       validModBreak: function () {
+        return true;
+        /*
+        skip validation for now, should be moved to own rest object.
+
         if (this.modBreak && (!this.modBreakUserId || !this.modBreakDate)) {
           throw Error('Incomplete mod break');
-        }
+        }*/
       },
       validExtraData: function (next) {
 
@@ -534,6 +573,22 @@ module.exports = function (db, sequelize, DataTypes) {
 
       // nieuwe scopes voor de api
       // -------------------------
+
+      onlyVisible: function (userRole) {
+        return {
+          where: sequelize.or(
+            {
+              viewableByRole: 'all'
+            },
+            {
+              viewableByRole: null
+            },
+            {
+              viewableByRole: roles[userRole] || ''
+            },
+          )
+        };
+      },
 
       // defaults
       default: {
@@ -765,6 +820,16 @@ module.exports = function (db, sequelize, DataTypes) {
         return result;
       },
 
+      includePoll:  function (userId) {
+        return {
+          include: [{
+            model: db.Poll.scope([ 'defaultScope', 'withIdea', { method: ['withVotes', 'poll', userId]}, { method: ['withUserVote', 'poll', userId]} ]),
+          as: 'poll',
+          required: false,
+        }]
+        }
+      },
+
       // vergelijk getRunning()
       sort: function (sort) {
 
@@ -908,13 +973,6 @@ module.exports = function (db, sequelize, DataTypes) {
           ]
         };
       },
-      withPoll: {
-        include: [{
-          model: db.Poll,
-          attributes: ['id', 'title', 'description'],
-          required: false
-        }]
-      },
       withAgenda: {
         include: [{
           model: db.AgendaItem,
@@ -938,6 +996,7 @@ module.exports = function (db, sequelize, DataTypes) {
     this.hasMany(models.Argument, {as: 'argumentsFor'});
     this.hasMany(models.Image);
     // this.hasOne(models.Image, {as: 'posterImage'});
+    this.hasOne(models.Poll, {as: 'poll', foreignKey: 'ideaId', });
     this.hasMany(models.Image, {as: 'posterImage'});
     this.hasOne(models.Vote, {as: 'userVote', foreignKey: 'ideaId'});
     this.belongsTo(models.Site);
@@ -1223,10 +1282,10 @@ module.exports = function (db, sequelize, DataTypes) {
   }
 
   let canMutate = function(user, self) {
-
     if (userHasRole(user, 'editor', self.userId) || userHasRole(user, 'admin', self.userId) || userHasRole(user, 'moderator', self.userId)) {
       return true;
     }
+
     if( !self.isOpen() ) {
       return false;
     }
@@ -1234,6 +1293,7 @@ module.exports = function (db, sequelize, DataTypes) {
     if (!userHasRole(user, 'owner', self.userId)) {
       return false;
     }
+
     let config = self.site && self.site.config && self.site.config.ideas
     let canEditAfterFirstLikeOrArg = config && config.canEditAfterFirstLikeOrArg || false
 		let voteCount = self.no + self.yes;
@@ -1247,14 +1307,25 @@ module.exports = function (db, sequelize, DataTypes) {
     createableBy: 'member',
     updateableBy: ['admin','editor','owner', 'moderator'],
     deleteableBy: ['admin','editor','owner', 'moderator'],
+    canView: function(user, self) {
+      if (self && self.viewableByRole && self.viewableByRole != 'all' ) {
+        return userHasRole(user, self.viewableByRole, self.userId)
+      } else {
+        return true
+      }
+    },
     canVote: function(user, self) {
       // TODO: dit wordt niet gebruikt omdat de logica helemaal in de route zit. Maar hier zou dus netter zijn.
       return false
     },
     canUpdate: canMutate,
     canDelete: canMutate,
-    toAuthorizedJSON: function(user, data) {
-      //console.log('data', data)
+    canAddPoll: canMutate,
+    toAuthorizedJSON: function(user, data, self) {
+
+      if (!self.auth.canView(user, self)) {
+        return {};
+      }
 
 	   /* if (idea.site.config.archivedVotes) {
 		    if (req.query.includeVoteCount && req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable) {
@@ -1274,6 +1345,12 @@ module.exports = function (db, sequelize, DataTypes) {
       data.user.isAdmin = userHasRole(user, 'editor');
       // er is ook al een createDateHumanized veld; waarom is dit er dan ook nog?
 	    data.createdAtText = moment(data.createdAt).format('LLL');
+
+      data.can = {};
+      // if ( self.can('vote', user) ) data.can.vote = true;
+      if ( self.can('update', user) ) data.can.edit = true;
+      if ( self.can('delete', user) ) data.can.delete = true;
+      return data;
 
       return data;
     },

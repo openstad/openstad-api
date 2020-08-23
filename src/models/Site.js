@@ -255,6 +255,54 @@ module.exports = function( db, sequelize, DataTypes ) {
 					},
           extraData: {
 						type: 'object',
+					},
+          types: {
+						type: 'arrayOfObjects',
+						default: [],
+				    subset: {
+							name: {
+								type: 'string',
+								default: 'noName',
+							},
+							label: {
+								type: 'label',
+								default: 'Dit is niets',
+							},
+							auth: {
+								type: 'object', // TODO: werk dit uit
+							},
+							mapIcon: {
+								type: 'string',
+								default: '',
+							},
+							listIcon: {
+								type: 'string',
+								default: '',
+							},
+							buttonIcon: {
+								type: 'string',
+								default: '',
+							},
+							buttonLabel: {
+								type: 'string',
+								default: '',
+							},
+							backgroundColor: {
+								type: 'string',
+								default: '#164995',
+							},
+							textColor: {
+								type: 'string',
+								default: 'white',
+							},
+              // TODO: deze komen uit cms thema; werk dat verder uit
+              "flag": { type: 'string', default: '' },
+              "mapUploadedFlag": { type: 'string', default: '' },
+              "mapFlagWidth": { type: 'string', default: '' },
+              "mapFlagHeight": { type: 'string', default: '' },
+              "Initialavailablebudget": { type: 'int', default: 0 },
+              "minimalBudgetSpent": { type: 'int', default: 0 },
+            }
           }
 				}
 			},
@@ -282,7 +330,18 @@ module.exports = function( db, sequelize, DataTypes ) {
 								default: ['zipCode', 'nickName'],
 							}
 						}
-					}
+					},
+
+					isClosed: {
+						type: 'boolean',
+						default: false,
+					},
+
+					closedText: {
+						type: 'string',
+						default: 'De reactiemogelijkheid is gesloten, u kunt niet meer reageren',
+					},
+
 				}
 			},
 			votes: {
@@ -449,6 +508,20 @@ module.exports = function( db, sequelize, DataTypes ) {
 				}
 			},
 
+			polls: {
+				type: 'object',
+				subset: {
+					canAddPolls: {
+						type: 'boolean',
+						default: false,
+					},
+					requiredUserRole: {
+						type: 'string',
+						default: 'anonymous',
+					},
+				},
+			},
+      
 			newslettersignup: {
 				type: 'object',
 				subset: {
@@ -483,7 +556,8 @@ module.exports = function( db, sequelize, DataTypes ) {
 					},
 				},
 			},
-			host: {
+
+      host: {
 				status: null,
 			},
 
@@ -522,6 +596,8 @@ module.exports = function( db, sequelize, DataTypes ) {
 					// dit is een oude
 					value[key] = { default: value[key] };
 				}
+
+        // TODO: 'arrayOfObjects' met een subset
 
 				// objects in objects
 				if (options[key].type == 'object' && options[key].subset) {
