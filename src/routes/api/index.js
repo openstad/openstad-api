@@ -32,6 +32,18 @@ router.use( '/site/:siteId(\\d+)/user', require('./user') );
 // submissions
 router.use( '/site/:siteId(\\d+)/submission', require('./submission') );
 
+// orders
+router.use( '/site/:siteId(\\d+)/order', require('./order') );
+router.use( '/site/:siteId(\\d+)/account/:ownerUserId(\\d+)/order', require('./order') );
+
+// products
+router.use( '/site/:siteId(\\d+)/product', require('./product') );
+router.use( '/site/:siteId(\\d+)/account/:accountId(\\d+)/product', require('./product') );
+
+//
+router.use( '/site/:siteId(\\d+)/account', require('./account') );
+
+
 // vote
 router.use( '/site/:siteId(\\d+)/vote', require('./vote') );
 

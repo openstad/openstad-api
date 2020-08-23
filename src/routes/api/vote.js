@@ -1,14 +1,14 @@
-const Promise     = require('bluebird');
-const express     = require('express');
-const createError = require('http-errors')
-const moment      = require('moment');
-const db          = require('../../db');
-const auth        = require('../../middleware/sequelize-authorization-middleware');
-const config      = require('config');
-const merge       = require('merge');
-const bruteForce = require('../../middleware/brute-force');
-const {Op} = require('sequelize');
-const pagination = require('../../middleware/pagination');
+const Promise     	= require('bluebird');
+const express     	= require('express');
+const createError 	= require('http-errors')
+const moment      	= require('moment');
+const db          	= require('../../db');
+const auth        	= require('../../middleware/sequelize-authorization-middleware');
+const config      	= require('config');
+const merge       	= require('merge');
+const bruteForce 		= require('../../middleware/brute-force');
+const {Op} 					= require('sequelize');
+const pagination 		= require('../../middleware/pagination');
 const searchResults = require('../../middleware/search-results');
 
 const router = express.Router({mergeParams: true});

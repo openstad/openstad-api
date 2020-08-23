@@ -17,6 +17,11 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultValue : config.siteId && typeof config.siteId == 'number' ? config.siteId : 0,
 		},
 
+		accountId: {
+			type         : DataTypes.INTEGER,
+			defaultValue : config.siteId && typeof config.siteId == 'number' ? config.siteId : 0,
+		},
+
     externalUserId: {
       type         : DataTypes.INTEGER,
       auth: {
