@@ -10,7 +10,9 @@
     "test:unit": "jest --no-cache --config jest.config.js",
     "test:unit:watch": "jest --watch --no-cache",
     "test:e2e": "jest --no-cache --config jest-e2e.config.js --forceExit",
-    "test:e2e:debug": "jest --no-cache --config jest-e2e.config.js --verbose --forceExit"
+    "test:e2e:debug": "jest --no-cache --config jest-e2e.config.js --verbose --forceExit",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "dependencies": {
     "@kubernetes/client-node": "^0.12.0",
@@ -50,7 +52,8 @@
     "sequelize": "^5.21.2",
     "umzug": "^2.2.0",
     "useragent": "^2.3.0",
-    "ws": "^7.3.1"
+    "ws": "^7.3.1",
+    "snyk": "^1.385.0"
   },
   "devDependencies": {
     "jest": "^25.5.4",
@@ -58,5 +61,6 @@
     "supertest": "^4.0.2"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "snyk": true
 }
