@@ -101,13 +101,9 @@ router.route('/')
 			});
 	})
 	.post(function(req, res, next) {
-    console.log('req.body.tags', req.body);
-
     if (!req.body.tags) return next();
 
  		let instance = req.results;
-
-		console.log('set tags', instance);
 
 		instance
 		  .setTags(req.body.tags)
@@ -160,7 +156,7 @@ router.route('/:accountId(\\d+)')
 	.put(function(req, res, next) {
 
     const account = req.results;
-    if (!( account && account.can && account.can('update') )) return next( new Error('You cannot update this User') );
+    if (!( account && account.can && account.can('update') )) return next( new Error('You cannot update this Account') );
 
     let data = {
       ...req.body,

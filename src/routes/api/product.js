@@ -7,75 +7,92 @@ const config = require('config');
 const db = require('../../db');
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const mail = require('../../lib/mail');
+const pagination = require('../../middleware/pagination');
+const {Op} = require('sequelize');
 
-let router = express.Router({mergeParams: true});
+
+const router = express.Router({mergeParams: true});
 
 // scopes: for all get requests
+/*
 router
 	.all('*', function(req, res, next) {
-		return next();
+		next();
 	})
+*/
+
+router
+	.all('*', function(req, res, next) {
+		req.scope = ['includeSite', 'includeTags'];
+		next();
+	});
 
 router.route('/')
 
-// list ideas
+// list users
 // ----------
-	.get(auth.can('products:list'))
+	.get(auth.can('Product', 'list'))
+	.get(pagination.init)
 	.get(function(req, res, next) {
+		let queryConditions = req.queryConditions ? req.queryConditions : {};
+		queryConditions = Object.assign(queryConditions, { siteId: req.params.siteId });
+
 		db.Product
-		//	.scope(...req.scope)
-	//		.findAll({ where: { siteId: req.params.siteId } })
-			.findAll()
-			.then( found => {
-				return found.map( entry => {
-					return createProductJSON(entry, req.user, req);
-				});
+			.scope(...req.scope)
+		//	.scope()
+		//	.findAll()
+			.findAndCountAll({
+				where:queryConditions,
+				 offset: req.pagination.offset,
+				 limit: req.pagination.limit
 			})
-			.then(function( found ) {
-				const queryTotal = found.length;
-				const total = found.length;
-				res.set('Access-Control-Expose-Headers', 'Content-Range');
-				res.set('Content-Range', `posts 0-${queryTotal}/${total}`);
-				res.json(found);
+			.then(function( result ) {
+				req.results = result.rows;
+				req.pagination.count = result.count;
+				return next();
 			})
-			.catch((err) => {
-				console.log('err', err)
-				next(err);
-			});
+			.catch(next);
+	})
+	.get(auth.useReqUser)
+//	.get(searchResults)
+	.get(pagination.paginateResults)
+	.get(function(req, res, next) {
+		res.json(req.results);
 	})
 
-// create idea
+// create
 // -----------
-	.post(auth.can('product:create'))
+	.post(auth.can('Product', 'create'))
 	.post(function(req, res, next) {
 		if (!req.site) return next(createError(401, 'Site niet gevonden'));
 		return next();
 	})
 	.post(function( req, res, next ) {
-		if (!(req.site.config && req.site.config.ideas && req.site.config.ideas.canAddNewIdeas)) return next(createError(401, 'Inzenden is gesloten'));
+		if (!(req.site.config && req.site.config.product && req.site.config.product.canCreateNewProducts)) return next(createError(401, 'Product mogen niet aangemaakt worden'));
 		return next();
 	})
 	.post(function(req, res, next) {
-		filterBody(req);
-		req.body.siteId = parseInt(req.params.siteId);
-		req.body.userId = req.user.id;
+
+		console.log('createte')
+
+		const data = {
+      ...req.body,
+		}
 
 		db.Product
-			.create(req.body)
+			.authorizeData(data, 'create', req.user)
+			.create(data)
 			.then(result => {
-				//console.log('result', result)
-				res.json(createProductJSON(result, req.user, req));
-				//mail.sendThankYouMail(result, req.user, req.site) // todo: optional met config?
+				 req.results = result;
+				 next();
 			})
 			.catch(function( error ) {
-				console.log('ererer', error)
+				console.log(error)
 				// todo: dit komt uit de oude routes; maak het generieker
 				if( typeof error == 'object' && error instanceof Sequelize.ValidationError ) {
 					let errors = [];
 					error.errors.forEach(function( error ) {
-						// notNull kent geen custom messages in deze versie van sequelize; zie https://github.com/sequelize/sequelize/issues/1500
-						// TODO: we zitten op een nieuwe versie van seq; vermoedelijk kan dit nu wel
-						errors.push(error.type === 'notNull Violation' && error.path === 'location' ? 'Kies een locatie op de kaart' : error.message);
+						errors.push(error.message);
 					});
 					res.status(422).json(errors);
 				} else {
@@ -83,121 +100,89 @@ router.route('/')
 				}
 			});
 	})
+	.post(function(req, res, next) {
+    if (!req.body.tags) return next();
 
-// one idea
+ 		let instance = req.results;
+
+		instance
+		  .setTags(req.body.tags)
+			.then((instance) => {
+				console.log('updated')
+				return next();
+		  })
+			.catch((err) => {
+				console.log('errr', err);
+				next(err);
+			});
+	})
+	.post(function(req, res, next) {
+		res.json(req.results);
+		//mail.sendThankYouMail(req.results, req.user, req.site) // todo: optional met config?
+	})
+
+
+
+// one user
 // --------
 router.route('/:productId(\\d+)')
 	.all(function(req, res, next) {
-		var productId = parseInt(req.params.productId) || 1;
-
+		const productId = parseInt(req.params.productId) || 1;
 		db.Product
+			.scope(...req.scope)
 			.findOne({
-				where: { id: productId, siteId: req.params.siteId }
+					where: { id: productId, siteId: req.params.siteId }
+					//where: { id: userId }
 			})
 			.then(found => {
-				if ( !found ) throw new Error('Product not found');
-				req.product = found;
+				if ( !found ) throw new Error('User not found');
+				req.results = found;
 				next();
 			})
 			.catch(next);
 	})
 
-// view product
+// view idea
 // ---------
-	.get(auth.can('product:view'))
+	.get(auth.can('Product', 'view'))
+	.get(auth.useReqUser)
 	.get(function(req, res, next) {
-		res.json(createProductJSON(req.product, req.user, req));
+		res.json(req.results);
 	})
 
-// update idea
+// update user
 // -----------
-	.put(auth.can('product:edit'))
+	.put(auth.useReqUser)
 	.put(function(req, res, next) {
-		console.log('req.body 1', req.body);
-		filterBody(req)
-		console.log('req.body 2', req.body);
 
-		req.product
-			.update(req.body)
-			.then(result => {
-				res.json(createProductJSON(result, req.user, req));
-			})
-			.catch(next);
+    const product = req.results;
+    if (!( product && product.can && product.can('update') )) return next( new Error('You cannot update this product') );
+
+    let data = {
+      ...req.body,
+		}
+
+
+    product
+      .authorizeData(data, 'update')
+      .update(data)
+      .then(result => {
+        req.results = result;
+        next()
+      })
+      .catch(next);
 	})
 
 // delete idea
 // ---------
-	.delete(auth.can('product:delete'))
+  .delete(auth.can('Product', 'delete'))
 	.delete(function(req, res, next) {
-		req.product
+		req.results
 			.destroy()
 			.then(() => {
-				res.json({ "idea": "deleted" });
+				res.json({ "product": "deleted" });
 			})
 			.catch(next);
 	})
-
-// extra functions
-// ---------------
-
-function filterBody(req) {
-	let filteredBody = {};
-
-	let keys = [ 'sku', 'name', 'description', 'image', 'images','product_status', 'regular_price', 'discount_price', 'quantity', 'vat' ];
-
-	console.log('req.body.image', req.body.image);
-	if (req.body.image && !req.body.images) {
-		req.body.images = [req.body.image];
-	}
-
-	let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');
-
-	if (hasModeratorRights) {
-		//keys.concat([]);
-	}
-
-	keys.forEach((key) => {
-		if (req.body[key]) {
-			filteredBody[key] = req.body[key];
-		}
-	});
-
-	req.body = filteredBody;
-}
-
-function createProductJSON(product, user, req) {
-	let hasModeratorRights = (user.role === 'admin' || user.role === 'editor' || user.role === 'moderator');
-
-	let can = {
-		// edit: user.can('arg:edit', argument.idea, argument),
-		// delete: req.user.can('arg:delete', entry.idea, entry),
-		// reply: req.user.can('arg:reply', entry.idea, entry),
-	};
-
-	let result = product.toJSON();
-	result.config = null;
-	result.site = null;
-	result.can = can;
-
-
-	if (product.user) {
-		result.user = {
-			firstName: product.user.firstName,
-			lastName: product.user.lastName,
-			fullName: product.user.fullName,
-			nickName: product.user.nickName,
-			isAdmin: hasModeratorRights,
-			email: hasModeratorRights ? product.user.email : '',
-		};
-	} else {
-		result.user = {
-			isAdmin: hasModeratorRights,
-		};
-	}
-
-	result.createdAtText = moment(product.createdAt).format('LLL');
-
-	return result;
-}
 
 module.exports = router;
