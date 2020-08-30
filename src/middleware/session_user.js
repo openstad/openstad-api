@@ -125,7 +125,6 @@ function getUserInstance( userId, siteOauthConfig, isFixedUser ) {
 					})
 					.then(
 						response => {
-
 							if ( !response.ok ) {
 								throw new Error('Error fetching user')
 							}
@@ -160,6 +159,8 @@ function getUserInstance( userId, siteOauthConfig, isFixedUser ) {
 }
 
 function resetSessionUser(user) {
+	console.log('resetSessionUser from ouath')
+
 
   if (!( user && user.update )) return {};
 	return user.update({

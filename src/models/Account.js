@@ -16,7 +16,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			type         : DataTypes.STRING(64),
 			allowNull    : true,
 			set          : function( value ) {
-				this.setDataValue('nickName', sanitize.noTags(value));
+				this.setDataValue('name', sanitize.noTags(value));
 			}
 		},
 
@@ -25,6 +25,22 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultValue : 'OPEN',
 			allowNull    : false
 		},
+
+
+		selectTags: function (tags) {
+			return {
+				include: [{
+					model: db.Tag,
+					attributes: ['id', 'name'],
+					through: {attributes: []},
+					where: {
+						name: tags
+					}
+				}],
+			}
+		},
+
+
 
 		extraData: {
 			type				 : DataTypes.TEXT,
@@ -81,11 +97,24 @@ module.exports = function( db, sequelize, DataTypes ) {
 		validate: {},
 	});
 
+	Account.scopes = function scopes() {
+		return {
+			includeTags: {
+				include: [{
+					model: db.Tag,
+					attributes: ['id', 'name'],
+					through: {attributes: []},
+				}]
+			},
+		}
+	}
+
 	Account.associate = function( models ) {
 		this.hasMany(models.Product);
 	 	this.hasMany(models.User);
 		this.hasMany(models.Order);
 		this.belongsTo(models.Site);
+		this.belongsToMany(models.Tag, {through: 'accountTags'});
 	}
 
 	return Account;

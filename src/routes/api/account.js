@@ -23,7 +23,7 @@ router
 
 router
 	.all('*', function(req, res, next) {
-		req.scope = ['includeSite'];
+		req.scope = ['includeSite', 'includeTags'];
 		next();
 	});
 
@@ -31,7 +31,7 @@ router.route('/')
 
 // list users
 // ----------
-	.get(auth.can('User', 'list'))
+	.get(auth.can('Account', 'list'))
 	.get(pagination.init)
 	.get(function(req, res, next) {
 		let queryConditions = req.queryConditions ? req.queryConditions : {};
@@ -68,10 +68,13 @@ router.route('/')
 		return next();
 	})
 	.post(function( req, res, next ) {
-		if (!(req.site.config && req.site.config.accounts && req.site.config.accounts.canCreateNewAccounts)) return next(createError(401, 'Gebruikers mogen niet aangemaakt worden'));
+		if (!(req.site.config && req.site.config.account && req.site.config.account.canCreateNewAccounts)) return next(createError(401, 'Account mogen niet aangemaakt worden'));
 		return next();
 	})
 	.post(function(req, res, next) {
+
+		console.log('createte')
+
 
 		const data = {
       ...req.body,
@@ -81,7 +84,8 @@ router.route('/')
 			.authorizeData(data, 'create', req.user)
 			.create(data)
 			.then(result => {
-				res.json(result);
+				 req.results = result;
+				 next();
 			})
 			.catch(function( error ) {
 				// todo: dit komt uit de oude routes; maak het generieker
@@ -96,6 +100,32 @@ router.route('/')
 				}
 			});
 	})
+	.post(function(req, res, next) {
+    console.log('req.body.tags', req.body);
+
+    if (!req.body.tags) return next();
+
+ 		let instance = req.results;
+
+		console.log('set tags', instance);
+
+		instance
+		  .setTags(req.body.tags)
+			.then((instance) => {
+				console.log('updated')
+				return next();
+		  })
+			.catch((err) => {
+				console.log('errr', err);
+				next(err);
+			});
+	})
+	.post(function(req, res, next) {
+		res.json(req.results);
+		//mail.sendThankYouMail(req.results, req.user, req.site) // todo: optional met config?
+	})
+
+
 
 // one user
 // --------

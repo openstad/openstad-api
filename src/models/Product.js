@@ -48,6 +48,19 @@ module.exports = function( db, sequelize, DataTypes ) {
       }
     },
 
+    selectTags: function (tags) {
+      return {
+        include: [{
+          model: db.Tag,
+          attributes: ['id', 'name'],
+          through: {attributes: []},
+          where: {
+            name: tags
+          }
+        }],
+      }
+    },
+
     name: {
       type         : DataTypes.STRING(255),
       allowNull    : false,
@@ -279,11 +292,23 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 	});
 
-	Product.scopes = function scopes() {
 
-	}
+  Product.scopes = function scopes() {
+    return {
+      includeTags: {
+        include: [{
+          model: db.Tag,
+          attributes: ['id', 'name'],
+          through: {attributes: []},
+        }]
+      },
+    }
+  }
+
 
 	Product.associate = function( models ) {
+    this.belongsTo(models.Account);
+    this.belongsToMany(models.Tag, {through: 'productTags'});
 	}
 
 	Product.prototype.isOpen = function() {
