@@ -16,7 +16,9 @@ module.exports = function( db, sequelize, DataTypes ) {
         //   msg  : `Titel moet tussen ${titleMinLength} en ${titleMaxLength} tekens lang zijn`
         // }
         textLength(value) {
-          console.log('value', value)
+          console.log('value', value);
+
+
           let len = sanitize.title(value.trim()).length;
           let titleMinLength = ( this.config && this.config.products && this.config.products.nameMinLength || 10 )
           let titleMaxLength = ( this.config && this.config.products && this.config.products.nameMaxLength || 50 )
@@ -88,27 +90,23 @@ module.exports = function( db, sequelize, DataTypes ) {
 
     accountId: {
       type         : DataTypes.INTEGER,
-      defaultValue : config.accountId && typeof config.accountId == 'number' ? config.accountId : 0,
+      defaultValue : config.accountId && typeof config.accountId === 'number' ? config.accountId : 0,
+    },
+
+		productId: {
+			type         : DataTypes.INTEGER,
+			defaultValue : config.accountId && typeof config.accountId === 'number' ? config.accountId : 0,
+		},
+
+		price: {
+       type: DataTypes.DECIMAL(10,2),
+       allowNull: true,
     },
 
 		status: {
 			type         : DataTypes.ENUM('OPEN','CLOSED','ACCEPTED','DENIED','BUSY','DONE'),
 			defaultValue : 'OPEN',
 			allowNull    : false
-		},
-
-
-		selectTags: function (tags) {
-			return {
-				include: [{
-					model: db.Tag,
-					attributes: ['id', 'name'],
-					through: {attributes: []},
-					where: {
-						name: tags
-					}
-				}],
-			}
 		},
 
 		extraData: {
@@ -175,12 +173,27 @@ module.exports = function( db, sequelize, DataTypes ) {
 					through: {attributes: []},
 				}]
 			},
+			selectTags: function (tags) {
+				return {
+					include: [{
+						model: db.Tag,
+						attributes: ['id', 'name'],
+						through: {attributes: []},
+						where: {
+							name: tags
+						}
+					}],
+				}
+			},
 		}
 	}
 
 	Product.associate = function( models ) {
 		this.hasMany(models.Order);
 		this.belongsTo(models.Account);
+
+		//variations
+		this.belongsTo(models.Product);
 		this.belongsToMany(models.Tag, {through: 'productTags'});
 	}
 

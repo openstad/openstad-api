@@ -27,18 +27,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		},
 
 
-		selectTags: function (tags) {
-			return {
-				include: [{
-					model: db.Tag,
-					attributes: ['id', 'name'],
-					through: {attributes: []},
-					where: {
-						name: tags
-					}
-				}],
-			}
-		},
+
 
 
 
@@ -105,6 +94,18 @@ module.exports = function( db, sequelize, DataTypes ) {
 					attributes: ['id', 'name'],
 					through: {attributes: []},
 				}]
+			},
+			selectTags: function (tags) {
+				return {
+					include: [{
+						model: db.Tag,
+						attributes: ['id', 'name'],
+						through: {attributes: []},
+						where: {
+							name: tags
+						}
+					}],
+				}
 			},
 		}
 	}

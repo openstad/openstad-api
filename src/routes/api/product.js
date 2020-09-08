@@ -23,7 +23,7 @@ router
 
 router
 	.all('*', function(req, res, next) {
-		req.scope = ['includeSite', 'includeTags'];
+		req.scope = ['includeTags'];
 		next();
 	});
 
@@ -71,9 +71,41 @@ router.route('/')
 		if (!(req.site.config && req.site.config.product && req.site.config.product.canCreateNewProducts)) return next(createError(401, 'Product mogen niet aangemaakt worden'));
 		return next();
 	})
-	.post(function(req, res, next) {
+	/**
+	 * Check which accountId should be added
+	 */
+	.post(function (req, res, next) {
+		const siteProductConfig =  req.site && req.site.config && req.site.config.product ? req.site.config.product : {};
 
-		console.log('createte')
+		// if site has fixed to one accountId make it static
+		if (siteProductConfig.fixedAccountId) {
+			req.body.accountId = siteProductConfig.fixedAccountId;
+			next();
+		// products and accounts can be created with an account
+	  } else if (siteProductConfig.allowNotAuthenticatedAccount && req.body.accountHash) {
+			db.Account
+				.findOne({
+					where: {
+						accountHash: accountHash
+					}
+				})
+				.then((account) => {
+					req.body.accountId = account.id;
+					req.account = account;
+					next();
+				})
+				.catch((err) => {
+					next(err)
+				});
+		} else if (req.user) {
+			if (req.user && req.user.accountId) {
+				req.body.accountId = req.user.accountId;
+			}
+			next();
+		}
+	})
+	.post(function(req, res, next) {
+		console.log('create', req.body);
 
 		const data = {
       ...req.body,
@@ -83,6 +115,8 @@ router.route('/')
 			.authorizeData(data, 'create', req.user)
 			.create(data)
 			.then(result => {
+				console.log('result', result)
+
 				 req.results = result;
 				 next();
 			})
@@ -116,7 +150,9 @@ router.route('/')
 				next(err);
 			});
 	})
+	.post(auth.useReqUser)
 	.post(function(req, res, next) {
+		console.log('req.results', req.results)
 		res.json(req.results);
 		//mail.sendThankYouMail(req.results, req.user, req.site) // todo: optional met config?
 	})
@@ -131,11 +167,10 @@ router.route('/:productId(\\d+)')
 		db.Product
 			.scope(...req.scope)
 			.findOne({
-					where: { id: productId, siteId: req.params.siteId }
-					//where: { id: userId }
+					where: { id: productId }
 			})
 			.then(found => {
-				if ( !found ) throw new Error('User not found');
+				if ( !found ) throw new Error('product not found');
 				req.results = found;
 				next();
 			})
