@@ -40,7 +40,7 @@
     "mysql2": "^1.6.5",
     "mysqldump": "^3.2.0",
     "nested-object-assign": "^1.0.3",
-    "nodemailer": "^6.0.0",
+    "nodemailer": "^6.4.11",
     "nodemon": "^1.17.5",
     "nunjucks": "^3.2.0",
     "pmx": "^1.6.7",
