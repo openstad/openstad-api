@@ -24,6 +24,7 @@ router
 router
 	.all('*', function(req, res, next) {
 		req.scope = ['includeTags'];
+		req.scope.push({method: ['forSiteId', req.params.siteId]});
 		next();
 	});
 
@@ -39,8 +40,6 @@ router.route('/')
 
 		db.Product
 			.scope(...req.scope)
-		//	.scope()
-		//	.findAll()
 			.findAndCountAll({
 				where:queryConditions,
 				 offset: req.pagination.offset,

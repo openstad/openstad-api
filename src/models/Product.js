@@ -31,6 +31,7 @@ module.exports = function( db, sequelize, DataTypes ) {
       }
     },
 
+
     sku: {
       type         : DataTypes.STRING(255),
       allowNull    : true,
@@ -172,6 +173,13 @@ module.exports = function( db, sequelize, DataTypes ) {
 					attributes: ['id', 'name'],
 					through: {attributes: []},
 				}]
+			},
+			forSiteId: function( siteId ) {
+				return {
+					where: {
+						accountId: [ sequelize.literal(`select id FROM accounts WHERE siteId = ${siteId}`) ]
+					}
+				};
 			},
 			selectTags: function (tags) {
 				return {
