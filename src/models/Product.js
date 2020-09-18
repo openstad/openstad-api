@@ -196,6 +196,14 @@ module.exports = function( db, sequelize, DataTypes ) {
 		}
 	}
 
+	Product.auth = Product.prototype.auth = {
+		listableBy: 'all',
+		viewableBy: 'all',
+		createableBy: 'admin',
+		updateableBy: 'admin',
+		deleteableBy: 'admin',
+	}
+
 	Product.associate = function( models ) {
 		this.hasMany(models.Order);
 		this.belongsTo(models.Account);
