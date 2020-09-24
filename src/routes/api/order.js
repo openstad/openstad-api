@@ -7,144 +7,79 @@ const config = require('config');
 const db = require('../../db');
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const mail = require('../../lib/mail');
+const pagination = require('../../middleware/pagination');
+const {Op} = require('sequelize');
 
-let router = express.Router({mergeParams: true});
 
-const { createMollieClient } = require('@mollie/api-client');
-
-const mollieClient = createMollieClient({ apiKey: 'test_dHar4XY7LxsDOtmnkVtjNVWXLSlXsM' });
+const router = express.Router({mergeParams: true});
 
 // scopes: for all get requests
+/*
 router
 	.all('*', function(req, res, next) {
-
-		req.scope = ['api'];
-
-		var sort = (req.query.sort || '').replace(/[^a-z_]+/i, '') || (req.cookies['order_sort'] && req.cookies['order_sort'].replace(/[^a-z_]+/i, ''));
-		if (sort) {
-			res.cookie('order_sort', sort, { expires: 0 });
-			if (sort == 'votes_desc' || sort == 'votes_asc') {
-				req.scope.push('includeVoteCount'); // het werkt niet als je dat in de sort scope functie doet...
-			}
-			req.scope.push({ method: ['sort', req.query.sort]});
-		}
-
-		if (req.query.mapMarkers) {
-			req.scope.push('mapMarkers');
-		}
-
-		if (req.query.running) {
-			req.scope.push('selectRunning');
-		}
-
-		if (req.query.includeArguments) {
-			req.scope.push({ method: ['includeArguments', req.user.id]});
-		}
-
-		if (req.query.includeMeeting) {
-			req.scope.push('includeMeeting');
-		}
-
-		if (req.query.includePosterImage) {
-			req.scope.push('includePosterImage');
-		}
-
-		if (req.query.includeUser) {
-			req.scope.push('includeUser');
-		}
-
-		// in case the votes are archived don't use these queries
-		// this means they can be cleaned up from the main table for performance reason
-		if (!req.site.config.archivedVotes) {
-			if (req.query.includeVoteCount && req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable) {
-				req.scope.push('includeVoteCount');
-			}
-
-			if (req.query.includeUserVote && req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable) {
-				// ik denk dat je daar niet het hele object wilt?
-				req.scope.push({ method: ['includeUserVote', req.user.id]});
-			}
-		}
-
-		// todo? volgens mij wordt dit niet meer gebruikt
-		// if (req.query.highlighted) {
-		//  	query = db.Order.getHighlighted({ siteId: req.params.siteId })
-		// }
-
-		return next();
-
+		next();
 	})
+*/
+
+router
+	.all('*', function(req, res, next) {
+		req.scope = ['includeSite', 'includeTags'];
+		next();
+	});
 
 router.route('/')
 
-// list orders
+// list users
 // ----------
-	.get(auth.can('orders:list'))
+	.get(auth.can('Account', 'list'))
+	.get(pagination.init)
 	.get(function(req, res, next) {
-		db.Order
+		let queryConditions = req.queryConditions ? req.queryConditions : {};
+		queryConditions = Object.assign(queryConditions, { siteId: req.params.siteId });
+
+		db.Account
 			.scope(...req.scope)
-			.findAll({ where: { siteId: req.params.siteId } })
-			.then( found => {
-				return found.map( entry => {
-					return createOrderJSON(entry, req.user, req);
-				});
+		//	.scope()
+		//	.findAll()
+			.findAndCountAll({
+				where:queryConditions,
+				 offset: req.pagination.offset,
+				 limit: req.pagination.limit
 			})
-			.then(function( found ) {
-				res.json(found);
+			.then(function( result ) {
+				req.results = result.rows;
+				req.pagination.count = result.count;
+				return next();
 			})
 			.catch(next);
 	})
+	.get(auth.useReqUser)
+//	.get(searchResults)
+	.get(pagination.paginateResults)
+	.get(function(req, res, next) {
+		res.json(req.results);
+	})
 
-// create orders
+// create
 // -----------
-	.post(auth.can('order:create'))
+	.post(auth.can('Account', 'create'))
 	.post(function(req, res, next) {
 		if (!req.site) return next(createError(401, 'Site niet gevonden'));
 		return next();
 	})
 	.post(function( req, res, next ) {
-		if (!(req.site.config && req.site.config.ideas && req.site.orders.open)) return next(createError(401, 'Winkel is gesloten'));
+		if (!(req.site.config && req.site.config.account && req.site.config.account.canCreateNewAccounts)) return next(createError(401, 'Account mogen niet aangemaakt worden'));
 		return next();
 	})
 	.post(function(req, res, next) {
-		filterBody(req);
-		req.body.siteId = parseInt(req.params.siteId);
-		req.body.userId = req.user.id;
-		req.body.startDate = new Date();
 
-		try {
-			req.body.location = JSON.parse(req.body.location || null);
-		} catch(err) {}
 
 		db.Order
 			.create(req.body)
 			.then(result => {
-				mollieClient.payments.create({
-				  amount: {
-				    value:    result.total,
-				    currency: 'EUR'
-				  },
-				  description: 'Bestelling bij ' + req.site,
-				  redirectUrl: 'https://'+req.site.domain+'/thankyou/123456',
-				  webhookUrl:  'https://'+req.site.domain+'/api/order/webhook'
-				})
-				  .then(payment => {
-						result.extraData.paymentIds = result.extraData.paymentIds ? result.extraData.paymentIds : [];
-						result.extraData.paymentIds.push(payment.id);
-						result.extraData.redirectUrl = payment.getCheckoutUrl();
+				req.results = result;
+				next();
 
-						result
-							.update(req.body)
-							.then(result => {
-								result.redirectUrl =	result.extraData.redirectUrl ;
-								res.json(createOrderJSON(result, req.user, req));
-								mail.sendThankYouMail(result, req.user, req.site) // todo: optional met config?
-							})
-							.catch(next);
-				  })
-				  .catch(error => {
-				    // Handle the error
-				  });
 			})
 			.catch(function( error ) {
 				// todo: dit komt uit de oude routes; maak het generieker
@@ -160,25 +95,61 @@ router.route('/')
 					next(error);
 				}
 			});
+
+	})
+	.post(function(req, res, next) {
+
+	})
+	.post(function(req, res, next) {
+		mollieClient.payments.create({
+			amount: {
+				value:    req.results.total,
+				currency: 'EUR'
+			},
+			description: 'Bestelling bij ' + req.site,
+			redirectUrl: 'https://'+req.site.domain+'/thankyou/123456',
+			webhookUrl:  'https://'+req.site.domain+'/api/order/webhook'
+		})
+			.then(payment => {
+				result.extraData.paymentIds = result.extraData.paymentIds ? result.extraData.paymentIds : [];
+				result.extraData.paymentIds.push(payment.id);
+				result.extraData.redirectUrl = payment.getCheckoutUrl();
+
+				result
+					.update(req.body)
+					.then(result => {
+						result.redirectUrl =	result.extraData.redirectUrl ;
+						res.json(createOrderJSON(result, req.user, req));
+						mail.sendThankYouMail(result, req.user, req.site) // todo: optional met config?
+					})
+					.catch(next);
+			})
+			.catch(error => {
+				// Handle the error
+			});
+
+	})
+	.post(function(req, res, next) {
+		res.json(req.results);
+		//mail.sendThankYouMail(req.results, req.user, req.site) // todo: optional met config?
 	})
 
-router.route('/:orderId(\\d+)/update-paymet')
 
 
-// one idea
+// one user
 // --------
-router.route('/:orderId(\\d+)')
+router.route('/:accountId(\\d+)')
 	.all(function(req, res, next) {
-		var ideaId = parseInt(req.params.orderId) || 1;
-
-		db.Order
-			.scope(...req.scope, 'includeVoteCount')
+		const accountId = parseInt(req.params.accountId) || 1;
+		db.Account
+			.scope(...req.scope)
 			.findOne({
-				where: { id: ideaId, siteId: req.params.siteId }
+					where: { id: accountId, siteId: req.params.siteId }
+					//where: { id: userId }
 			})
 			.then(found => {
-				if ( !found ) throw new Error('Idea not found');
-				req.idea = found;
+				if ( !found ) throw new Error('User not found');
+				req.results = found;
 				next();
 			})
 			.catch(next);
@@ -186,144 +157,45 @@ router.route('/:orderId(\\d+)')
 
 // view idea
 // ---------
-	.get(auth.can('order:view'))
+	.get(auth.can('Account', 'view'))
+	.get(auth.useReqUser)
 	.get(function(req, res, next) {
-		res.json(createOrderJSON(req.idea, req.user, req));
+		res.json(req.results);
 	})
 
-// update idea
+// update user
 // -----------
-	.put(auth.can('order:edit'))
+	.put(auth.useReqUser)
 	.put(function(req, res, next) {
-		filterBody(req)
-		if (req.body.location) {
-			try {
-				req.body.location = JSON.parse(req.body.location || null);
-			} catch(err) {}
-		} else {
-			req.body.location = JSON.parse(null);
+
+    const account = req.results;
+    if (!( account && account.can && account.can('update') )) return next( new Error('You cannot update this Account') );
+
+    let data = {
+      ...req.body,
 		}
 
-		req.idea
-			.update(req.body)
-			.then(result => {
-				res.json(createOrderJSON(result, req.user, req));
-			})
-			.catch(next);
+
+    account
+      .authorizeData(data, 'update')
+      .update(data)
+      .then(result => {
+        req.results = result;
+        next()
+      })
+      .catch(next);
 	})
 
 // delete idea
 // ---------
-	.delete(auth.can('order:delete'))
+  .delete(auth.can('Account', 'delete'))
 	.delete(function(req, res, next) {
-		req.idea
+		req.results
 			.destroy()
 			.then(() => {
-				res.json({ "idea": "deleted" });
+				res.json({ "account": "deleted" });
 			})
 			.catch(next);
 	})
-
-// extra functions
-// ---------------
-
-function filterBody(req) {
-	let filteredBody = {};
-
-	let keys;
-	let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');
-
-	if (hasModeratorRights) {
-		keys = [ 'siteId', 'meetingId', 'userId', 'startDate', 'endDate', 'sort', 'status', 'title', 'posterImageUrl', 'summary', 'description', 'budget', 'extraData', 'location', 'modBreak', 'modBreakUserId', 'modBreakDate' ];
-	} else {
-		keys = [ 'title', 'summary', 'description', 'extraData', 'location' ];
-	}
-
-	keys.forEach((key) => {
-		if (req.body[key]) {
-			filteredBody[key] = req.body[key];
-		}
-	});
-
-	if (hasModeratorRights) {
-    if (filteredBody.modBreak) {
-      if ( !req.idea || req.order.modBreak != filteredBody.modBreak ) {
-        if (!req.body.modBreakUserId) filteredBody.modBreakUserId = req.user.id;
-        if (!req.body.modBreakDate) filteredBody.modBreakDate = new Date().toString();
-      }
-    } else {
-      filteredBody.modBreak = '';
-      filteredBody.modBreakUserId = null;
-      filteredBody.modBreakDate = null;
-    }
-  }
-
-	req.body = filteredBody;
-}
-
-function createOrderJSON(idea, user, req) {
-	let hasModeratorRights = (user.role === 'admin' || user.role === 'editor' || user.role === 'moderator');
-
-	let can = {
-		// edit: user.can('arg:edit', argument.idea, argument),
-		// delete: req.user.can('arg:delete', entry.idea, entry),
-		// reply: req.user.can('arg:reply', entry.idea, entry),
-	};
-
-	let result = order.toJSON();
-	result.config = null;
-	result.site = null;
-	result.can = can;
-
-
-// Fixme: hide email in arguments and their reactions
-	function hideEmailsForNormalUsers(args) {
-		return args.map((argument) => {
-			argument.user.email = hasModeratorRights ? argument.user.email : '';
-
-			if (argument.reactions) {
-				argument.reactions = argument.reactions.map((reaction) => {
-					reaction.user.email = hasModeratorRights ? reaction.user.email : '';
-
-					return reaction;
-				})
-			}
-
-			return argument;
-		});
-	}
-
-	if (order.argumentsAgainst) {
-		result.argumentsAgainst = hideEmailsForNormalUsers(result.argumentsAgainst);
-	}
-
-	if (order.argumentsFor) {
-		result.argumentsFor = hideEmailsForNormalUsers(result.argumentsFor);
-	}
-
-	if (order.extraData && order.extraData.phone && hasModeratorRights) {
-		delete result.extraData.phone;
-	}
-
-
-	if (order.user) {
-		result.user = {
-			firstName: order.user.firstName,
-			lastName: order.user.lastName,
-			fullName: order.user.fullName,
-			nickName: order.user.nickName,
-			isAdmin: hasModeratorRights,
-			email: hasModeratorRights ? order.user.email : '',
-		};
-	} else {
-		result.user = {
-			isAdmin: hasModeratorRights,
-		};
-	}
-
-	result.createdAtText = moment(order.createdAt).format('LLL');
-
-	return result;
-}
 
 module.exports = router;
