@@ -180,7 +180,8 @@ router.route('/:orderId(\\d+)')
 		res.json(req.results);
 	})
 	.post('/payment-status', function(req, res, next) {
-		res.json(req.results);
+		// update payment status
+		console.log('update payment st')
 	})
 
 // update user
