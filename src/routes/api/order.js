@@ -9,7 +9,9 @@ const auth = require('../../middleware/sequelize-authorization-middleware');
 const mail = require('../../lib/mail');
 const pagination = require('../../middleware/pagination');
 const {Op} = require('sequelize');
+const { createMollieClient } = require('@mollie/api-client');
 
+const mollieClient = createMollieClient({ apiKey: 'test_dHar4XY7LxsDOtmnkVtjNVWXLSlXsM' });
 
 const router = express.Router({mergeParams: true});
 
@@ -23,7 +25,8 @@ router
 
 router
 	.all('*', function(req, res, next) {
-		req.scope = ['includeSite', 'includeTags'];
+		req.scope = ['includeLog', 'includeItems', 'includeTransaction', forSiteId];
+		req.scope.push({method: ['forSiteId', req.params.siteId]});
 		next();
 	});
 
@@ -31,20 +34,20 @@ router.route('/')
 
 // list users
 // ----------
-	.get(auth.can('Account', 'list'))
+	.get(auth.can('Order', 'list'))
 	.get(pagination.init)
 	.get(function(req, res, next) {
-		let queryConditions = req.queryConditions ? req.queryConditions : {};
-		queryConditions = Object.assign(queryConditions, { siteId: req.params.siteId });
 
-		db.Account
+		let queryConditions = req.queryConditions ? req.queryConditions : {};
+
+		db.Order
 			.scope(...req.scope)
 		//	.scope()
 		//	.findAll()
 			.findAndCountAll({
 				where:queryConditions,
-				 offset: req.pagination.offset,
-				 limit: req.pagination.limit
+			 	offset: req.pagination.offset,
+			 	limit: req.pagination.limit
 			})
 			.then(function( result ) {
 				req.results = result.rows;
@@ -62,18 +65,16 @@ router.route('/')
 
 // create
 // -----------
-	.post(auth.can('Account', 'create'))
+	.post(auth.can('Order', 'create'))
 	.post(function(req, res, next) {
 		if (!req.site) return next(createError(401, 'Site niet gevonden'));
 		return next();
 	})
 	.post(function( req, res, next ) {
-		if (!(req.site.config && req.site.config.account && req.site.config.account.canCreateNewAccounts)) return next(createError(401, 'Account mogen niet aangemaakt worden'));
+		if (!(req.site.config && req.site.config.order && req.site.config.order.canCreateNewOrders)) return next(createError(401, 'Order mogen niet aangemaakt worden'));
 		return next();
 	})
 	.post(function(req, res, next) {
-
-
 		db.Order
 			.create(req.body)
 			.then(result => {
@@ -98,7 +99,27 @@ router.route('/')
 
 	})
 	.post(function(req, res, next) {
+		if (users) {
+			users.forEach((user) => {
+				actions.push(function() {
+					return new Promise((resolve, reject) => {
+					user
+					 .authorizeData(data, 'update', req.user)
+					 .update(data)
+					 .then((result) => {
+						 resolve();
+					 })
+					 .catch((err) => {
+						 console.log('err', err)
+						 reject(err);
+					 })
+				 })}())
+			});
+		}
 
+		return Promise.all(actions)
+			 .then(() => { next(); })
+			 .catch(next)
 	})
 	.post(function(req, res, next) {
 		mollieClient.payments.create({
@@ -107,44 +128,40 @@ router.route('/')
 				currency: 'EUR'
 			},
 			description: 'Bestelling bij ' + req.site,
-			redirectUrl: 'https://'+req.site.domain+'/thankyou/123456',
-			webhookUrl:  'https://'+req.site.domain+'/api/order/webhook'
+			redirectUrl: 'https://'+req.site.domain+'/thankyou',
+			webhookUrl:  'https://'+req.site.domain+'/api/site/'+req.params.siteId+'/order/'+req.params.orderId+'/payment-status'
 		})
 			.then(payment => {
-				result.extraData.paymentIds = result.extraData.paymentIds ? result.extraData.paymentIds : [];
-				result.extraData.paymentIds.push(payment.id);
-				result.extraData.redirectUrl = payment.getCheckoutUrl();
-
-				result
-					.update(req.body)
-					.then(result => {
-						result.redirectUrl =	result.extraData.redirectUrl ;
-						res.json(createOrderJSON(result, req.user, req));
-						mail.sendThankYouMail(result, req.user, req.site) // todo: optional met config?
-					})
-					.catch(next);
+				req.results.extraData.paymentIds = result.extraData.paymentIds ? result.extraData.paymentIds : [];
+				req.results.extraData.paymentIds.push(payment.id);
+				req.results.extraData.paymentUrl = payment.getCheckoutUrl();
+				next();
 			})
-			.catch(error => {
-				// Handle the error
+			.catch(err => {
+				// Handle the errorz
+				next(err);
 			});
 
 	})
 	.post(function(req, res, next) {
-		res.json(req.results);
-		//mail.sendThankYouMail(req.results, req.user, req.site) // todo: optional met config?
+		result
+			.update(result)
+			.then(result => {
+				res.json(req.results);
+				mail.sendThankYouMail(req.results, req.user, req.site) // todo: optional met config?
+			})
+			.catch(next);
 	})
-
-
 
 // one user
 // --------
-router.route('/:accountId(\\d+)')
+router.route('/:orderId(\\d+)')
 	.all(function(req, res, next) {
-		const accountId = parseInt(req.params.accountId) || 1;
-		db.Account
+		const orderId = parseInt(req.params.orderId) || 1;
+		db.Order
 			.scope(...req.scope)
 			.findOne({
-					where: { id: accountId, siteId: req.params.siteId }
+					where: { id: orderId }
 					//where: { id: userId }
 			})
 			.then(found => {
@@ -157,9 +174,12 @@ router.route('/:accountId(\\d+)')
 
 // view idea
 // ---------
-	.get(auth.can('Account', 'view'))
+	.get(auth.can('Order', 'view'))
 	.get(auth.useReqUser)
 	.get(function(req, res, next) {
+		res.json(req.results);
+	})
+	.post('/payment-status', function(req, res, next) {
 		res.json(req.results);
 	})
 
@@ -168,15 +188,14 @@ router.route('/:accountId(\\d+)')
 	.put(auth.useReqUser)
 	.put(function(req, res, next) {
 
-    const account = req.results;
-    if (!( account && account.can && account.can('update') )) return next( new Error('You cannot update this Account') );
+    const order = req.results;
+    if (!( order && order.can && order.can('update') )) return next( new Error('You cannot update this Order') );
 
     let data = {
       ...req.body,
 		}
 
-
-    account
+    order
       .authorizeData(data, 'update')
       .update(data)
       .then(result => {
@@ -188,12 +207,12 @@ router.route('/:accountId(\\d+)')
 
 // delete idea
 // ---------
-  .delete(auth.can('Account', 'delete'))
+  .delete(auth.can('Order', 'delete'))
 	.delete(function(req, res, next) {
 		req.results
 			.destroy()
 			.then(() => {
-				res.json({ "account": "deleted" });
+				res.json({ "order": "deleted" });
 			})
 			.catch(next);
 	})

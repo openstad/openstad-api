@@ -113,50 +113,7 @@ router.route('/')
 		req.body.startDate = new Date();
 
 
-		db.Order
-			.create(req.body)
-			.then(result => {
-				mollieClient.payments.create({
-				  amount: {
-				    value:    result.total,
-				    currency: 'EUR'
-				  },
-				  description: 'Bestelling bij ' + req.site,
-				  redirectUrl: 'https://'+req.site.domain+'/thankyou/123456',
-				  webhookUrl:  'https://'+req.site.domain+'/api/order/webhook'
-				})
-				  .then(payment => {
-						result.extraData.paymentIds = result.extraData.paymentIds ? result.extraData.paymentIds : [];
-						result.extraData.paymentIds.push(payment.id);
-						result.extraData.redirectUrl = payment.getCheckoutUrl();
 
-						result
-							.update(req.body)
-							.then(result => {
-								result.redirectUrl =	result.extraData.redirectUrl ;
-								res.json(createOrderJSON(result, req.user, req));
-								mail.sendThankYouMail(result, req.user, req.site) // todo: optional met config?
-							})
-							.catch(next);
-				  })
-				  .catch(error => {
-				    // Handle the error
-				  });
-			})
-			.catch(function( error ) {
-				// todo: dit komt uit de oude routes; maak het generieker
-				if( typeof error == 'object' && error instanceof Sequelize.ValidationError ) {
-					let errors = [];
-					error.errors.forEach(function( error ) {
-						// notNull kent geen custom messages in deze versie van sequelize; zie https://github.com/sequelize/sequelize/issues/1500
-						// TODO: we zitten op een nieuwe versie van seq; vermoedelijk kan dit nu wel
-						errors.push(error.type === 'notNull Violation' && error.path === 'location' ? 'Kies een locatie op de kaart' : error.message);
-					});
-					res.status(422).json(errors);
-				} else {
-					next(error);
-				}
-			});
 	})
 
 router.route('/:orderId(\\d+)/update-paymet')

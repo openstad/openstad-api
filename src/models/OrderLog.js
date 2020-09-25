@@ -23,11 +23,11 @@ module.exports = function( db, sequelize, DataTypes ) {
 	});
 
 	OrderLog.auth = OrderLog.prototype.auth = {
-		listableBy: 'all',
-		viewableBy: 'all',
-		createableBy: 'admin',
-		updateableBy: 'admin',
-		deleteableBy: 'admin',
+		listableBy: ['admin','editor', 'moderator'],
+		viewableBy: ['admin','editor', 'moderator'],
+		createableBy: ['admin','editor', 'moderator'],
+		updateableBy: ['admin','editor', 'moderator'],
+		deleteableBy: ['admin','editor', 'moderator'],
 	}
 
 	OrderLog.associate = function( models ) {

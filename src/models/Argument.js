@@ -38,6 +38,11 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultValue: 0,
 		},
 
+    rating: {
+      type         : DataTypes.INTEGER,
+      allowNull    : true
+    },
+
 		sentiment: {
 			type         : DataTypes.ENUM('against', 'for'),
 			defaultValue : 'for',

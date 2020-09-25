@@ -42,7 +42,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			type         : DataTypes.STRING(64),
 			auth: {
 				listableBy: ['editor','owner'],
-        viewableBy: 'all',
+        viewableBy: ['editor','owner'],
 				createableBy: ['editor','owner'],
 				updateableBy: ['editor','owner'],
 			},
@@ -56,7 +56,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			type         : DataTypes.STRING(64),
 			auth: {
 				listableBy: ['editor','owner'],
-        viewableBy: 'all',
+        viewableBy: ['editor','owner'],
 				createableBy: ['editor','owner'],
 				updateableBy: ['editor','owner'],
 			},
@@ -201,10 +201,8 @@ module.exports = function( db, sequelize, DataTypes ) {
 	Order.associate = function( models ) {
 		this.hasMany(models.Order);
 		this.belongsTo(models.Account);
-
 		//variations
 		this.belongsTo(models.Order);
-		this.belongsToMany(models.Tag, {through: 'productTags'});
 	}
 
 	return Order;
