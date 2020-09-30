@@ -15,6 +15,27 @@ const mollieClient = createMollieClient({ apiKey: 'test_dHar4XY7LxsDOtmnkVtjNVWX
 
 const router = express.Router({mergeParams: true});
 
+const calculateOrderTotal = (orderItems, orderFees) => {
+	totals = 0.00;
+
+	orderItems.forEach(item => {
+			let price = item.price;
+			let qty = item.quantity;
+			let amount = price * qty;
+
+			totals += amount;
+	});
+
+	orderFees.forEach(fee => {
+			let price = fee.price;
+			let qty = fee.quantity;
+			let amount = price * qty;
+
+			totals += amount;
+	});
+
+}
+
 // scopes: for all get requests
 /*
 router
@@ -37,7 +58,6 @@ router.route('/')
 	.get(auth.can('Order', 'list'))
 	.get(pagination.init)
 	.get(function(req, res, next) {
-
 		let queryConditions = req.queryConditions ? req.queryConditions : {};
 
 		db.Order
@@ -75,12 +95,69 @@ router.route('/')
 		return next();
 	})
 	.post(function(req, res, next) {
+		const orderSiteConfig = req.site.config && req.site.config.order && orderSiteConfig ? orderSiteConfig : {};
+
+		req.orderFees = orderSiteConfig && orderSiteConfig.orderFees ? orderSiteConfig.orderFees : [{
+			price: '2.95',
+			name: 'Verzendkosten',
+			quantity: 1
+		}];
+
+		next();
+	})
+	.post(async function(req, res, next) {
+		if (req.body.orderItems) {
+			req.body.orderItems.forEach((orderItem) => {
+				const product = await db.Product.findOne({ where: { id: orderItem.productId } });
+				orderItem.product = product;
+			})
+		}
+
+		next();
+	})
+	/*
+		Coupons is for later, basic logic is simple,
+		buttt, needs some rules, tracking etc.
+
+	.post(async function(req, res, next) {
+		const coupon = req.body.coupon ?  await db.OrderCoupon.findOne({ where: { coupon: req.body.coupon, claimed: null } }) : null;
+
+		if (coupon) {
+			const amount = coupon.type === 'percentage' ? calculateOrderTotal(req.body.orderItems, req.orderFees) * (coupon.amount / 10) : coupon.amount;
+
+			req.orderFees.push([
+				price: amount,
+				name: 'Kortingscode',
+				quantity: 1
+			])
+		}
+
+		next();
+	})
+	*/
+	.post(function(req, res, next) {
+
+		const data = {
+			siteId: req.site.id,
+			email: req.body.email,
+			firstName:req.body.firstName,
+			lastName: req.body.lastName,
+			phoneNumber: req.body.phoneNumber,
+			streetName: req.body.streetName,
+			houseNumber: req.body.houseNumber,
+			postcode: req.body.postcode,
+			city: req.body.city,
+			suffix: req.body.suffix,
+			phoneNumber: req.body.phoneNumber,
+			paymentStatus: req.body.paymentStatus,
+			total: calculateOrderTotal(req.body.orderItems, req.orderFees),
+		}
+
 		db.Order
 			.create(req.body)
 			.then(result => {
 				req.results = result;
 				next();
-
 			})
 			.catch(function( error ) {
 				// todo: dit komt uit de oude routes; maak het generieker
@@ -99,20 +176,33 @@ router.route('/')
 
 	})
 	.post(function(req, res, next) {
-		if (users) {
-			users.forEach((user) => {
+		if (req.body.orderItems) {
+			req.body.orderItems.forEach((orderItem) => {
 				actions.push(function() {
 					return new Promise((resolve, reject) => {
-					user
-					 .authorizeData(data, 'update', req.user)
-					 .update(data)
-					 .then((result) => {
-						 resolve();
-					 })
-					 .catch((err) => {
-						 console.log('err', err)
-						 reject(err);
-					 })
+
+						const data = {
+							vat: product.vat,
+							quantity: orderItem.quantity,
+					    orderId: req.results.id,
+							productId: product.id,
+							price: product.price,
+							extraData: {
+								product: product
+							},
+						};
+
+						db.OrderItem
+						 .authorizeData(data, 'update', req.user)
+						 .create(data)
+						 .then((result) => {
+							 resolve();
+						 })
+						 .catch((err) => {
+							 console.log('err', err)
+							 reject(err);
+						 })
+
 				 })}())
 			});
 		}
@@ -182,6 +272,10 @@ router.route('/:orderId(\\d+)')
 	.post('/payment-status', function(req, res, next) {
 		// update payment status
 		console.log('update payment st')
+		res.json({
+			'what to do?' : 'Pay'
+		});
+
 	})
 
 // update user
@@ -204,6 +298,29 @@ router.route('/:orderId(\\d+)')
         next()
       })
       .catch(next);
+	})
+	.put(function(req, res, next) {
+		if (req.body.orderItems) {
+			req.body.orderItems.forEach((orderItem) => {
+				actions.push(function() {
+					return new Promise((resolve, reject) => {
+					db.OrderItem
+					 .authorizeData(data, 'update', req.user)
+					 .update(data)
+					 .then((result) => {
+						 resolve();
+					 })
+					 .catch((err) => {
+						 console.log('err', err)
+						 reject(err);
+					 })
+				 })}())
+			});
+		}
+
+		return Promise.all(actions)
+			 .then(() => { next(); })
+			 .catch(next)
 	})
 
 // delete idea

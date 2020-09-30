@@ -16,9 +16,6 @@ module.exports = function( db, sequelize, DataTypes ) {
         //   msg  : `Titel moet tussen ${titleMinLength} en ${titleMaxLength} tekens lang zijn`
         // }
         textLength(value) {
-          console.log('value', value);
-
-
           let len = sanitize.title(value.trim()).length;
           let titleMinLength = ( this.config && this.config.products && this.config.products.nameMinLength || 10 )
           let titleMaxLength = ( this.config && this.config.products && this.config.products.nameMaxLength || 50 )
