@@ -12,7 +12,7 @@ let router = express.Router({mergeParams: true});
 
 const { createMollieClient } = require('@mollie/api-client');
 
-const mollieClient = createMollieClient({ apiKey: 'test_dHar4XY7LxsDOtmnkVtjNVWXLSlXsM' });
+const mollieClient = createMollieClient({ apiKey: 'test_QUGRvhJHDjsekFazFcDwxzrKNRcGMy' });
 
 // scopes: for all get requests
 router

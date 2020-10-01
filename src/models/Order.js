@@ -2,13 +2,14 @@ var config         = require('config')
 , log            = require('debug')('app:user')
 , pick           = require('lodash/pick');
 
-var sanitize       = require('../util/sanitize');
+const sanitize       = require('../util/sanitize');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
+const emailBlackList = require('../../config/mail_blacklist')
 
 
 module.exports = function( db, sequelize, DataTypes ) {
 	var Order = sequelize.define('order', {
-		siteId: {
+		accountId: {
 			type         : DataTypes.INTEGER,
 			defaultValue : 0,
 		},
@@ -177,6 +178,13 @@ module.exports = function( db, sequelize, DataTypes ) {
 					attributes: ['event', 'description', 'createdAt'],
 					through: {attributes: []},
 				}]
+			},
+			forSiteId: function( siteId ) {
+				return {
+					where: {
+						accountId: [ sequelize.literal(`select id FROM accounts WHERE siteId = ${siteId}`) ]
+					}
+				};
 			},
 			includeItems: {
 				include: [{

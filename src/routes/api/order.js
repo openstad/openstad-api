@@ -11,15 +11,15 @@ const pagination = require('../../middleware/pagination');
 const {Op} = require('sequelize');
 const { createMollieClient } = require('@mollie/api-client');
 
-const mollieClient = createMollieClient({ apiKey: 'test_dHar4XY7LxsDOtmnkVtjNVWXLSlXsM' });
+const mollieClient = createMollieClient({ apiKey: 'test_uFMBVR28rQdcqwAcMwvRdSdAmMsPpU' });
 
 const router = express.Router({mergeParams: true});
 
 const calculateOrderTotal = (orderItems, orderFees) => {
-	totals = 0.00;
+	let totals = 0.00;
 
 	orderItems.forEach(item => {
-			let price = item.price;
+			let price = item.product.price;
 			let qty = item.quantity;
 			let amount = price * qty;
 
@@ -34,6 +34,7 @@ const calculateOrderTotal = (orderItems, orderFees) => {
 			totals += amount;
 	});
 
+	return totals;
 }
 
 // scopes: for all get requests
@@ -46,7 +47,7 @@ router
 
 router
 	.all('*', function(req, res, next) {
-		req.scope = ['includeLog', 'includeItems', 'includeTransaction', forSiteId];
+		req.scope = ['includeLog', 'includeItems', 'includeTransaction'];
 		req.scope.push({method: ['forSiteId', req.params.siteId]});
 		next();
 	});
@@ -95,7 +96,7 @@ router.route('/')
 		return next();
 	})
 	.post(function(req, res, next) {
-		const orderSiteConfig = req.site.config && req.site.config.order && orderSiteConfig ? orderSiteConfig : {};
+		const orderSiteConfig = req.site.config && req.site.config.order && req.site.config.order ? req.site.config.order : {};
 
 		req.orderFees = orderSiteConfig && orderSiteConfig.orderFees ? orderSiteConfig.orderFees : [{
 			price: '2.95',
@@ -105,15 +106,26 @@ router.route('/')
 
 		next();
 	})
-	.post(function(req, res, next) {
+	.post(async function( req, res, next) {
 		if (req.body.orderItems) {
-			req.body.orderItems.forEach(async (orderItem) => {
-				const product = await db.Product.findOne({ where: { id: orderItem.productId } });
-				orderItem.product = product;
-			})
-		}
+			const actions = [];
+			req.body.orderItems.forEach((orderItem) => {
+				actions.push(function() {
+					return new Promise(async (resolve, reject) => {
+						const product = await db.Product.findOne({ where: { id: orderItem.productId } });
+						console.log('productIDDDD', product.id);
+						orderItem.product = product;
 
-		next();
+						resolve();
+				 })}())
+		 	});
+
+			return Promise.all(actions)
+				 .then(() => { next(); })
+				 .catch(next)
+		} else {
+			 next(createError(401, 'No order items send with order request'));
+		}
 	})
 	/*
 		Coupons is for later, basic logic is simple,
@@ -137,8 +149,14 @@ router.route('/')
 	*/
 	.post(function(req, res, next) {
 
+	 const firstOrderItem = req.body.orderItems[0];
+	// console.log('firstOrderItem', firstOrderItem.produ);
+	 // derive accountId from the ordered products, which means for now only one order per account per time
+	 const accountId = firstOrderItem.product.accountId;
+
 		const data = {
-			siteId: req.site.id,
+			accountId: accountId,
+			userId: req.user.id,
 			email: req.body.email,
 			firstName:req.body.firstName,
 			lastName: req.body.lastName,
@@ -155,8 +173,10 @@ router.route('/')
 			}
 		}
 
+		console.log('data', data)
+
 		db.Order
-			.create(req.body)
+			.create(data)
 			.then(result => {
 				req.results = result;
 				next();
@@ -178,69 +198,82 @@ router.route('/')
 
 	})
 	.post(function(req, res, next) {
-		if (req.body.orderItems) {
-			req.body.orderItems.forEach((orderItem) => {
-				actions.push(function() {
-					return new Promise((resolve, reject) => {
 
-						const data = {
-							vat: product.vat,
-							quantity: orderItem.quantity,
-					    orderId: req.results.id,
-							productId: product.id,
-							price: product.price,
-							extraData: {
-								product: product
-							},
-						};
+		const actions = [];
 
-						db.OrderItem
-						 .authorizeData(data, 'create', req.user)
-						 .create(data)
-						 .then((result) => {
-							 resolve();
-						 })
-						 .catch((err) => {
-							 console.log('err', err)
-							 reject(err);
-						 })
+		req.body.orderItems.forEach((orderItem) => {
+			actions.push(function() {
+				return new Promise((resolve, reject) => {
+					const product = orderItem.product;
 
-				 })}())
-			});
-		}
+					const data = {
+						vat: product.vat,
+						quantity: orderItem.quantity,
+				    orderId: req.results.id,
+						productId: product.id,
+						price: product.price,
+						extraData: {
+							product: product
+						},
+					};
+
+					db.OrderItem
+					 .authorizeData(data, 'create', req.user)
+					 .create(data)
+					 .then((result) => {
+						 resolve();
+					 })
+					 .catch((err) => {
+						 console.log('err', err)
+						 reject(err);
+					 })
+
+			 })}())
+		});
 
 		return Promise.all(actions)
 			 .then(() => { next(); })
 			 .catch(next)
 	})
 	.post(function(req, res, next) {
+
+		console.log(' req.results.total',  req.results.total);
+		let paymentApiUrl = config.url + 'api/site/'+req.params.siteId+'/order/'+req.params.orderId +'/payment';
+
 		mollieClient.payments.create({
 			amount: {
-				value:    req.results.total,
+				value:    req.results.total.toString(),
 				currency: 'EUR'
 			},
 			description: 'Bestelling bij ' + req.site.name,
-			redirectUrl: 'https://'+req.site.domain+'/thankyou',
-			webhookUrl:  'https://'+req.site.domain+'/api/site/'+req.params.siteId+'/order/'+req.params.orderId+'/payment-status'
+			redirectUrl: paymentApiUrl,
+		//	webhookUrl:  'https://'+req.site.domain+'/api/site/'+req.params.siteId+'/order/'+req.params.orderId+'/payment-status'
+			webhookUrl:  paymentApiUrl,
 		})
-			.then(payment => {
-				req.results.extraData.paymentIds = result.extraData.paymentIds ? result.extraData.paymentIds : [];
-				req.results.extraData.paymentIds.push(payment.id);
-				req.results.extraData.paymentUrl = payment.getCheckoutUrl();
-				next();
-			})
-			.catch(err => {
-				// Handle the errorz
-				next(err);
-			});
-
+		.then(payment => {
+			req.results.extraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
+			req.results.extraData.paymentIds.push(payment.id);
+			req.results.extraData.paymentUrl = payment.getCheckoutUrl();
+			next();
+		})
+		.catch(err => {
+			// Handle the errorz
+			next(err);
+		});
 	})
 	.post(function(req, res, next) {
-		result
-			.update(result)
+		req.results
+			.authorizeData(req.results, 'update', req.user)
+			.save()
 			.then(result => {
-				res.json(req.results);
-				mail.sendThankYouMail(req.results, req.user, req.site) // todo: optional met config?
+				const orderJson = req.results.get({plain:true});
+
+				const returnValues = {
+					...orderJson,
+					redirectUrl: req.results.extraData.paymentUrl
+				};
+
+				res.json(returnValues);
 			})
 			.catch(next);
 	})
@@ -329,13 +362,28 @@ router.route('/:orderId(\\d+)')
 			.catch(next);
 	})
 
-router.route('/:orderId(\\d+)/payment-status')
+router.route('/:orderId(\\d+)/payment')
 	.post(function(req, res, next) {
-		// update payment status
-		console.log('update payment st')
-		res.json({
-			'what to do?' : 'Pay'
-		});
+
+		const siteUrl = req.site.config.cms.url + '/thankyou';
+		const done = () => {
+			return res.redirect(siteUrl)
+		}
+
+		const paymentId = req.body.id;
+
+		mollieClient.payments.get(paymentId)
+		  .then(payment => {
+		   	if (payment.isPaid()) {
+
+				} else {
+					done();
+				}
+		  })
+		  .catch(error => {
+		    // Handle the error
+		  });
+
 
 	})
 
