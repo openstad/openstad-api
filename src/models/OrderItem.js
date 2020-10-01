@@ -3,6 +3,7 @@ var config         = require('config')
 , pick           = require('lodash/pick');
 
 var sanitize       = require('../util/sanitize');
+const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
 
 
 module.exports = function( db, sequelize, DataTypes ) {

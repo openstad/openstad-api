@@ -105,9 +105,9 @@ router.route('/')
 
 		next();
 	})
-	.post(async function(req, res, next) {
+	.post(function(req, res, next) {
 		if (req.body.orderItems) {
-			req.body.orderItems.forEach((orderItem) => {
+			req.body.orderItems.forEach(async (orderItem) => {
 				const product = await db.Product.findOne({ where: { id: orderItem.productId } });
 				orderItem.product = product;
 			})
@@ -271,14 +271,6 @@ router.route('/:orderId(\\d+)')
 	.get(function(req, res, next) {
 		res.json(req.results);
 	})
-	.post('/payment-status', function(req, res, next) {
-		// update payment status
-		console.log('update payment st')
-		res.json({
-			'what to do?' : 'Pay'
-		});
-
-	})
 
 // update user
 // -----------
@@ -336,5 +328,16 @@ router.route('/:orderId(\\d+)')
 			})
 			.catch(next);
 	})
+
+router.route('/:orderId(\\d+)/payment-status')
+	.post(function(req, res, next) {
+		// update payment status
+		console.log('update payment st')
+		res.json({
+			'what to do?' : 'Pay'
+		});
+
+	})
+
 
 module.exports = router;
