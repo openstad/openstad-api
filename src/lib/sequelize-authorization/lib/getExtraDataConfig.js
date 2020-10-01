@@ -1,4 +1,6 @@
 const userHasRole = require('./hasRole');
+var sanitize = require('../../../util/sanitize');
+
 
 module.exports = function (dataTypeJSON,  siteConfigKey) {
   return {
@@ -25,6 +27,7 @@ module.exports = function (dataTypeJSON,  siteConfigKey) {
       }
 
       let oldValue =  this.getDataValue('extraData');
+
       try {
         if (typeof oldValue == 'string') {
           oldValue = JSON.parse(oldValue) || {};
@@ -45,10 +48,19 @@ module.exports = function (dataTypeJSON,  siteConfigKey) {
             // not defined in put data; use old val
             val[key] = old[key];
           }
+
+          if (typeof val[key] === 'string') {
+            val[key] = sanitize.safeTags(val[key]);
+          }
         });
       }
 
       fillValue(oldValue, value);
+
+      // ensure images is always an array
+      if (value.images && typeof value.images === 'string') {
+        value.images = [value.images];
+      }
 
       this.setDataValue('extraData', value);
     },

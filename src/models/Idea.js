@@ -15,7 +15,27 @@ var argVoteThreshold = config.ideas && config.ideas.argumentVoteThreshold;
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 const roles = require('../lib/sequelize-authorization/lib/roles');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
+const hasModeratorRights = (user) => {
+  return userHasRole(user, 'editor', self.userId) || userHasRole(user, 'admin', self.userId) || userHasRole(user, 'moderator', self.userId);
+}
 
+
+
+function hideEmailsForNormalUsers(args) {
+  return args.map((argument) => {
+    delete argument.user.email;
+
+    if (argument.reactions) {
+      argument.reactions = argument.reactions.map((reaction) => {
+        delete reaction.user.email;
+
+        return reaction;
+      })
+    }
+
+    return argument;
+  });
+}
 
 module.exports = function (db, sequelize, DataTypes) {
 
@@ -35,7 +55,11 @@ module.exports = function (db, sequelize, DataTypes) {
         createableBy: 'editor',
         updateableBy: 'editor',
       },
-      allowNull: true
+      allowNull: true,
+      set: function (meetingId) {
+        meetingId = meetingId ? meetingId : null
+        this.setDataValue('meetingId', meetingId);
+      }
     },
 
     userId: {
@@ -251,7 +275,11 @@ module.exports = function (db, sequelize, DataTypes) {
       auth:  {
         updateableBy: 'moderator',
       },
-      allowNull: true
+      allowNull: true,
+      set: function (budget) {
+        budget = budget ? budget : null
+        this.setDataValue('budget', budget);
+      }
     },
 
     extraData: getExtraDataConfig(DataTypes.JSON,  'ideas'),
@@ -259,6 +287,10 @@ module.exports = function (db, sequelize, DataTypes) {
     location: {
       type: DataTypes.GEOMETRY('POINT'),
       allowNull: !(config.ideas && config.ideas.location && config.ideas.location.isMandatory),
+      set: function (location) {
+        location = location ? location : null
+        this.setDataValue('location', location);
+      }
     },
 
     position: {
@@ -284,7 +316,8 @@ module.exports = function (db, sequelize, DataTypes) {
       },
       allowNull: true,
       set: function (text) {
-        this.setDataValue('modBreak', sanitize.content(text));
+        text = text ? sanitize.content(text.trim()) : null;
+        this.setDataValue('modBreak', text);
       }
     },
 
@@ -574,20 +607,25 @@ module.exports = function (db, sequelize, DataTypes) {
       // nieuwe scopes voor de api
       // -------------------------
 
-      onlyVisible: function (userRole) {
-        return {
-          where: sequelize.or(
-            {
-              viewableByRole: 'all'
-            },
-            {
-              viewableByRole: null
-            },
-            {
-              viewableByRole: roles[userRole] || ''
-            },
-          )
-        };
+      onlyVisible: function (userId, userRole) {
+        if (userId) {
+          return {
+            where: sequelize.or(
+              { userId },
+              { viewableByRole: 'all' },
+              { viewableByRole: null },
+              { viewableByRole: roles[userRole] || '' },
+            )
+          };
+        } else {
+          return {
+            where: sequelize.or(
+              {viewableByRole: 'all' },
+              { viewableByRole: null },
+              { viewableByRole: roles[userRole] || '' },
+            )
+          };
+        }
       },
 
       // defaults
@@ -618,8 +656,10 @@ module.exports = function (db, sequelize, DataTypes) {
         )
       },
 
-      filter: function (filters) {
-        let conditions = {};
+      filter: function (filtersInclude, filtersExclude) {
+        let conditions = {
+          [Sequelize.Op.and]:[]
+        };
 
         const filterKeys = [
           {
@@ -642,23 +682,63 @@ module.exports = function (db, sequelize, DataTypes) {
           },
         ];
 
-
         filterKeys.forEach((filter, i) => {
-          const filterValue = filters[filter.key]
-          if (filters[filter.key]) {
-            if (filter.extraData) {
-              conditions[Sequelize.Op.and] = sequelize.literal(`extraData->"$.${filter.key}"='${filterValue}'`)
-            } else {
-              conditions[filter.key] = filterValue;
+          //first add include filters
+          if (filtersInclude) {
+            let filterValue = filtersInclude[filter.key];
+
+            if (filtersInclude[filter.key]) {
+              if (filter.extraData) {
+                filterValue = Array.isArray(filterValue) ? filterValue : [filterValue];
+
+                filterValue.forEach((value, key)=>{
+                  conditions[Sequelize.Op.and].push({
+                    [Sequelize.Op.and] : sequelize.literal(`extraData->"$.${filter.key}"='${value}'`)
+                  });
+                });
+
+              } else {
+                conditions[Sequelize.Op.and].push({
+                  [filter.key] : filterValue
+                });
+              }
+            }
+          }
+
+          //add exclude filters
+          if (filtersExclude) {
+            let excludeFilterValue = filtersExclude[filter.key];
+
+            if (excludeFilterValue) {
+              if (filter.extraData) {
+                excludeFilterValue = Array.isArray(excludeFilterValue) ? excludeFilterValue : [excludeFilterValue];
+
+                //filter out multiple conditions
+                excludeFilterValue.forEach((value, key)=>{
+                  conditions[Sequelize.Op.and].push({
+                    [Sequelize.Op.and] : sequelize.literal(`extraData->"$.${filter.key}"!='${value}'`)
+                  });
+
+
+                })
+
+              } else {
+                /*
+                TODO
+                conditions[Sequelize.Op.and].push({
+                  [filter.key] : filterValue
+                });
+                */
+              }
             }
           }
         });
 
         return {
-          where: conditions
+          where: sequelize.and(conditions)
+          //where: sequelize.and(conditions)
         }
       },
-
 
       // vergelijk getRunning()
       selectRunning: {
@@ -735,7 +815,7 @@ module.exports = function (db, sequelize, DataTypes) {
             attributes: ['id', 'name'],
             through: {attributes: []},
             where: {
-              name: tags
+              id: tags
             }
           }],
         }
@@ -801,7 +881,7 @@ module.exports = function (db, sequelize, DataTypes) {
       includeUser: {
         include: [{
           model: db.User,
-          attributes: ['role', 'nickName', 'firstName', 'lastName', 'email']
+          attributes: ['id','role', 'nickName', 'firstName', 'lastName', 'email', 'extraData']
         }]
       },
 
@@ -1000,7 +1080,7 @@ module.exports = function (db, sequelize, DataTypes) {
     this.hasMany(models.Image, {as: 'posterImage'});
     this.hasOne(models.Vote, {as: 'userVote', foreignKey: 'ideaId'});
     this.belongsTo(models.Site);
-    this.belongsToMany(models.Tag, {through: 'ideaTags'});
+    this.belongsToMany(models.Tag, {through: 'ideaTags', constraints: false});
   }
 
   Idea.getRunning = function (sort, extraScopes) {
@@ -1309,7 +1389,7 @@ module.exports = function (db, sequelize, DataTypes) {
     deleteableBy: ['admin','editor','owner', 'moderator'],
     canView: function(user, self) {
       if (self && self.viewableByRole && self.viewableByRole != 'all' ) {
-        return userHasRole(user, self.viewableByRole, self.userId)
+        return userHasRole(user, [ self.viewableByRole, 'owner' ], self.userId)
       } else {
         return true
       }
@@ -1337,20 +1417,35 @@ module.exports = function (db, sequelize, DataTypes) {
       delete data.site;
       delete data.config;
       // dit zou nu dus gedefinieerd moeten worden op site.config, maar wegens backward compatible voor nu nog even hier:
-	    if (data.extraData && data.extraData.phone) {
-		    delete data.extraData.phone;
-	    }
+      //
+
       // wordt dit nog gebruikt en zo ja mag het er uit
       if (!data.user) data.user = {};
-      data.user.isAdmin = userHasRole(user, 'editor');
+
+    //  data.user.isAdmin = !!userHasRole(user, 'editor');
+
       // er is ook al een createDateHumanized veld; waarom is dit er dan ook nog?
 	    data.createdAtText = moment(data.createdAt).format('LLL');
 
+      // if user is not allowed to edit idea then remove phone key, otherwise publically available
+      // needs to move to definition per key
+      if (!canMutate(user, self) && data.extraData && data.extraData.phone) {
+		    delete data.extraData.phone;
+	    }
+
+      if (data.argumentsAgainst) {
+        data.argumentsAgainst = hideEmailsForNormalUsers(data.argumentsAgainst);
+      }
+
+      if (data.argumentsFor) {
+        data.argumentsFor = hideEmailsForNormalUsers(data.argumentsFor);
+      }
+
       data.can = {};
+
       // if ( self.can('vote', user) ) data.can.vote = true;
       if ( self.can('update', user) ) data.can.edit = true;
       if ( self.can('delete', user) ) data.can.delete = true;
-      return data;
 
       return data;
     },

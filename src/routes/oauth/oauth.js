@@ -41,19 +41,12 @@ router
 
 
 		req.session.save(() => {
-      console.log('====================');
-      console.log(req.site);
-      console.log(req.site.id);
 			let which = req.session.useOauth || 'default';
-      console.log(which);
 			let siteOauthConfig = ( req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which] ) || {};;
-      console.log(siteOauthConfig);
 			let authServerUrl = siteOauthConfig['auth-server-url'] || config.authorization['auth-server-url'];
 			let authClientId = siteOauthConfig['auth-client-id'] || config.authorization['auth-client-id'];
 			let authServerLoginPath = siteOauthConfig['auth-server-login-path'] || config.authorization['auth-server-login-path'];
 			let authServerAdminLoginPath = siteOauthConfig['auth-server-admin-login-path'] || config.authorization['auth-server-admin-login-path'];
-
-
 
 			authServerLoginPath = req.query.loginPriviliged ? authServerAdminLoginPath : authServerLoginPath;
 
@@ -110,7 +103,7 @@ router
 					throw createError('Login niet gelukt');
 				},
 				error => {
-					//console.log('ERR');
+					console.log('ERR', error);
 				}
 			)
 			.then(
@@ -333,8 +326,6 @@ router
 			"updatedAt": req.user.updatedAt,
 			"deletedAt": req.user.deletedAt,
 		};
-
-	//console.log('data', data);
 
 		res.json(data);
 	})

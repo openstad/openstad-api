@@ -96,8 +96,9 @@ router.route('/')
 	})
 	.get(pagination.init)
 	.get(function(req, res, next) {
+		let { dbQuery } = req;
 
-		let where = {};
+		let where = {...dbQuery.where};
 		let ideaId = parseInt(req.query.ideaId);
 		if (ideaId) {
 			where.ideaId = ideaId;
@@ -136,10 +137,10 @@ router.route('/')
 
 		db.Vote
 			.scope(req.scope)
-			.findAndCountAll({ where, order, offset: req.pagination.offset, limit: req.pagination.limit })
+			.findAndCountAll({ where, order, ...dbQuery })
 			.then(function( result ) {
         req.results = result.rows;
-        req.pagination.count = result.count;
+        req.dbQuery.count = result.count;
         return next();
 			})
 			.catch(next);
