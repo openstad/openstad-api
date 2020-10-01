@@ -37,18 +37,19 @@ router.route('/')
 	.get(auth.can('Product', 'list'))
 	.get(pagination.init)
 	.get(function(req, res, next) {
-		let queryConditions = req.queryConditions ? req.queryConditions : {};
+		const { dbQuery } = req;
+
+		dbQuery.where = {
+      ...req.queryConditions,
+			...dbQuery.where,
+    };
 
 		db.Product
 			.scope(...req.scope)
-			.findAndCountAll({
-					where:queryConditions,
-				 offset: req.pagination.offset,
-				 limit: req.pagination.limit
-			})
+			.findAndCountAll(dbQuery)
 			.then(function( result ) {
 				req.results = result.rows;
-				req.pagination.count = result.count;
+				req.dbQuery.count = result.count;
 				return next();
 			})
 			.catch(next);

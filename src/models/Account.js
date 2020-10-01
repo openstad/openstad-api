@@ -112,7 +112,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 	Account.associate = function( models ) {
 		this.hasMany(models.Product);
-	 	this.hasMany(models.User);
+	 	this.hasMany(models.User, {constraints: false});
 		this.hasMany(models.Order);
 		this.belongsTo(models.Site);
 		this.belongsToMany(models.Tag, {through: 'accountTags'});

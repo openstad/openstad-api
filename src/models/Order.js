@@ -13,6 +13,11 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultValue : 0,
 		},
 
+		userId: {
+			type         : DataTypes.INTEGER,
+			defaultValue : 0,
+		},
+
 		extraData: getExtraDataConfig(DataTypes.JSON, 'order'),
 
 		email: {
@@ -199,10 +204,9 @@ module.exports = function( db, sequelize, DataTypes ) {
 	}
 
 	Order.associate = function( models ) {
-		this.hasMany(models.Order);
+	//	this.hasMany(models.Order);
 		this.belongsTo(models.Account);
-		//variations
-		this.belongsTo(models.Order);
+		this.belongsTo(models.User);
 	}
 
 	return Order;
