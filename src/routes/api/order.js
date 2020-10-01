@@ -149,8 +149,10 @@ router.route('/')
 			city: req.body.city,
 			suffix: req.body.suffix,
 			phoneNumber: req.body.phoneNumber,
-			paymentStatus: req.body.paymentStatus,
 			total: calculateOrderTotal(req.body.orderItems, req.orderFees),
+			extraData: {
+				orderNote: req.body.orderNote,
+			}
 		}
 
 		db.Order
@@ -193,7 +195,7 @@ router.route('/')
 						};
 
 						db.OrderItem
-						 .authorizeData(data, 'update', req.user)
+						 .authorizeData(data, 'create', req.user)
 						 .create(data)
 						 .then((result) => {
 							 resolve();
@@ -217,7 +219,7 @@ router.route('/')
 				value:    req.results.total,
 				currency: 'EUR'
 			},
-			description: 'Bestelling bij ' + req.site,
+			description: 'Bestelling bij ' + req.site.name,
 			redirectUrl: 'https://'+req.site.domain+'/thankyou',
 			webhookUrl:  'https://'+req.site.domain+'/api/site/'+req.params.siteId+'/order/'+req.params.orderId+'/payment-status'
 		})
@@ -255,7 +257,7 @@ router.route('/:orderId(\\d+)')
 					//where: { id: userId }
 			})
 			.then(found => {
-				if ( !found ) throw new Error('User not found');
+				if ( !found ) throw new Error('Order not found');
 				req.results = found;
 				next();
 			})

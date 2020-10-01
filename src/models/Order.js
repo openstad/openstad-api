@@ -141,7 +141,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 			}
 		},
 
-
     paymentStatus: {
 			type         : DataTypes.ENUM('OPEN','PAYED'),
 			defaultValue : 'OPEN',
