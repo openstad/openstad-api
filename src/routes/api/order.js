@@ -10,10 +10,34 @@ const mail = require('../../lib/mail');
 const pagination = require('../../middleware/pagination');
 const {Op} = require('sequelize');
 const { createMollieClient } = require('@mollie/api-client');
-
 const mollieClient = createMollieClient({ apiKey: 'test_uFMBVR28rQdcqwAcMwvRdSdAmMsPpU' });
-
 const router = express.Router({mergeParams: true});
+const generateToken = require('../../util/generate-token');
+
+const fetchOrderMw = function(req, res, next) {
+	const orderId = req.params.orderId;
+
+	let query;
+
+	if (isNaN(orderId)) {
+		query = {	where: { hash: orderId } }
+	} else {
+		query = { where: { id: parseInt(orderId) } }
+	}
+	db.Order
+		.scope(...req.scope)
+		.findOne({
+				where,
+				//where: { id: userId }
+		})
+		.then(found => {
+			if ( !found ) throw new Error('Order not found');
+			req.results = found;
+			req.order = found;
+			next();
+		})
+		.catch(next);
+}
 
 const calculateOrderTotal = (orderItems, orderFees) => {
 	let totals = 0.00;
@@ -164,6 +188,7 @@ router.route('/')
 			streetName: req.body.streetName,
 			houseNumber: req.body.houseNumber,
 			postcode: req.body.postcode,
+			hash: generateToken({ length: 128 }),
 			city: req.body.city,
 			suffix: req.body.suffix,
 			phoneNumber: req.body.phoneNumber,
@@ -280,22 +305,8 @@ router.route('/')
 
 // one user
 // --------
-router.route('/:orderId(\\d+)')
-	.all(function(req, res, next) {
-		const orderId = parseInt(req.params.orderId) || 1;
-		db.Order
-			.scope(...req.scope)
-			.findOne({
-					where: { id: orderId }
-					//where: { id: userId }
-			})
-			.then(found => {
-				if ( !found ) throw new Error('Order not found');
-				req.results = found;
-				next();
-			})
-			.catch(next);
-	})
+router.route('/:orderId')
+	.all(fetchOrderMw)
 
 // view idea
 // ---------
@@ -363,11 +374,13 @@ router.route('/:orderId(\\d+)')
 	})
 
 router.route('/:orderId(\\d+)/payment')
+	.all(fetchOrderMw)
 	.post(function(req, res, next) {
 
 		const siteUrl = req.site.config.cms.url + '/thankyou';
-		const done = () => {
-			return res.redirect(siteUrl)
+
+		const done = (orderHash) => {
+			return res.redirect(siteUrl '?resourceType=order&hash=' + orderHash);
 		}
 
 		const paymentId = req.body.id;
@@ -375,13 +388,16 @@ router.route('/:orderId(\\d+)/payment')
 		mollieClient.payments.get(paymentId)
 		  .then(payment => {
 		   	if (payment.isPaid()) {
+					req.order.set('paymentStatus', 'paid');
 
+					done(req.order.hash);
 				} else {
-					done();
+					done(req.order.hash);
 				}
 		  })
 		  .catch(error => {
-		    // Handle the error
+					// don't through an error for now
+		    	done(req.order.hash);
 		  });
 
 

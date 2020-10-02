@@ -118,6 +118,16 @@ module.exports = function( db, sequelize, DataTypes ) {
 			}
 		},
 
+		hash: {
+			type         : DataTypes.STRING(200),
+			allowNull    : true,
+			defaultValue : null,
+			auth: {
+				viewableBy: ['admin', 'owner'],
+			},
+		},
+
+
 		city: {
 			type         : DataTypes.STRING(64),
 			allowNull    : true,
@@ -149,7 +159,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		},
 
     paymentStatus: {
-			type         : DataTypes.ENUM('OPEN','PAYED'),
+			type         : DataTypes.ENUM('OPEN','PAID'),
 			defaultValue : 'OPEN',
 			allowNull    : false
     },
