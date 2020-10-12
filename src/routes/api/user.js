@@ -136,7 +136,8 @@ router.route('/:userId(\\d+)')
     let data = {}
 
 	  const keys = [ 'firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData'];
-	  keys.forEach((key) => {
+
+    keys.forEach((key) => {
 		  if (req.body[key]) {
 			  data[key] = req.body[key];
 		  }

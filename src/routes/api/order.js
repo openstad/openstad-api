@@ -58,7 +58,7 @@ const calculateOrderTotal = (orderItems, orderFees) => {
 			totals += amount;
 	});
 
-	return totals;
+	return totals.toFixed(2);
 }
 
 // scopes: for all get requests
@@ -262,8 +262,10 @@ router.route('/')
 	})
 	.post(function(req, res, next) {
 
-		console.log(' req.results.total',  req.results.total);
-		let paymentApiUrl = config.url + 'api/site/'+req.params.siteId+'/order/'+req.params.orderId +'/payment';
+		let paymentApiUrl = config.url + '/api/site/'+req.params.siteId+'/order/'+req.results.id +'/payment';
+
+		console.log(' req.results.paymentApiUrl',  paymentApiUrl);
+
 
 		mollieClient.payments.create({
 			amount: {
@@ -272,8 +274,8 @@ router.route('/')
 			},
 			description: 'Bestelling bij ' + req.site.name,
 			redirectUrl: paymentApiUrl,
-		//	webhookUrl:  'https://'+req.site.domain+'/api/site/'+req.params.siteId+'/order/'+req.params.orderId+'/payment-status'
-			webhookUrl:  paymentApiUrl,
+			webhookUrl:  'https://'+req.site.domain+'/api/site/'+req.params.siteId+'/order/'+req.params.orderId+'/payment-status'
+		//	webhookUrl:  paymentApiUrl,
 		})
 		.then(payment => {
 			req.results.extraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
@@ -376,19 +378,24 @@ router.route('/:orderId')
 router.route('/:orderId(\\d+)/payment')
 	.all(fetchOrderMw)
 	.post(function(req, res, next) {
-
 		const siteUrl = req.site.config.cms.url + '/thankyou';
 
 		const done = (orderHash) => {
-			return res.redirect(siteUrl '?resourceType=order&hash=' + orderHash);
+			return res.redirect(siteUrl + '?resourceType=order&hash=' + orderHash);
 		}
 
 		const paymentId = req.body.id;
 
+		if (!req.order.extraData.paymentIds.includes(paymentId)) {
+			return next(createError(401, 'Payment ID not for this order'));
+		}
+
 		mollieClient.payments.get(paymentId)
 		  .then(payment => {
 		   	if (payment.isPaid()) {
+
 					req.order.set('paymentStatus', 'paid');
+					mail.sendThankYouMail(req.results, req.user, req.site) // todo: optional met config?
 
 					done(req.order.hash);
 				} else {
@@ -399,8 +406,6 @@ router.route('/:orderId(\\d+)/payment')
 					// don't through an error for now
 		    	done(req.order.hash);
 		  });
-
-
 	})
 
 
