@@ -196,13 +196,13 @@ router
 					user
 						.update(data)
 						.then(() => {
-							req.setSessionUser(user.id, '');
+
 							req.userData.id = user.id;
 							return next();
 						})
 						.catch((e) => {
 							console.log('update e', e)
-							req.setSessionUser(user.id, '');
+
 							req.userData.id = user.id;
 							return next();
 						})
@@ -216,7 +216,7 @@ router
 					db.User
 						.create(data)
 						.then(result => {
-							req.setSessionUser(result.id, '');
+
 							req.userData.id = result.id;
 							return next();
 						})

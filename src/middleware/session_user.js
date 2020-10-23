@@ -20,14 +20,14 @@ var cookieTTL    = config.get('security.sessions.cookieTTL');
 
 module.exports = function getSessionUser( req, res, next ) {
 
-	req.setSessionUser   = setSessionUser.bind(req);
-	req.unsetSessionUser = unsetSessionUser.bind(req);
+	//req.setSessionUser   = setSessionUser.bind(req);
+	//req.unsetSessionUser = unsetSessionUser.bind(req);
 
 	if( !req.session ) {
 		return next(Error('express-session middleware not loaded?'));
 	}
 
-	let userId = req.session[uidProperty];
+	let userId = null;
 	let isFixedUser = false;
 
 	if (req.headers['x-authorization']) {
@@ -55,6 +55,13 @@ module.exports = function getSessionUser( req, res, next ) {
 				}
 			});
 		}
+	} else {
+			console.log('no user');
+			req.user = {};
+			// Pass user entity to template view.
+			res.locals.user = {};
+			next();
+
 	}
 
 	let which = req.session.useOauth || 'default';
@@ -141,6 +148,8 @@ function getUserInstance( userId, siteOauthConfig, isFixedUser ) {
 						}
 					)
 					.catch(err => {
+						console.error(err);
+						console.error('Reset user');
 						return resetSessionUser(user);
 					})
 
@@ -148,6 +157,7 @@ function getUserInstance( userId, siteOauthConfig, isFixedUser ) {
 				if (isFixedUser) {
 					return user;
 				} else {
+					console.error('Reset user');
 			    return resetSessionUser(user);
 				}
 			}
