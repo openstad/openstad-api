@@ -60,11 +60,10 @@ module.exports = function getSessionUser( req, res, next ) {
 			req.user = {};
 			// Pass user entity to template view.
 			res.locals.user = {};
-			next();
-
+			return next();
 	}
 
-	let which = req.session.useOauth || 'default';
+	let which = 'default';
 	let siteOauthConfig = ( req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which] ) || {};;
 
 	getUserInstance(userId, siteOauthConfig, isFixedUser)
