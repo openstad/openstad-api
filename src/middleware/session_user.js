@@ -11,7 +11,7 @@ module.exports = function getSessionUser( req, res, next ) {
 		return next(Error('express-session middleware not loaded?'));
 	}
 
-	if(!req.headers('x-authorization')) {
+	if(!req.headers['x-authorization']) {
 		req.user = {};
 		res.locals.user = {};
 
