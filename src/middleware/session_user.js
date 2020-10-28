@@ -1,75 +1,54 @@
-var config       = require('config');
-var pmx          = require('pmx');
-var jwt          = require('jsonwebtoken');
+const config = require('config');
+const jwt = require('jsonwebtoken');
 const createError = require('http-errors');
 const merge = require('merge');
 const fetch = require('node-fetch');
-
-var db           = require('../db');
-
-var uidProperty  = config.get('security.sessions.uidProperty');
-var cookieTTL    = config.get('security.sessions.cookieTTL');
-
-// user 1 has died
-// db.User.findOne({where: {id: 1, role: 'unknown'}}).then(function( unknownUser ) {
-//   if( !unknownUser ) {
-//   	console.error('User ID 1 must have role \'unknown\'');
-//   	process.exit();
-//   }
-// });
+const db = require('../db');
 
 module.exports = function getSessionUser( req, res, next ) {
-
-	//req.setSessionUser   = setSessionUser.bind(req);
-	//req.unsetSessionUser = unsetSessionUser.bind(req);
 
 	if( !req.session ) {
 		return next(Error('express-session middleware not loaded?'));
 	}
 
+	if(!req.headers('x-authorization')) {
+		req.user = {};
+		res.locals.user = {};
+
+		return next();
+	}
+
 	let userId = null;
 	let isFixedUser = false;
 
-	if (req.headers['x-authorization']) {
-
+	// jwt overrules other settings
+	if (req.headers['x-authorization'].match(/^bearer /i)) {
 		// jwt overrules other settings
-		if (req.headers['x-authorization'].match(/^bearer /i)) {
-			// jwt overrules other settings
-			let token = req.headers['x-authorization'].replace(/^bearer /i, '');
-			let data = jwt.verify(token, config.authorization['jwt-secret']);
+		const token = req.headers['x-authorization'].replace(/^bearer /i, '');
+		const data = jwt.verify(token, config.authorization['jwt-secret']);
 
-			if (data && data.userId) {
-				userId = data.userId
-			}
+		if (data && data.userId) {
+			userId = data.userId
 		}
-
-
-		// auth token overrules other settings
-		let tokens = config && config.authorization && config.authorization['fixed-auth-tokens'];
-
-		if (tokens) {
-			tokens.forEach((token) => {
-				if (token.token === req.headers['x-authorization']) {
-					userId = token.userId;
-					isFixedUser = true;
-				}
-			});
-		}
-	} else {
-			console.log('no user');
-			req.user = {};
-			// Pass user entity to template view.
-			res.locals.user = {};
-			return next();
 	}
 
-	let which = 'default';
-	let siteOauthConfig = ( req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which] ) || {};;
+	// auth token overrules other settings
+	const tokens = config && config.authorization && config.authorization['fixed-auth-tokens'];
+
+	if (tokens) {
+		tokens.forEach((token) => {
+			if (token.token === req.headers['x-authorization']) {
+				userId = token.userId;
+				isFixedUser = true;
+			}
+		});
+	}
+
+	const which = req.query.useOauth || 'default';
+	const siteOauthConfig = ( req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which] ) || {};;
 
 	getUserInstance(userId, siteOauthConfig, isFixedUser)
 		.then(function( user ) {
-			//console.log('fetched user id', user.id)
-
 			req.user = user;
 			// Pass user entity to template view.
 			res.locals.user = user;
@@ -80,22 +59,6 @@ module.exports = function getSessionUser( req, res, next ) {
 			next(err);
 		});
 
-}
-
-function setSessionUser( userId, originUrl ) {
-	// The original `maxAge` is 'session', but now the user wants to
-	// stay logged in.
-	this.session.cookie.maxAge = cookieTTL;
-	this.session[uidProperty] = userId;
-	if( originUrl ) {
-		this.session['ref'] = originUrl;
-	}
-}
-
-function unsetSessionUser() {
-	this.session.cookie.maxAge = null;
-	this.session[uidProperty]  = null;
-	this.session['ref']        = null;
 }
 
 function getUserInstance( userId, siteOauthConfig, isFixedUser ) {
