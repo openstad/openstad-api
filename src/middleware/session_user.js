@@ -111,7 +111,9 @@ function getUserInstance( userId, siteOauthConfig, isFixedUser ) {
 					)
 					.catch(err => {
 						console.error(err);
-						console.error('Reset user');
+						console.error('Reset user in catch');
+						console.error('user id', userId)
+						console.error(user);
 						return resetSessionUser(user);
 					})
 
@@ -119,7 +121,10 @@ function getUserInstance( userId, siteOauthConfig, isFixedUser ) {
 				if (isFixedUser) {
 					return user;
 				} else {
-					console.error('Reset user');
+					console.error('Reset user when dbuser && dbuser.externalUserId && dbuser.externalAccessToken === false');
+					console.error('user id', userId)
+					console.error(dbuser);
+					console.error(user);
 			    return resetSessionUser(user);
 				}
 			}
@@ -134,6 +139,7 @@ function getUserInstance( userId, siteOauthConfig, isFixedUser ) {
 function resetSessionUser(user) {
 
   if (!( user && user.update )) return {};
+  console.log('Set externalAccessToken to null');
 	return user.update({
 		externalAccessToken: null
 	})
