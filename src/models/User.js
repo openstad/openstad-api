@@ -205,6 +205,12 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 		houseNumber: {
 			type         : DataTypes.STRING(64),
+      auth: {
+        listableBy: ['editor','owner'],
+        viewableBy: ['editor','owner'],
+        createableBy: ['editor','owner'],
+        updateableBy: ['editor','owner'],
+      },
 			allowNull    : true,
 			set          : function( value ) {
 				this.setDataValue('houseNumber', sanitize.noTags(value));
@@ -213,6 +219,12 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 		postcode: {
 			type         : DataTypes.STRING(64),
+      auth: {
+        listableBy: ['editor','owner'],
+        viewableBy: ['editor','owner'],
+        createableBy: ['editor','owner'],
+        updateableBy: ['editor','owner'],
+      },
 			allowNull    : true,
 			set          : function( value ) {
 				this.setDataValue('postcode', sanitize.noTags(value));
@@ -221,6 +233,12 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 		city: {
 			type         : DataTypes.STRING(64),
+      auth: {
+        listableBy: ['editor','owner'],
+        viewableBy: ['editor','owner'],
+        createableBy: ['editor','owner'],
+        updateableBy: ['editor','owner'],
+      },
 			allowNull    : true,
 			set          : function( value ) {
 				this.setDataValue('city', sanitize.noTags(value));
@@ -229,13 +247,17 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 		suffix: {
 			type         : DataTypes.STRING(64),
+      auth: {
+        listableBy: ['editor','owner'],
+        viewableBy: ['editor','owner'],
+        createableBy: ['editor','owner'],
+        updateableBy: ['editor','owner'],
+      },
 			allowNull    : true,
 			set          : function( value ) {
 				this.setDataValue('suffix', sanitize.noTags(value));
 			}
 		},
-
-
 
 		fullName: {
 			type         : DataTypes.VIRTUAL,
@@ -283,9 +305,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 				}
 			},
 			set          : function( zipCode ) {
-				zipCode = zipCode != null ?
-				  String(zipCode).trim() :
-				  null;
+				zipCode = zipCode ? String(zipCode).trim() : null;
 				this.setDataValue('zipCode', zipCode);
 			},
 
