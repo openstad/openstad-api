@@ -19,7 +19,8 @@ const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraD
 
 module.exports = function (db, sequelize, DataTypes) {
 
-  var Tour = sequelize.define('idea', {
+  var Tour = sequelize.define('tour', {
+
 
     accountId: {
       type: DataTypes.INTEGER,
@@ -35,7 +36,7 @@ module.exports = function (db, sequelize, DataTypes) {
       auth:  {
         updateableBy: 'editor',
       },
-      defaultValue: 'OPEN',
+      defaultValue: 'CONCEPT',
       allowNull: false
     },
 
@@ -65,87 +66,18 @@ module.exports = function (db, sequelize, DataTypes) {
 
     revisions: getExtraDataConfig(DataTypes.JSON,  'tours'),
 
-
   });
 
   Tour.scopes = function scopes() {
     // Helper function used in `withVoteCount` scope.
 
-    function argCount(fieldName) {
-      return [sequelize.literal(`
-				(SELECT
-					COUNT(*)
-				FROM
-					arguments a
-				WHERE
-					a.deletedAt IS NULL AND
-					a.ideaId = idea.id)
-			`), fieldName];
-    }
 
     return {
 
       // nieuwe scopes voor de api
       // -------------------------
 
-      onlyVisible: function (userRole) {
-        return {
-          where: sequelize.or(
-            {
-              viewableByRole: 'all'
-            },
-            {
-              viewableByRole: null
-            },
-            {
-              viewableByRole: roles[userRole] || ''
-            },
-          )
-        };
-      },
-
       api: {},
-
-      filter: function (filters) {
-        let conditions = {};
-
-        const filterKeys = [
-          {
-            'key': 'id'
-          },
-          {
-            'key': 'title'
-          },
-          {
-            'key': 'theme',
-            'extraData': true
-          },
-          {
-            'key': 'area',
-            'extraData': true
-          },
-          {
-            'key': 'vimeoId',
-            'extraData': true
-          },
-        ];
-
-
-        filterKeys.forEach((filter, i) => {
-          const filterValue = filters[filter.key]
-          if (filters[filter.key]) {
-            if (filter.extraData) {
-              conditions[Sequelize.Op.and] = sequelize.literal(`extraData->"$.${filter.key}"='${filterValue}'`)
-            } else {
-              conditions[filter.key] = filterValue;
-            }
-          }
-        });
-
-        return {
-          where: conditions
-        }
-      },
 
       forSiteId: function( siteId ) {
 				return {
@@ -155,46 +87,6 @@ module.exports = function (db, sequelize, DataTypes) {
 				};
 			},
 
-      includeReviews: function (userId) {
-        return {
-          include: [{
-            model: db.Argument.scope(
-              'defaultScope',
-              {method: ['withVoteCount', 'argumentsAgainst']},
-              {method: ['withUserVote', 'argumentsAgainst', userId]},
-              'withReactions'
-            ),
-            as: 'argumentsAgainst',
-            required: false,
-            where: {
-              sentiment: 'against',
-              parentId: null
-            }
-          }, {
-            model: db.Argument.scope(
-              'defaultScope',
-              {method: ['withVoteCount', 'argumentsFor']},
-              {method: ['withUserVote', 'argumentsFor', userId]},
-              'withReactions'
-            ),
-            as: 'argumentsFor',
-            required: false,
-            where: {
-              sentiment: 'for',
-              parentId: null
-            }
-          }],
-          // HACK: Inelegant?
-          order: [
-            sequelize.literal(`GREATEST(0, \`argumentsAgainst.yes\` - ${argVoteThreshold}) DESC`),
-            sequelize.literal(`GREATEST(0, \`argumentsFor.yes\` - ${argVoteThreshold}) DESC`),
-            sequelize.literal('argumentsAgainst.parentId'),
-            sequelize.literal('argumentsFor.parentId'),
-            sequelize.literal('argumentsAgainst.createdAt'),
-            sequelize.literal('argumentsFor.createdAt')
-          ]
-        };
-      },
 
       includeTags: {
         include: [{
@@ -216,16 +108,7 @@ module.exports = function (db, sequelize, DataTypes) {
           }],
         }
       },
-      includeArgsCount: {
-        include: [{
-          model: db.Site,
-        }],
-        attributes: {
-          include: [
-            argCount('reviewCount')
-          ]
-        }
-      },
+
 
       includeUser: {
         include: [{
@@ -239,53 +122,13 @@ module.exports = function (db, sequelize, DataTypes) {
           attributes: ['role', 'nickName', 'firstName', 'lastName', 'email']
         }]
       },
-      withArguments: function (userId) {
-        return {
-          include: [{
-            model: db.Argument.scope(
-              'defaultScope',
-              {method: ['withVoteCount', 'argumentsAgainst']},
-              {method: ['withUserVote', 'argumentsAgainst', userId]},
-              'withReactions'
-            ),
-            as: 'argumentsAgainst',
-            required: false,
-            where: {
-              sentiment: 'against',
-              parentId: null,
-            }
-          }, {
-            model: db.Argument.scope(
-              'defaultScope',
-              {method: ['withVoteCount', 'argumentsFor']},
-              {method: ['withUserVote', 'argumentsFor', userId]},
-              'withReactions'
-            ),
-            as: 'argumentsFor',
-            required: false,
-            where: {
-              sentiment: 'for',
-              parentId: null,
-            }
-          }],
-          // HACK: Inelegant?
-          order: [
-            sequelize.literal(`GREATEST(0, \`argumentsAgainst.yes\` - ${argVoteThreshold}) DESC`),
-            sequelize.literal(`GREATEST(0, \`argumentsFor.yes\` - ${argVoteThreshold}) DESC`),
-            'argumentsAgainst.parentId',
-            'argumentsFor.parentId',
-            'argumentsAgainst.createdAt',
-            'argumentsFor.createdAt'
-          ]
-        };
-      }
     }
   }
 
   Tour.associate = function (models) {
     this.belongsTo(models.Account);
-    this.hasMany(models.TourStep);
-    this.hasMany(models.Argument, {as: 'review'});
+  //  this.hasMany(models.TourStep);
+  //  this.hasMany(models.Argument, {as: 'review'});
     this.belongsToMany(models.Tag, {through: 'tourTags'});
   }
 

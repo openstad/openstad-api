@@ -35,6 +35,8 @@ router.use( '/site/:siteId(\\d+)(/idea/:ideaId(\\d+))?/poll', require('./poll') 
 // tags
 router.use( '/site/:siteId(\\d+)/tag', require('./tag') );
 
+router.use( '/site/:siteId(\\d+)/tour', require('./tour') );
+
 // users
 router.use( '/site/:siteId(\\d+)/user', require('./user') );
 
