@@ -47,6 +47,8 @@ module.exports = function getSessionUser( req, res, next ) {
 	const which = req.query.useOauth || 'default';
 	const siteOauthConfig = ( req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which] ) || {};;
 
+	console.log('site oauth config: ');
+	console.log(siteOauthConfig);
 	getUserInstance(userId, siteOauthConfig, isFixedUser)
 		.then(function( user ) {
 			req.user = user;
@@ -82,6 +84,9 @@ function getUserInstance( userId, siteOauthConfig, isFixedUser ) {
 				let authServerGetUserPath = siteOauthConfig['auth-server-get-user-path'] || config.authorization['auth-server-get-user-path'];
 				let authClientId = siteOauthConfig['auth-client-id'] || config.authorization['auth-client-id'];
 				let url = authServerUrl + authServerGetUserPath;
+
+				console.log(url, authClientId, siteOauthConfig, config.authorization);
+
 				url = url.replace(/\[\[clientId\]\]/, authClientId);
 
 				return fetch(
