@@ -49,7 +49,7 @@ module.exports = function getSessionUser( req, res, next ) {
 
 	console.log('site oauth config: ');
 	console.log(siteOauthConfig);
-	console.log(req.params, req.query, req.headers)
+	console.log(req.params, req.query, req.headers, req.path);
 	getUserInstance(userId, siteOauthConfig, isFixedUser)
 		.then(function( user ) {
 			req.user = user;
