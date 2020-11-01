@@ -45,10 +45,11 @@ module.exports = function getSessionUser( req, res, next ) {
 	}
 
 	const which = req.query.useOauth || 'default';
-	const siteOauthConfig = ( req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which] ) || {};;
+	const siteOauthConfig = ( req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which] ) || {};
 
 	console.log('site oauth config: ');
 	console.log(siteOauthConfig);
+	console.log(req.params, req.query, req.headers)
 	getUserInstance(userId, siteOauthConfig, isFixedUser)
 		.then(function( user ) {
 			req.user = user;
