@@ -99,10 +99,7 @@ router.route('/')
 					next(err)
 				});
 		} else if (req.user) {
-			if (req.user && req.user.accountId) {
-				req.body.accountId = req.user.accountId;
-			}
-			next();
+
 		}
 	})
 	.post(function(req, res, next) {
@@ -165,6 +162,7 @@ router.route('/')
 router.route('/:tourId(\\d+)')
 	.all(function(req, res, next) {
 		const tourId = parseInt(req.params.tourId) || 1;
+		console.log('tourId', tourId)
 		db.Tour
 			.scope(...req.scope)
 			.findOne({
@@ -190,22 +188,31 @@ router.route('/:tourId(\\d+)')
 // -----------
 	.put(auth.useReqUser)
 	.put(function(req, res, next) {
+		const tour = req.results;
 
-    const tour = req.results;
-    if (!( tour && tour.can && tour.can('update') )) return next( new Error('You cannot update this tour') );
+	  if (!( tour && tour.can && tour.can('update') )) return next( new Error('You cannot update this tour') );
+		console.log('333', req.user.role)
 
     let data = {
       ...req.body,
 		}
 
+		console.log('data', data)
+
+
     tour
       .authorizeData(data, 'update')
       .update(data)
       .then(result => {
+				console.log('result', result)
+
         req.results = result;
         next()
       })
       .catch(next);
+	})
+	.put(function(req, res, next) {
+		res.json(req.results);
 	})
 
 // delete idea

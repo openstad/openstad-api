@@ -64,7 +64,29 @@ module.exports = function (db, sequelize, DataTypes) {
 
     live: getExtraDataConfig(DataTypes.JSON,  'tours'),
 
-    revisions: getExtraDataConfig(DataTypes.JSON,  'tours'),
+    revisions: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: '[]',
+      get: function() {
+        let value = this.getDataValue('revisions');
+        try {
+          if (typeof value == 'string') {
+            value = JSON.parse(value);
+          }
+        } catch (err) {}
+        
+        return value;
+      },
+      set: function(value) {
+        try {
+          if (typeof value == 'string') {
+            value = JSON.parse(value);
+          }
+        } catch (err) {}
+        this.setDataValue('revisions', value);
+      }
+    },
 
   });
 

@@ -11,7 +11,6 @@ module.exports = function( app ) {
 
 	// We only get here when the request has not yet been handled by a route.
 	app.use(function( req, res, next ) {
-		console.log('4040404');
 		next(createError(404, 'Pagina niet gevonden'));
 	});
 
