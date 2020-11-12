@@ -2,14 +2,18 @@
 
 ## UNRELEASED
 * Update NPM modules for security
+* Fix site reset config
+* Remove unused global vimeo fields
+* Added possibility to query GET overview routes with NOT (!=) and substring (like%%) operator 
 
-## v0.8.0-PRERLEASE (2020-17-07)
+## v0.8.0 (2020-11-02)
 * Add id & extraData to properties included in idea GET call with param includeUser=1
 * On update user of for all sites add check if site exists, otherwise update breaks
 * If extraData.images is set then the new value ovreplaces the old value instead of being merged (it waas impossible to delete images)
 * Add min/max number of to budgeting voting
 * Make sure postcode validation doesn't fail on an empty string
 * Add Delete route for vote
+* Feature: Add option count-per-theme to voting in participatory budgeting
 
 ## 0.7.6 (2020-10-07)
 * Votes were viewable when they should not be
