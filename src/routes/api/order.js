@@ -10,7 +10,6 @@ const mail = require('../../lib/mail');
 const pagination = require('../../middleware/pagination');
 const {Op} = require('sequelize');
 const { createMollieClient } = require('@mollie/api-client');
-const mollieClient = createMollieClient({ apiKey: 'test_uFMBVR28rQdcqwAcMwvRdSdAmMsPpU' });
 const router = express.Router({mergeParams: true});
 const generateToken = require('../../util/generate-token');
 
@@ -261,11 +260,9 @@ router.route('/')
 			 .catch(next)
 	})
 	.post(function(req, res, next) {
-
-		let paymentApiUrl = config.url + '/api/site/'+req.params.siteId+'/order/'+req.results.id +'/payment';
-
-		console.log(' req.results.paymentApiUrl',  paymentApiUrl);
-
+		const mollieApiKey = req.site.config && req.site.config.payment && req.site.config.payment.mollieApiKey ? req.site.config.payment.mollieApiKey : '';
+		const paymentApiUrl = config.url + '/api/site/'+req.params.siteId+'/order/'+req.results.id +'/payment';
+		const mollieClient = createMollieClient({ apiKey: mollieApiKey });
 
 		mollieClient.payments.create({
 			amount: {
