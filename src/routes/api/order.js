@@ -21,14 +21,11 @@ const fetchOrderMw = function(req, res, next) {
 	if (isNaN(orderId)) {
 		query = {	where: { hash: orderId } }
 	} else {
-		query = { where: { id: parseInt(orderId) } }
+		query = { where: { id: parseInt(orderId, 10) } }
 	}
 	db.Order
-		.scope(...req.scope)
-		.findOne({
-				where,
-				//where: { id: userId }
-		})
+		//.scope(...req.scope)
+		.findOne(query)
 		.then(found => {
 			if ( !found ) throw new Error('Order not found');
 			req.results = found;
