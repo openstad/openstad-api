@@ -14,7 +14,10 @@ const router = express.Router({mergeParams: true});
 const generateToken = require('../../util/generate-token');
 
 const fetchOrderMw = function(req, res, next) {
+
 	const orderId = req.params.orderId;
+
+	console.log('fetchOrderMw orderId', orderId);
 
 	let query;
 
@@ -374,7 +377,7 @@ router.route('/:orderId')
 
 router.route('/:orderId(\\d+)/payment')
 	.all(fetchOrderMw)
-	.post(function(req, res, next) {
+	.all(function(req, res, next) {
 		const siteUrl = req.site.config.cms.url + '/thankyou';
 
 		const done = (orderHash) => {
@@ -389,6 +392,12 @@ router.route('/:orderId(\\d+)/payment')
 		if (!req.order.extraData.paymentIds.includes(paymentId)) {
 			return next(createError(401, 'Payment ID not for this order'));
 		}
+
+		const mollieApiKey = req.site.config && req.site.config.payment && req.site.config.payment.mollieApiKey ? req.site.config.payment.mollieApiKey : '';
+
+
+		const mollieClient = createMollieClient({ apiKey: mollieApiKey });
+
 
 
 		mollieClient.payments.get(paymentId)
