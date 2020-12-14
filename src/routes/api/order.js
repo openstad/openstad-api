@@ -30,7 +30,7 @@ const fetchOrderMw = function(req, res, next) {
   req.scope = req.scope ? req.scope : [];
 
 	db.Order
-	//	.scope(...req.scope)
+		.scope(...req.scope)
 		.findOne(query)
 		.then(found => {
 			if ( !found ) throw new Error('Order not found');
@@ -73,7 +73,7 @@ router
 
 router
 	.all('*', function(req, res, next) {
-		req.scope = ['includeLog', 'includeItems', 'includeTransaction'];
+	//	req.scope = ['includeLog', 'includeItems', 'includeTransaction'];
 		req.scope.push({method: ['forSiteId', req.params.siteId]});
 		next();
 	});
@@ -278,10 +278,14 @@ router.route('/')
 		//	webhookUrl:  paymentApiUrl,
 		})
 		.then(payment => {
+			req.results.extraData  = req.results.extraData ? req.results.extraData : [];
 			req.results.extraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
 			req.results.extraData.paymentIds.push(payment.id);
 			req.results.extraData.paymentUrl = payment.getCheckoutUrl();
-			next();
+			req.results
+				.save()
+				.then(() => { next() })
+				.catch(next)
 		})
 		.catch(err => {
 			// Handle the errorz

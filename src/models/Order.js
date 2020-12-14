@@ -19,7 +19,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultValue : 0,
 		},
 
-		extraData: getExtraDataConfig(DataTypes.JSON, 'order'),
+		extraData: getExtraDataConfig(DataTypes.JSON, 'orders'),
 
 		email: {
 			type         : DataTypes.STRING(255),
