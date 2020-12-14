@@ -6,7 +6,7 @@ const sanitize       = require('../util/sanitize');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
 const emailBlackList = require('../../config/mail_blacklist')
 
-
+//'includeLog', 'includeItems', 'includeTransaction'
 module.exports = function( db, sequelize, DataTypes ) {
 	var Order = sequelize.define('order', {
 		accountId: {
@@ -203,13 +203,13 @@ module.exports = function( db, sequelize, DataTypes ) {
 					through: {attributes: []},
 				}]
 			},
-			includeTransaction: {
+		/*	includeTransaction: {
 				include: [{
 					model: db.Transaction,
 					attributes: ['status', 'createdAt', 'provider'],
 					through: {attributes: []},
 				}]
-			},
+			},*/
 		}
 	}
 

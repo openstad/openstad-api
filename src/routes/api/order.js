@@ -23,8 +23,11 @@ const fetchOrderMw = function(req, res, next) {
 	} else {
 		query = { where: { id: parseInt(orderId, 10) } }
 	}
+
+  req.scope = req.scope ? req.scope : [];
+
 	db.Order
-		//.scope(...req.scope)
+	//	.scope(...req.scope)
 		.findOne(query)
 		.then(found => {
 			if ( !found ) throw new Error('Order not found');
@@ -380,9 +383,13 @@ router.route('/:orderId(\\d+)/payment')
 
 		const paymentId = req.body.id;
 
+		console.log('Payment processing paymentId', paymentId, ' orderId: ', req.params.orderId);
+
+
 		if (!req.order.extraData.paymentIds.includes(paymentId)) {
 			return next(createError(401, 'Payment ID not for this order'));
 		}
+
 
 		mollieClient.payments.get(paymentId)
 		  .then(payment => {
