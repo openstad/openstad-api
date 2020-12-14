@@ -98,6 +98,15 @@
 			</tr>
 			<tr>
 				<td></td>
+				<td>
+
+
+
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
 				<td width="560">
 					<h1>{{SITENAME}}</h1>
 					<h2 class="blue">Welkom! Bedankt voor je inzending!</h2>
@@ -110,16 +119,49 @@
 
           <h4>Beste  {{user.fullName | default('indiener')}},</h4>
 
-					Bedankt voor het plaatsen van jouw inzending op Vuilnisvrij West!<br/>
-					Je inzending is goed ontvangen.<br/>
+					Bedankt voor het bestelling bij {{SITENAME}}<br/>
+					Deze is goed ontvangen en zullen we zo spoedig mogelijk verzenden.<br/>
 					<br/>
-					<a href="{{inzendingURL}}" target="_blank" style="color: #EC0000">Bekijk hier je inzending</a>
+          {% if order.orderItems  %}
+            <table>
+            {% for orderItem in order.orderItems %}
+            <tr class="list-group-item clearfix card-item">
+                <td class="col-xs-2">
+                  <img src="{{ item.product.extraData.images[0]}}" />
+                </td>
+                <td class="col-xs-2">
+                    <strong>{{ item.name }}</strong><br/>
+                </td>
+                <td class="col-xs-4 text-right product-change">
+                    {% if item and item.qty > 0 %}
+                    <a href="/cart/{{item.product.id}}" data-quantity="{{item.qty + 1}}" data-product-id="{{item.product.id}}" class="cart-add btn-group-last pull-right btn btn-primary">
+                      +
+                    </a>
+                    <span class="qty pull-right btn btn-primary btn-qty">
+                      {{item.qty}}
+                    </span>
+                    <a href="/cart/{{item.product.id}}" data-quantity="{{item.qty - 1}}" data-product-id="{{item.product.id}}" class="cart-add btn-group-first pull-right btn btn-primary">
+                      -
+                    </a>
+                    {% else %}
+                    <a href="/cart/{{item.product.id}}" data-product-id="{{idea.id}}" data-quantity="1"  class="cart-add pull-right btn btn-primary cart-btn-add-circle">
+                      +
+                    </a>
+                    {% endif %}
+                </td>
+                <td class="col-xs-2 text-right">
+                    {{ item.price | currency}}
+                </td>
+            </tr>
+            {% endfor %}
+            </table>
+          {% endif %}
+
 
 					<p style="margin-bottom: 3em; margin-top: 2em;">
 						Hartelijke groet,<br>
 						Team {{SITENAME}}
 					</p>
-
         </td>
 				<td></td>
       </tr>

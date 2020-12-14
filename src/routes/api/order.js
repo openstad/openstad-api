@@ -73,6 +73,7 @@ router
 
 router
 	.all('*', function(req, res, next) {
+		req.scope = [];
 	//	req.scope = ['includeLog', 'includeItems', 'includeTransaction'];
 		req.scope.push({method: ['forSiteId', req.params.siteId]});
 		next();

@@ -17,6 +17,8 @@ var moment       = require('moment-timezone');
 var env = nunjucks.configure('email');
 
 var dateFilter   = require('../lib/nunjucks-date-filter');
+var currencyFilter   = require('../lib/nunjucks-currency-filter');
+
 dateFilter.setDefaultFormat('DD-MM-YYYY HH:mm');
 env.addFilter('date', dateFilter);
 //env.addFilter('duration', duration);
