@@ -181,6 +181,8 @@ router.route('/')
 	 // derive accountId from the ordered products, which means for now only one order per account per time
 	 const accountId = firstOrderItem.product.accountId;
 
+	 console.log('reqbody', req.body)
+
 		const data = {
 			accountId: accountId,
 			userId: req.user.id,
@@ -198,6 +200,7 @@ router.route('/')
 			total: calculateOrderTotal(req.body.orderItems, req.orderFees),
 			extraData: {
 				orderNote: req.body.orderNote,
+				test: 'add something'
 			}
 		}
 
@@ -389,24 +392,28 @@ router.route('/:orderId(\\d+)/payment')
 			return res.redirect(siteUrl + '?resourceType=order&hash=' + orderHash);
 		}
 
-		const paymentId = req.body.id;
-
-		console.log('Payment processing paymentId', paymentId, ' orderId: ', req.params.orderId);
 
 
-		if (!req.order.extraData.paymentIds.includes(paymentId)) {
-			return next(createError(401, 'Payment ID not for this order'));
+		if (!req.order.extraData && !req.order.extraData.paymentIds  && !req.order.extraData.paymentIds[0]) {
+			return next(createError(500, 'No Payment IDs found for this order'));
 		}
+
+	/*	if (!req.order.extraData.paymentIds.includes(paymentId)) {
+			return next(createError(401, 'Payment ID not for this order'));
+		}*/
 
 		const mollieApiKey = req.site.config && req.site.config.payment && req.site.config.payment.mollieApiKey ? req.site.config.payment.mollieApiKey : '';
 
 
 		const mollieClient = createMollieClient({ apiKey: mollieApiKey });
 
+		const paymentId = req.order.extraData.paymentIds[0];
 
+		console.log('Payment processing paymentId', paymentId, ' orderId: ', req.params.orderId);
 
 		mollieClient.payments.get(paymentId)
 		  .then(payment => {
+				console.log('payment', payment)
 		   	if (payment.isPaid()) {
 
 					req.order.set('paymentStatus', 'paid');
