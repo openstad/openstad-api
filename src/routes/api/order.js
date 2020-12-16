@@ -388,8 +388,8 @@ router.route('/:orderId(\\d+)/payment')
 	.all(function(req, res, next) {
 		const siteUrl = req.site.config.cms.url + '/thankyou';
 
-		const done = (orderHash) => {
-			return res.redirect(siteUrl + '?resourceType=order&hash=' + orderHash);
+		const done = (orderId, orderHash) => {
+			return res.redirect(siteUrl + '?resourceId='+ orderId +'&resourceType=order&hash=' + orderHash);
 		}
 
 
@@ -414,19 +414,23 @@ router.route('/:orderId(\\d+)/payment')
 		mollieClient.payments.get(paymentId)
 		  .then(payment => {
 
-		   	if (payment.isPaid()) {
-
+		   	if (payment.isPaid() && req.order.paymentStatus !== 'paid') {
 					req.order.set('paymentStatus', 'paid');
-					mail.sendThankYouMail(req.results, req.user, req.site) // todo: optional met config?
 
-					done(req.order.hash);
+					req.order
+						.save()
+						.then(() => {
+							mail.sendThankYouMail(req.order, req.user, req.site) // todo: optional met config?
+							done(req.order.id, req.order.hash);
+						})
+						.catch(next)
 				} else {
-					done(req.order.hash);
+					done(req.order.id, req.order.hash);
 				}
 		  })
 		  .catch(error => {
 					// don't through an error for now
-		    	done(req.order.hash);
+		    	done(req.order.id, req.order.hash);
 		  });
 	})
 
