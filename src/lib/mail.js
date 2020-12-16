@@ -34,6 +34,7 @@ env.addGlobal('GLOBALS', config.get('express.rendering.globals'));
 env.addGlobal('config', config)
 
 let transporter;
+
 switch ( method ) {
   case 'smtp':
     transporter = nodemailer.createTransport(transport.smtp);
@@ -63,6 +64,10 @@ function sendMail( options ) {
 		    cid      : entry
       }
     });
+  }
+
+  if (options.smtp) {
+    transporter = nodemailer.createTransport(options.smtp);
   }
 
   transporter.sendMail(
@@ -95,7 +100,7 @@ function sendNotificationMail( data ) {
 		subject     : data.subject,
 		html        : html,
 		text        : `Er hebben recent activiteiten plaatsgevonden op ${data.SITENAME} die mogelijk voor jou interessant zijn!`,
-		attachments : getDefaultAttachments(data.logo)
+		attachments : getDefaultAttachments(data.logo),
 	});
 };
 
@@ -120,13 +125,16 @@ function sendThankYouMail (resource, user, site) {
 	let inzendingPath = ( resourceTypeConfig.feedbackEmail && resourceTypeConfig.feedbackEmail.inzendingPath && resourceTypeConfig.feedbackEmail.inzendingPath.replace(/\[\[ideaId\]\]/, resource.id) ) || "/" ;
 	inzendingPath = inzendingPath.replace(/\[\[articleId\]\]/, resource.id);
 	let inzendingURL = url + inzendingPath;
-  const logo =  getLogoForSite(site)
+
+  const logo =  getLogoForSite(site);
+  const smtp = site && site.config.smpt ?  site.config.smpt : false;
 
   let data    = {
     date: new Date(),
     user: user,
     idea: resource,
     article: resource,
+    activeResource: resource,
     HOSTNAME: hostname,
     SITENAME: sitename,
 		inzendingURL,
@@ -165,14 +173,15 @@ function sendThankYouMail (resource, user, site) {
   let attachments = ( resourceTypeConfig.feedbackEmail && resourceTypeConfig.feedbackEmail.attachments ) || getDefaultAttachments(logo);
 
   try {
-  sendMail({
-    to: user.email,
-    from: fromAddress,
-    subject: (resourceTypeConfig.feedbackEmail && resourceTypeConfig.feedbackEmail.subject) || 'Bedankt voor je inzending',
-    html: html,
-    text: text,
-    attachments,
-  });
+    sendMail({
+      to: user.email,
+      from: fromAddress,
+      subject: (resourceTypeConfig.feedbackEmail && resourceTypeConfig.feedbackEmail.subject) || 'Bedankt voor je inzending',
+      html: html,
+      text: text,
+      attachments,
+      smtp
+    });
   } catch(err) {
     console.log(err);
   }
@@ -224,6 +233,7 @@ function sendNewsletterSignupConfirmationMail( newslettersignup, user, site ) {
 	let confirmationUrl = site && site.config && site.config.newslettersignup && site.config.newslettersignup.confirmationEmail && site.config.newslettersignup.confirmationEmail.url;
 	confirmationUrl = confirmationUrl.replace(/\[\[token\]\]/, newslettersignup.confirmToken)
   const logo = getLogoForSite(site);
+  const smtp = site && site.config.smpt ?  site.config.smpt : false;
 
   let data = {
     date: new Date(),
@@ -259,6 +269,7 @@ function sendNewsletterSignupConfirmationMail( newslettersignup, user, site ) {
     html: html,
     text: text,
     attachments,
+    smtp
   });
 
 }

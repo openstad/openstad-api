@@ -413,7 +413,7 @@ router.route('/:orderId(\\d+)/payment')
 
 		mollieClient.payments.get(paymentId)
 		  .then(payment => {
-				console.log('payment', payment)
+
 		   	if (payment.isPaid()) {
 
 					req.order.set('paymentStatus', 'paid');
