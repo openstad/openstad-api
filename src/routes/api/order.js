@@ -415,7 +415,7 @@ router.route('/:orderId(\\d+)/payment')
 		  .then(payment => {
 
 		   	if (payment.isPaid() && req.order.paymentStatus !== 'paid') {
-					req.order.set('paymentStatus', 'paid');
+					req.order.set('paymentStatus', 'PAID');
 
 					req.order
 						.save()
