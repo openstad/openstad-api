@@ -125,11 +125,15 @@ router.route('/')
 	.post(function(req, res, next) {
 		const orderSiteConfig = req.site.config && req.site.config.order && req.site.config.order ? req.site.config.order : {};
 
-		req.orderFees = orderSiteConfig && orderSiteConfig.orderFees ? orderSiteConfig.orderFees : [{
-			price: '2.95',
-			name: 'Verzendkosten',
-			quantity: 1
-		}];
+		/**
+		 * para examplar
+		 * {
+ 			price: '2.95',
+ 			name: 'Verzendkosten',
+ 			quantity: 1
+ 		}
+		 */
+		req.orderFees = orderSiteConfig && orderSiteConfig.orderFees ? orderSiteConfig.orderFees : [];
 
 		next();
 	})
@@ -388,11 +392,10 @@ router.route('/:orderId(\\d+)/payment')
 	.all(function(req, res, next) {
 		const siteUrl = req.site.config.cms.url + '/thankyou';
 
-		const done = (orderId, orderHash) => {
-			return res.redirect(siteUrl + '?resourceId='+ orderId +'&resourceType=order&hash=' + orderHash);
+		const done = (orderId, orderHash, clearCart) => {
+			const clearCartQuery = clearCart ? '&clearCart=1' : '';
+			return res.redirect(siteUrl + '?resourceId='+ orderId +'&resourceType=order&hash=' + orderHash + clearCartQuery);
 		}
-
-
 
 		if (!req.order.extraData && !req.order.extraData.paymentIds  && !req.order.extraData.paymentIds[0]) {
 			return next(createError(500, 'No Payment IDs found for this order'));
@@ -411,19 +414,28 @@ router.route('/:orderId(\\d+)/payment')
 
 		console.log('Payment processing paymentId', paymentId, ' orderId: ', req.params.orderId);
 
+		/**
+		 * In future might be useful to seperate transactions and orders
+		 */
 		mollieClient.payments.get(paymentId)
 		  .then(payment => {
 
-		   	if (payment.isPaid() && req.order.paymentStatus !== 'paid') {
+		   	if (payment.isPaid() && req.order.paymentStatus !== 'PAID') {
 					req.order.set('paymentStatus', 'PAID');
 
 					req.order
 						.save()
 						.then(() => {
-							mail.sendThankYouMail(req.order, req.user, req.site) // todo: optional met config?
-							done(req.order.id, req.order.hash);
+							mail.sendThankYouMail(req.order, req.user, req.site);
+							done(req.order.id, req.order.hash, true);
 						})
 						.catch(next)
+				} else if (payment.isCancceled()) {
+					req.order.set('paymentStatus', 'CANCELLED');
+
+				} else if (payment.isExpired()) {
+					req.order.set('paymentStatus', 'EXPIRED');
+
 				} else {
 					done(req.order.id, req.order.hash);
 				}

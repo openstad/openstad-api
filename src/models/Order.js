@@ -159,7 +159,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		},
 
     paymentStatus: {
-			type         : DataTypes.ENUM('OPEN','PAID'),
+			type         : DataTypes.ENUM('OPEN','PAID', 'CANCELLED', 'EXPIRED'),
 			defaultValue : 'OPEN',
 			allowNull    : false
     },
@@ -214,9 +214,9 @@ module.exports = function( db, sequelize, DataTypes ) {
 	}
 
 	Order.auth = Order.prototype.auth = {
+		createableBy: 'all',
 		listableBy: ['admin','editor','owner', 'moderator'],
-		viewableBy: ['admin','editor','owner', 'moderator'],
-		createableBy: 'member',
+		viewableBy: ['admin','editor','owner', 'moderator', 'hash'],
     updateableBy: ['admin','editor','owner', 'moderator'],
     deleteableBy: ['admin','editor','owner', 'moderator'],
 	}

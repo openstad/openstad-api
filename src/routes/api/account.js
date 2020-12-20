@@ -73,9 +73,6 @@ router.route('/')
 	})
 	.post(function(req, res, next) {
 
-		console.log('createte')
-
-
 		const data = {
       ...req.body,
 		}
@@ -108,7 +105,6 @@ router.route('/')
 		instance
 		  .setTags(req.body.tags)
 			.then((instance) => {
-				console.log('updated')
 				return next();
 		  })
 			.catch((err) => {
@@ -161,7 +157,6 @@ router.route('/:accountId(\\d+)')
     let data = {
       ...req.body,
 		}
-
 
     account
       .authorizeData(data, 'update')
