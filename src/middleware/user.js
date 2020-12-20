@@ -83,7 +83,14 @@ function getUserId(authorizationHeader) {
  */
 function parseJwt(authorizationHeader) {
 	let token = authorizationHeader.replace(/^bearer /i, '');
-	return jwt.verify(token, config.authorization['jwt-secret']);
+	console.log('token 111', token, typeof token);
+
+	if (!token) {
+		console.log('token herhereh', token);
+		return false;
+	}
+
+	return token ? jwt.verify(token, config.authorization['jwt-secret']) : false;
 }
 
 /**

@@ -208,15 +208,18 @@ router.route('/')
 			}
 		}
 
-		console.log('data', data)
 
 		db.Order
 			.create(data)
 			.then(result => {
 				req.results = result;
+				console.log('result order', req.results)
+
 				next();
 			})
 			.catch(function( error ) {
+				console.log('result order error',error )
+
 				// todo: dit komt uit de oude routes; maak het generieker
 				if( typeof error == 'object' && error instanceof Sequelize.ValidationError ) {
 					let errors = [];
@@ -241,6 +244,8 @@ router.route('/')
 				return new Promise((resolve, reject) => {
 					const product = orderItem.product;
 
+					console.log('req.resultsreq.results', req.results.id);
+
 					const data = {
 						vat: product.vat,
 						quantity: orderItem.quantity,
@@ -251,6 +256,9 @@ router.route('/')
 							product: product
 						},
 					};
+
+					console.log('req.resultsreq.results', req.results.id, data);
+
 
 					db.OrderItem
 					 .authorizeData(data, 'create', req.user)

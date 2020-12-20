@@ -40,7 +40,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 	OrderItem.auth = OrderItem.prototype.auth = {
 		listableBy: ['admin','editor', 'moderator'],
 		viewableBy: ['admin','editor', 'moderator'],
-		createableBy: ['admin','editor', 'moderator'],
+		createableBy: 'all',
 		updateableBy: ['admin','editor', 'moderator'],
 		deleteableBy: ['admin','editor', 'moderator'],
 	}
