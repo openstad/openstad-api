@@ -16,9 +16,6 @@ module.exports = function can(action, user, self, hash) {
   // in case a hash comes from browser, pass it along to see if it's listed as a valid method
   // not all models have this hash property
   const isValidHash  = self.hash && self.hash === hash;
-  console.log('isValidHash', isValidHash);
-  console.log('external hash', hash);
-  console.log(' self.hash',  self.hash);
 
   if (self.auth && typeof self.auth[functionName] == 'function') return self.auth[functionName](user, self, isValidHash);
 

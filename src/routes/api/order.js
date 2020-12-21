@@ -16,16 +16,8 @@ const generateToken = require('../../util/generate-token');
 const fetchOrderMw = function(req, res, next) {
 
 	const orderId = req.params.orderId;
-
-	console.log('fetchOrderMw orderId', orderId);
-
-	let query;
-
-	if (isNaN(orderId)) {
-		query = {	where: { hash: orderId } }
-	} else {
-		query = { where: { id: parseInt(orderId, 10) } }
-	}
+	
+	const query = { where: { id: parseInt(orderId, 10) } }
 
   req.scope = req.scope ? req.scope : [];
 

@@ -1,6 +1,6 @@
 const hasRole = require('../lib/hasRole');
 
-module.exports = function authorizeData(data, action, user, self, site) {
+module.exports = function authorizeData(data, action, user, self, site, isValidHash) {
 
   self = self || this;
   site = site || self.site;
@@ -13,7 +13,7 @@ module.exports = function authorizeData(data, action, user, self, site) {
 
 
     // TODO: dit is een check op jezelf, nu kan de argument:view check uit de routes
-    if (!self.can(action, user))  throw 'cannot';
+    if (!self.can(action, user, self, isValidHash))  throw 'cannot';
 
     let keys = Object.keys( data );
 
@@ -23,7 +23,7 @@ module.exports = function authorizeData(data, action, user, self, site) {
       let testRole;
       if (self.rawAttributes[key] && self.rawAttributes[key].auth) {
         if (self.rawAttributes[key].auth.authorizeData) {
-          data[key] = self.rawAttributes[key].auth.authorizeData(data[key], action, user, self, site);
+          data[key] = self.rawAttributes[key].auth.authorizeData(data[key], action, user, self, site, isValidHash);
           // todo: ik denk dat hij hier moet return-en; een beetje heftige aanpassing voor even tussendoor
         } else {
           // dit is generieker dan de extraData versie; TODO: die moet dus ook zo generiek worden
@@ -39,7 +39,7 @@ module.exports = function authorizeData(data, action, user, self, site) {
 
       testRole = testRole || (self.auth && self.auth[action+'ableBy']);
 
-      if (!hasRole(user, testRole, self.userId)) {
+      if (!hasRole(user, testRole, self.userId, isValidHash)) {
         data[key] = undefined;
       }
 

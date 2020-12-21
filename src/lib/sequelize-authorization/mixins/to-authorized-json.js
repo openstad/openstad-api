@@ -1,15 +1,21 @@
 const hasRole = require('../lib/hasRole');
 
-module.exports = function toAuthorizedJSON(user) {
+module.exports = function toAuthorizedJSON(user, hash) {
+  console.log('toAuthorizedJSON toAuthorizedJSON', hash)
 
   let self = this;
+  let isValidHash = self.hash === hash;
 
   if (!self.rawAttributes) return {};
   if (typeof user != 'object') user = undefined;
   if (!user) user = self.auth && self.auth.user;
   if (!user || !user.role) user = { role: 'all' };
+  console.log(' self.hash',  self.hash)
+  console.log(' hash',  hash)
 
-  if (!self.can('view', user)) return {};
+  console.log('lets be real isValidHash', isValidHash)
+
+  if (!self.can('view', user, self, isValidHash)) return {};
 
   let keys = self._options.attributes || Object.keys( self.dataValues );
   keys = keys.concat( Object.keys(self).filter( key => key != 'dataValues' && !key.match(/^_/) ) );
@@ -18,12 +24,16 @@ module.exports = function toAuthorizedJSON(user) {
   keys.forEach((key) => {
 
     let value = self.get(key);
+    console.log('validate key', key)
+
     if (key == 'id') {
       // todo: primary keys, not id
       result[key] = value;
     } else {
       result[key] = authorizedValue(key, value, user);
     }
+
+
 
   });
 
@@ -53,7 +63,7 @@ module.exports = function toAuthorizedJSON(user) {
     let testRole;
     if (self.rawAttributes[key] && self.rawAttributes[key].auth) {
       if (self.rawAttributes[key].auth.authorizeData) {
-        return self.rawAttributes[key].auth.authorizeData(null, 'view', user, self, self.site);
+        return self.rawAttributes[key].auth.authorizeData(null, 'view', user, self, self.site, isValidHash);
       } else {
         // todo: waarom loopt dit niet via authorizeData
         testRole = self.rawAttributes[key].auth.viewableBy;
@@ -72,4 +82,3 @@ module.exports = function toAuthorizedJSON(user) {
   }
 
 }
-

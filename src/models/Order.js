@@ -24,7 +24,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		email: {
 			type         : DataTypes.STRING(255),
 			auth: {
-				listableBy: ['editor','owner'],
+				listableBy: ['editor','owner','hash'],
 				viewableBy: ['editor','owner'],
 				createableBy: ['editor','owner'],
 				updateableBy: ['editor','owner'],
@@ -48,7 +48,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		firstName: {
 			type         : DataTypes.STRING(64),
 			auth: {
-				listableBy: ['editor','owner'],
+				listableBy: ['editor','owner','hash'],
         viewableBy: ['editor','owner'],
 				createableBy: ['editor','owner'],
 				updateableBy: ['editor','owner'],
@@ -62,7 +62,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		lastName: {
 			type         : DataTypes.STRING(64),
 			auth: {
-				listableBy: ['editor','owner'],
+				listableBy: ['editor','owner','hash'],
         viewableBy: ['editor','owner'],
 				createableBy: ['editor','owner'],
 				updateableBy: ['editor','owner'],
@@ -76,7 +76,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		phoneNumber: {
 			type         : DataTypes.STRING(64),
 			auth: {
-				listableBy: ['editor','owner'],
+				listableBy: ['editor','owner','hash'],
 				viewableBy: ['editor','owner'],
 				createableBy: ['editor','owner'],
 				updateableBy: ['editor','owner'],
@@ -90,7 +90,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		streetName: {
 			type         : DataTypes.STRING(64),
 			auth: {
-				listableBy: ['editor','owner'],
+				listableBy: ['editor','owner','hash'],
 				viewableBy: ['editor','owner'],
 				createableBy: ['editor','owner'],
 				updateableBy: ['editor','owner'],
@@ -147,7 +147,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		phoneNumber: {
 			type         : DataTypes.STRING(64),
 			auth: {
-				listableBy: ['editor','owner'],
+				listableBy: ['editor','owner','hash'],
 				viewableBy: ['editor','owner'],
 				createableBy: ['editor','owner'],
 				updateableBy: ['editor','owner'],
