@@ -309,20 +309,17 @@ router.route('/')
 		});
 	})
 	.post(function(req, res, next) {
-		req.results
-			.authorizeData(req.results, 'update', req.user)
-			.save()
-			.then(result => {
-				const orderJson = req.results.get({plain:true});
+		const orderJson = req.results.get({plain:true});
 
-				const returnValues = {
-					...orderJson,
-					redirectUrl: req.results.extraData.paymentUrl
-				};
+		console.log('orderJson', orderJson)
+		console.log('req.results', req.results)
 
-				res.json(returnValues);
-			})
-			.catch(next);
+		const returnValues = {
+			...orderJson,
+			redirectUrl: req.results.extraData.paymentUrl
+		};
+
+		res.json(returnValues);
 	})
 
 // one user
