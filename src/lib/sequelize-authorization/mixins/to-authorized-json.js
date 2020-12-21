@@ -1,21 +1,24 @@
 const hasRole = require('../lib/hasRole');
 
-module.exports = function toAuthorizedJSON(user, hash) {
-  console.log('toAuthorizedJSON toAuthorizedJSON', hash)
+module.exports = function toAuthorizedJSON(user) {
 
   let self = this;
-  let isValidHash = self.hash === hash;
+  let isValidHash = self.hash === self.queryHash;
 
   if (!self.rawAttributes) return {};
   if (typeof user != 'object') user = undefined;
   if (!user) user = self.auth && self.auth.user;
   if (!user || !user.role) user = { role: 'all' };
+  console.log('toAuthorizedJSON toAuthorizedJSON', self.queryHash)
+
   console.log(' self.hash',  self.hash)
-  console.log(' hash',  hash)
+  console.log(' hash',  self.queryHash)
 
   console.log('lets be real isValidHash', isValidHash)
 
-  if (!self.can('view', user, self, isValidHash)) return {};
+  if (!self.can('view', user, self, self.queryHash)) return {};
+
+  console.log('woop')
 
   let keys = self._options.attributes || Object.keys( self.dataValues );
   keys = keys.concat( Object.keys(self).filter( key => key != 'dataValues' && !key.match(/^_/) ) );
@@ -30,10 +33,8 @@ module.exports = function toAuthorizedJSON(user, hash) {
       // todo: primary keys, not id
       result[key] = value;
     } else {
-      result[key] = authorizedValue(key, value, user);
+      result[key] = authorizedValue(key, value, user, isValidHash);
     }
-
-
 
   });
 
@@ -43,18 +44,19 @@ module.exports = function toAuthorizedJSON(user, hash) {
 
   return Object.keys(result).length ? result : undefined;
 
-  function authorizedValue(key, value, user) {
+  function authorizedValue(key, value, user, isValidHash) {
 
     if (value && value.toJSON) {
       // TODO: for associated models this should use the association key to check the validity
       return value.toJSON(user);
     }
 
-    if (Array.isArray(value)) {
 
+
+    if (Array.isArray(value)) {
       let aresult = [];
       aresult = value.map(val => {
-        return authorizedValue(key, val, user);
+        return authorizedValue(key, val, user, isValidHash);
       });
 
       return aresult.length ? aresult : undefined;
@@ -75,7 +77,13 @@ module.exports = function toAuthorizedJSON(user, hash) {
       }
     }
     testRole = testRole || ( self.auth && self.auth.viewableBy );
-    if ( hasRole(user, testRole, self.userId)) {
+
+    console.log('user', user);
+    console.log('testRole', testRole);
+    console.log('self.userId', self.userId);
+    console.log('isValidHash', isValidHash);
+
+    if ( hasRole(user, testRole, self.userId, isValidHash)) {
       return value;
     }
 

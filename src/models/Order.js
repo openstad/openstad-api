@@ -227,5 +227,10 @@ module.exports = function( db, sequelize, DataTypes ) {
 		this.belongsTo(models.User);
 	}
 
+	Order.toAuthorizedJSON = function(user, data) {
+		console.log('toAuthorizedJSON',data)
+		return data;
+	}
+
 	return Order;
 };
