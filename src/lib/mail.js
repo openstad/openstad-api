@@ -70,6 +70,9 @@ function sendMail( options ) {
     transporter = nodemailer.createTransport(options.smtp);
   }
 
+  console.log('defaultSendMailOptions', defaultSendMailOptions);
+  console.log('options', options);
+
   transporter.sendMail(
     merge(defaultSendMailOptions, options),
     function( error, info ) {

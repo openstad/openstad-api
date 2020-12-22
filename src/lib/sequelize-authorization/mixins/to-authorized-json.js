@@ -9,16 +9,9 @@ module.exports = function toAuthorizedJSON(user) {
   if (typeof user != 'object') user = undefined;
   if (!user) user = self.auth && self.auth.user;
   if (!user || !user.role) user = { role: 'all' };
-  console.log('toAuthorizedJSON toAuthorizedJSON', self.queryHash)
 
-  console.log(' self.hash',  self.hash)
-  console.log(' hash',  self.queryHash)
-
-  console.log('lets be real isValidHash', isValidHash)
 
   if (!self.can('view', user, self, self.queryHash)) return {};
-
-  console.log('woop')
 
   let keys = self._options.attributes || Object.keys( self.dataValues );
   keys = keys.concat( Object.keys(self).filter( key => key != 'dataValues' && !key.match(/^_/) ) );
@@ -27,7 +20,6 @@ module.exports = function toAuthorizedJSON(user) {
   keys.forEach((key) => {
 
     let value = self.get(key);
-    console.log('validate key', key)
 
     if (key == 'id') {
       // todo: primary keys, not id
@@ -77,11 +69,6 @@ module.exports = function toAuthorizedJSON(user) {
       }
     }
     testRole = testRole || ( self.auth && self.auth.viewableBy );
-
-    console.log('user', user);
-    console.log('testRole', testRole);
-    console.log('self.userId', self.userId);
-    console.log('isValidHash', isValidHash);
 
     if ( hasRole(user, testRole, self.userId, isValidHash)) {
       return value;
