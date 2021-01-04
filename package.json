@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@kubernetes/client-node": "^0.12.2",
-    "aws-sdk": "^2.775.0",
+    "aws-sdk": "^2.809.0",
     "bcrypt": "^5.0.0",
     "co": "^4.6.0",
     "compression": "^1.7.4",
