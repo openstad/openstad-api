@@ -18,7 +18,7 @@
     "bcrypt": "^5.0.0",
     "co": "^4.6.0",
     "compression": "^1.7.4",
-    "config": "^3.3.2",
+    "config": "^3.3.3",
     "connect-session-sequelize": "^6.1.1",
     "cookie-parser": "^1.4.5",
     "cron": "^1.8.2",
