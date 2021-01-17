@@ -16,7 +16,7 @@ const generateToken = require('../../util/generate-token');
 const fetchOrderMw = function(req, res, next) {
 
 	const orderId = req.params.orderId;
-	
+
 	const query = { where: { id: parseInt(orderId, 10) } }
 
   req.scope = req.scope ? req.scope : [];
@@ -282,7 +282,7 @@ router.route('/')
 			},
 			description: 'Bestelling bij ' + req.site.name,
 			redirectUrl: paymentApiUrl,
-			webhookUrl:  'https://'+req.site.domain+'/api/site/'+req.params.siteId+'/order/'+req.params.orderId+'/payment-status'
+			webhookUrl:  'https://'+req.site.domain+'/api/site/'+req.params.siteId+'/order/'+req.results.id+'/payment'
 		//	webhookUrl:  paymentApiUrl,
 		})
 		.then(payment => {
