@@ -66,7 +66,7 @@ jobs:
         run: sudo snap install yq --channel=v3/stable
 
       - name: Run build script
-        run: docker build -t ${{ secrets.DOCKER_PUBLIC_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ steps.vars.outputs.current_branch }}-${{ steps.vars.outputs.sha_short }}-${{ github.run_id}} .
+        run: docker build -t ${{ secrets.DOCKER_PUBLIC_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ steps.vars.outputs.current_branch }}-${{ steps.vars.outputs.sha_short }}-${{ github.run_id }} .
         shell: bash
 
       - name: Run docker push script
