@@ -2,6 +2,7 @@
 
 ## UNRELEASED
 * Add login required to choices-guide results
+* Add functionality to save submissions and send a confirmation e-mail to admin and/or user
 
 ## v0.12.0 (2020-01-27)
 * Remove auth express session and refactor user middleware (auth is now stateless)
