@@ -13,7 +13,7 @@
     "test:e2e:debug": "jest --no-cache --config jest-e2e.config.js --verbose --forceExit"
   },
   "dependencies": {
-    "@kubernetes/client-node": "^0.12.2",
+    "@kubernetes/client-node": "^0.13.2",
     "aws-sdk": "^2.775.0",
     "bcrypt": "^5.0.0",
     "co": "^4.6.0",
