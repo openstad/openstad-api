@@ -19,27 +19,32 @@ module.exports = function can(action, user, self, hash) {
 
   if (self.auth && typeof self.auth[functionName] == 'function') return self.auth[functionName](user, self, isValidHash);
 
+  let userId = self.userId;
+  if (self.toString().match('SequelizeInstance:user')) { // TODO: find a better check
+    userId = self.id
+  }
+
   // or fallback to default
   switch (action) {
 
     case 'list':
-      return hasRole(user, self.auth && self.auth.listableBy, self.userId, isValidHash);
+      return hasRole(user, self.auth && self.auth.listableBy, userId, isValidHash);
       break;
 
     case 'create':
-      return hasRole(user, self.auth && self.auth.createableBy, self.userId, isValidHash);
+      return hasRole(user, self.auth && self.auth.createableBy, userId, isValidHash);
       break;
 
     case 'view':
-      return hasRole(user, self.auth && self.auth.viewableBy, self.userId, isValidHash);
+      return hasRole(user, self.auth && self.auth.viewableBy, userId, isValidHash);
       break;
 
     case 'update':
-      return hasRole(user, self.auth && self.auth.updateableBy, self.userId, isValidHash);
+      return hasRole(user, self.auth && self.auth.updateableBy, userId, isValidHash);
       break;
 
     case 'delete':
-      return hasRole(user, self.auth && self.auth.deleteableBy, self.userId, isValidHash);
+      return hasRole(user, self.auth && self.auth.deleteableBy, userId, isValidHash);
       break;
 
     default:

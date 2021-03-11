@@ -17,7 +17,7 @@ module.exports = function( db, sequelize, DataTypes ) {
       validate: {
         len: {
           args: [0, 255],
-          msg: 'Titel moet tussen 2 en 255 tekens lang zijn'
+          msg: 'Titel moet tussen 0 en 255 tekens lang zijn'
         }
       },
       set: function( text ) {
@@ -32,11 +32,34 @@ module.exports = function( db, sequelize, DataTypes ) {
       validate: {
         len: {
           args: [0, 5000],
-          msg: 'Beschrijving moet tussen 2 en 5000 tekens zijn'
+          msg: 'Beschrijving moet tussen 0 en 5000 tekens zijn'
         },
       },
       set: function( text ) {
         this.setDataValue('description', sanitize.content(text.trim()));
+      }
+    },
+
+    moreInfo: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      defaultValue: '{}',
+      get: function() {
+        let value = this.getDataValue('moreInfo');
+        try {
+          if (typeof value == 'string') {
+            value = JSON.parse(value);
+          }
+        } catch (err) {}
+        return value;
+      },
+      set: function(value) {
+        try {
+          if (typeof value == 'string') {
+            value = JSON.parse(value);
+          }
+        } catch (err) {}
+        this.setDataValue('moreInfo', JSON.stringify(value));
       }
     },
 
@@ -67,6 +90,11 @@ module.exports = function( db, sequelize, DataTypes ) {
       type: DataTypes.ENUM('continuous', 'enum-buttons', 'enum-radio', 'a-to-b'),
       defaultValue: 'continuous',
       allowNull: false
+    },
+
+    dimensions: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
     },
 
     values: {

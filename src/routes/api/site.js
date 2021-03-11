@@ -10,6 +10,26 @@ const checkHostStatus = require('../../services/checkHostStatus')
 
 let router = express.Router({mergeParams: true});
 
+const refreshSiteConfigMw = function (req, res, next) {
+	const site = req.results;
+
+	// assume https, wont work for some dev environments
+	const cmsUrl = site.config.cms &&  site.config.cms.url ?  site.config.cms.url : 'https://' + site.domain;
+
+	if (!cmsUrl) {
+		next();
+	}
+
+	//return fetch(cmsUrl + '/modules/openstad-api/refresh')
+	/*
+		@todo The /modules/openstad-api/refresh is cleaner, doesn't require a restart
+		but needs basichAuth headers in case a site is password protected
+	 */
+	return fetch(cmsUrl + '/config-reset')
+		.then(function () { 	next();  })
+		.catch(function (err) { console.log('errrr', err); next();	});
+}
+
 router.route('/')
 
 // list sites
@@ -17,7 +37,10 @@ router.route('/')
 	.get(auth.can('Site', 'list'))
 	.get(pagination.init)
 	.get(function(req, res, next) {
+		const scope = ['withArea'];
+
 		db.Site
+			.scope(scope)
 			.findAndCountAll({ offset: req.dbQuery.offset, limit: req.dbQuery.limit })
 			.then( result => {
         req.results = result.rows;
@@ -47,15 +70,17 @@ router.route('/')
 	.post(function(req, res, next) {
 		db.Site
 			.create(req.body)
-			.then(result => {
+			.then((result) => {
 				req.results = result;
-				return checkHostStatus({id: result.id});
+				next();
+				//return checkHostStatus({id: result.id});
 			})
-      .then(next)
+			.catch(next)
 	})
 	.post(auth.useReqUser)
+	.post(refreshSiteConfigMw)
 	.post(function(req, res, next) {
-    res.json(req.results)
+    return res.json(req.results);
   })
 
 // one site routes: get site
@@ -158,25 +183,7 @@ router.route('/:siteIdOrDomain') //(\\d+)
 			});
 	})
 	// call the site, to let the site know a refresh of the siteConfig is needed
-	.put(function (req, res, next) {
-		const site = req.results;
-
-		// assume https, wont work for some dev environments
-		const cmsUrl = 'https://' + site.domain;
-
-		if (!cmsUrl) {
-			next();
-		}
-
-		//return fetch(cmsUrl + '/modules/openstad-api/refresh')
-		/*
-			@todo The /modules/openstad-api/refresh is cleaner, doesn't require a restart
-			but needs basichAuth headers in case a site is password protected
-		 */
-		return fetch(cmsUrl + '/config-reset')
-			.then(function () { 	next();  })
-			.catch(function (err) { console.log('errrr', err); next();	});
-	})
+	.put(refreshSiteConfigMw)
 	.put(function (req, res, next) {
 		// when succesfull return site JSON
 		res.json(req.results);
