@@ -196,8 +196,7 @@ router.route('/:productId(\\d+)')
 
     let data = {
       ...req.body,
-		}
-
+	}
 
     product
       .authorizeData(data, 'update')

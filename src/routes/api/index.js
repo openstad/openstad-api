@@ -37,6 +37,10 @@ router.use( '/site/:siteId(\\d+)/tag', require('./tag') );
 
 router.use( '/site/:siteId(\\d+)/tour', require('./tour') );
 
+router.use( '/site/:siteId(\\d+)/app', require('./app') );
+
+router.use( '/site/:siteId(\\d+)/account', require('./account') );
+
 // users
 router.use( '/site/:siteId(\\d+)/user', require('./user') );
 
@@ -52,8 +56,7 @@ router.use( '/site/:siteId(\\d+)/product', require('./product') );
 router.use( '/site/:siteId(\\d+)/account/:accountId(\\d+)/product', require('./product') );
 
 //
-router.use( '/site/:siteId(\\d+)/account', require('./account') );
-
+router.use( '/site/:siteId(\\d+)/account/:accountId(\\d+)/subscription', require('./account') );
 
 // vote
 router.use( '/site/:siteId(\\d+)/vote', require('./vote') );

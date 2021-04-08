@@ -4,6 +4,16 @@ var config         = require('config')
 
 var sanitize       = require('../util/sanitize');
 
+const isAccountActive = (account, site) => {
+	const accountStatus = account.status;
+
+	if (accountStatus === '' || accountStatus === '') {
+		return 
+	}
+
+
+}
+
 
 module.exports = function( db, sequelize, DataTypes ) {
 	var Account = sequelize.define('account', {
@@ -26,10 +36,22 @@ module.exports = function( db, sequelize, DataTypes ) {
 			allowNull    : false
 		},
 
+		paymentStatus: {
+			type         : DataTypes.ENUM('failed','paid','none'),
+			defaultValue : 'none',
+			allowNull    : false
+		},
+
+		/*isActive: {
+			type: DataTypes.VIRTUAL,
+			get: function () {
 
 
 
 
+
+			}
+		},*/
 
 		extraData: {
 			type				 : DataTypes.TEXT,

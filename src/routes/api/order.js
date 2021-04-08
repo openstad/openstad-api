@@ -337,7 +337,7 @@ router.route('/:orderId')
 
     let data = {
       ...req.body,
-		}
+	}
 
     order
       .authorizeData(data, 'update')

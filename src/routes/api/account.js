@@ -123,19 +123,24 @@ router.route('/')
 // --------
 router.route('/:accountId(\\d+)')
 	.all(function(req, res, next) {
-		const accountId = parseInt(req.params.accountId) || 1;
-		db.Account
-			.scope(...req.scope)
-			.findOne({
-					where: { id: accountId, siteId: req.params.siteId }
+		const accountId = parseInt(req.params.accountId) || false;
+		if (accountId) {
+			throw new Error('Account Id not found');
+
+		} else {
+			db.Account
+				.scope(...req.scope)
+				.findOne({
+					where: {id: accountId, siteId: req.params.siteId}
 					//where: { id: userId }
-			})
-			.then(found => {
-				if ( !found ) throw new Error('User not found');
-				req.results = found;
-				next();
-			})
-			.catch(next);
+				})
+				.then(found => {
+					if (!found) throw new Error('User not found');
+					req.results = found;
+					next();
+				})
+				.catch(next);
+		}
 	})
 
 // view idea
