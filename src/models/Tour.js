@@ -41,6 +41,8 @@ module.exports = function (db, sequelize, DataTypes) {
     },
 
 
+
+
     title: {
       type: DataTypes.STRING(255),
       allowNull: false,

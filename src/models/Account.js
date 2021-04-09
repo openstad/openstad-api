@@ -7,11 +7,30 @@ var sanitize       = require('../util/sanitize');
 const isAccountActive = (account, site) => {
 	const accountStatus = account.status;
 
-	if (accountStatus === '' || accountStatus === '') {
-		return 
+	if (accountStatus === 'DENIED' || accountStatus === 'CLOSED') {
+		return false;
 	}
 
+	// if set to trial always true
+	if (accountStatus === 'TRIAL') {
+		return true;
+	}
 
+	const siteAccountConfig = site.config && site.config.account ? site.config.account : {};
+
+	/**
+	 * In case payment is required
+	 */
+	if (siteAccountConfig.activePlanRequired) {
+		if (account.paymentStatus === 'paid') {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	// by default return true
+	return true;
 }
 
 
@@ -30,9 +49,15 @@ module.exports = function( db, sequelize, DataTypes ) {
 			}
 		},
 
+		appId: {
+			type         : DataTypes.INTEGER,
+			defaultValue : 0,
+		},
+
+
 		status: {
-			type         : DataTypes.ENUM('OPEN','CLOSED','ACCEPTED','DENIED','BUSY','DONE'),
-			defaultValue : 'OPEN',
+			type         : DataTypes.ENUM('TRIAL', 'ACTIVE', 'DENIED', 'CLOSED'),
+			defaultValue : 'TRIAL',
 			allowNull    : false
 		},
 
@@ -41,17 +66,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultValue : 'none',
 			allowNull    : false
 		},
-
-		/*isActive: {
-			type: DataTypes.VIRTUAL,
-			get: function () {
-
-
-
-
-
-			}
-		},*/
 
 		extraData: {
 			type				 : DataTypes.TEXT,
@@ -110,6 +124,11 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 	Account.scopes = function scopes() {
 		return {
+			includeProduct: {
+				include: [{
+					model: db.Product,
+				}]
+			},
 			includeTags: {
 				include: [{
 					model: db.Tag,
@@ -137,6 +156,9 @@ module.exports = function( db, sequelize, DataTypes ) {
 	 	this.hasMany(models.User, {constraints: false});
 		this.hasMany(models.Order);
 		this.belongsTo(models.Site);
+
+		this.belongsTo(models.Product);
+
 		this.belongsToMany(models.Tag, {through: 'accountTags'});
 	}
 
