@@ -29,6 +29,8 @@ router.use( '/site/:siteId(\\d+)/idea', require('./idea') );
 // articles
 router.use( '/site/:siteId(\\d+)/article', require('./article') );
 
+router.use( '/site/:siteId(\\d+)/action-sequence', require('./action-sequence') );
+
 // polls
 router.use( '/site/:siteId(\\d+)(/idea/:ideaId(\\d+))?/poll', require('./poll') );
 

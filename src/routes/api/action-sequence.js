@@ -11,73 +11,27 @@ var createError = require('http-errors');
 // scopes: for all get requests
 router
     .all('*', function(req, res, next) {
-        req.scope = ['api'];
-        req.scope.push('includeSite');
         return next();
-    });
-
-router.route('/')
-    .get(auth.can('Area', 'list'))
-    .get(pagination.init)
-    .get(function(req, res, next) {
-        let { dbQuery } = req;
-
-        return db.Area
-            .findAndCountAll(dbQuery)
-            .then(function(result) {
-                req.results = result.rows || [];
-                req.dbQuery.count = result.count;
-                return next();
-            })
-            .catch(next);
-    })
-    .get(searchResults)
-    .get(pagination.paginateResults)
-    .get(function(req, res, next) {
-        res.json(req.results);
-    })
-
-    // Persist an area
-    .post(auth.can('Area', 'create'))
-    .post(function(req, res, next) {
-        // if geodata is set transform to polygon format this api expects
-        if (req.body.geoJSON) {
-            req.body.polygon = formatGeoJsonToPolygon(req.body.geoJSON);
-        }
-
-        next();
-    })
-    .post(function(req, res, next) {
-        if (!req.body.name) return next(createError(401, 'Geen naam opgegeven'));
-        if (!req.body.polygon) return next(createError(401, 'Geen polygoon opgegeven'));
-        return next();
-    })
-    .post(function(req, res, next) {
-        db.Area
-            .create(req.body)
-            .catch((err) => {
-                console.log('errr', err);
-                next(err);
-            })
-            .then(function(result) {
-                res.json({ success: true, id: result.id });
-            });
     });
 
 router.route('/:actionSequenceId(\\d+)')
     .all(function(req, res, next) {
-        const actionSequenceId = parseInt(req.params.actionSequenceId) || 1;
+        const actionSequenceId = parseInt(req.params.actionSequenceId, 10) || 1;
+        const siteId = parseInt(req.params.siteId, 10) || 1;
 
         db.ActionSequence
             .findOne({
                 // where: { id: areaId, siteId: req.params.siteId }
-                where: { id: actionSequenceId },
+                where: {
+                    id: actionSequenceId,
+                    siteId: siteId
+                },
             })
             .then(found => {
                 if (!found) throw new Error('Action Sequence not found for id: ' + actionSequenceId);
 
                 req.actionSequence = found;
-                req.results = req.area;
+                req.results = found;
                 next();
             })
             .catch((err) => {
@@ -92,7 +46,7 @@ router.route('/:actionSequenceId(\\d+)')
     .get(async (req, res, next) => {
         const actions = await db.Action.findAll({
             where: {
-                actionSequenceId: parseInt(req.params.actionSequenceId)
+                actionSequenceId: parseInt(req.params.actionSequenceId, 10)
             },
             order: [ [ 'priority', 'DESC' ], [ 'createdAt', 'DESC' ]],
         });
