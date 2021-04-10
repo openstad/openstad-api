@@ -43,11 +43,20 @@ const sendMail = (options) => {
 
 module.exports = function( db, sequelize, DataTypes ) {
     var Action = sequelize.define('action', {
-
         id: {
             type: DataTypes.STRING,
             allowNull: false,
             unique: true
+        },
+
+        siteId: {
+            type         : DataTypes.INTEGER,
+            defaultValue : 0,
+        },
+
+        accountId: {
+            type         : DataTypes.INTEGER,
+            defaultValue : 0,
         },
 
         type: {
@@ -88,8 +97,8 @@ module.exports = function( db, sequelize, DataTypes ) {
 
         conditions: {
             type: DataTypes.JSON,
-            allowNull		 : false,
-            defaultValue : [],
+            allowNull		 : true,
+            defaultValue : null,
         },
 
         action: {
@@ -292,6 +301,11 @@ module.exports = function( db, sequelize, DataTypes ) {
 
     Action.prototype.getSelection = async (checkFromDate) => {
         let selection = [];
+
+        if (!this.conditions) {
+            return selection;
+        }
+
         let where = {};
 
         /**
@@ -313,14 +327,14 @@ module.exports = function( db, sequelize, DataTypes ) {
          * },
          *
          */
-        const conditions = action.conditions
+        const conditions = this.conditions
         const modelName = conditions.model;
         const eventName = conditions.event;
-        const filters = condition.filters;
+        const filters = conditions.filters;
         const hours = conditions.hours;
 
         if (!db[modelName]) {
-            throw new Error(`Model defined as ${modelName} in conditions of action with id ${action.id} doesn't exists.`)
+            throw new Error(`Model defined as ${modelName} in conditions of action with id ${this.id} doesn't exists.`)
         }
 
         /**
@@ -354,7 +368,7 @@ module.exports = function( db, sequelize, DataTypes ) {
                 break;
 
             default:
-                throw new Error(`Event defined as ${modelName} in conditions of action with id ${action.id}`)
+                throw new Error(`Event defined as ${modelName} in conditions of action with id ${this.id}`)
         }
 
         // add filters to where object
@@ -402,7 +416,7 @@ module.exports = function( db, sequelize, DataTypes ) {
                     //only fetch items that are always running
                     type: 'continuously'
                 },
-                order: [ [ 'priority', 'DESC' ]],
+                order: [ [ 'priority', 'DESC' ], [ 'createdAt', 'DESC' ]],
             });
 
             for (var i = 0; i < actions.length; i++) {
@@ -418,18 +432,13 @@ module.exports = function( db, sequelize, DataTypes ) {
                 const selectionToActUpon = await action.getSelection(lastRunDate);
 
                 // there are also actions where all the resources should be bundled, or treated as one
-                for (var i = 0; i < selectionToActUpon.length; i++) {
-                    const selectedResources = selectionToActUpon[i];
-
-                    const settings = {
-                        ...action.settings,
-                        selectedResource: selectedResource
-                    };
+                for (var j = 0; j < selectionToActUpon.length; j++) {
+                    const selectedResource = selectionToActUpon[j];
 
                     try {
                         // cron runs req, res will be empty, this will cause request actions to fail in case people try to run them as cron
                         // which is perfectly fine, the act method should properly display an error here.
-                        await actionType.act(settings, req, res);
+                        await actionType.act(action, selectedResource, req, res);
 
                         await db.ActionLog.create({
                             actionId: action.id,
@@ -440,7 +449,7 @@ module.exports = function( db, sequelize, DataTypes ) {
                         await db.ActionLog.create({
                             actionId: action.id,
                             settings: settings,
-                            status: 'failure'
+                            status: 'error'
                         });
                     }
                 }

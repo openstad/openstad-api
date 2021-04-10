@@ -2,7 +2,7 @@ const convertDbPolygonToLatLng = require ('../util/convert-db-polygon-to-lat-lng
 const {formatPolygonToGeoJson} = require('../util/geo-json-formatter');
 
 module.exports = function( db, sequelize, DataTypes ) {
-    var ActionLog = sequelize.define('ActionLog', {
+    var ActionRun = sequelize.define('action_log', {
         status: {
             type         : DataTypes.ENUM('success', 'error', 'info'),
             defaultValue : 'info',
@@ -41,18 +41,17 @@ module.exports = function( db, sequelize, DataTypes ) {
         }
     });
 
-    ActionLog.associate = function( models ) {
+    ActionRun.associate = function( models ) {
         this.belongsTo(models.User);
     }
 
-    Event.auth = Event.prototype.auth = {
-        listableBy: 'all',
-        viewableBy: 'all',
+    ActionRun.auth = Event.prototype.auth = {
+        listableBy: 'admin',
+        viewableBy: 'admin',
         createableBy: ['editor','owner', 'admin'],
         updateableBy: ['editor','owner', 'admin'],
         deleteableBy: ['editor','owner', 'admin'],
         toAuthorizedJSON: function(user, data) {
-            data.geoJSON = formatPolygonToGeoJson(data.polygon);
             return data;
         }
     }

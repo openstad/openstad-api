@@ -9,7 +9,6 @@ module.exports = function( db, sequelize, DataTypes ) {
             unique: true
         },
 
-
         siteId: {
             type         : DataTypes.INTEGER,
             defaultValue : config.siteId && typeof config.siteId == 'number' ? config.siteId : 0,
@@ -20,36 +19,6 @@ module.exports = function( db, sequelize, DataTypes ) {
             defaultValue : config.siteId && typeof config.siteId == 'number' ? config.siteId : 0,
         },
 
-
-        // If triggered auto
-        trigger: {
-            type         : DataTypes.ENUM('cron', 'url'),
-            defaultValue : 'url',
-            allowNull    : false
-        },
-
-        status: {
-            type         : DataTypes.ENUM('concept', 'paused', 'active'),
-            defaultValue : 'TRIAL',
-            allowNull    : false
-        },
-
-        polygon: {
-            type: DataTypes.GEOMETRY,
-            allowNull: false,
-            set: function (polygon) {
-                polygon = polygon ? polygon.map(polygon => {
-                    return [polygon.lat, polygon.lng];
-                }) : [];
-
-                const formattedPolygon = {"type": "Polygon", coordinates: [polygon]};
-
-                this.setDataValue('polygon',formattedPolygon);
-            },
-            get: function () {
-                return convertDbPolygonToLatLng(this.getDataValue('polygon'));
-            }
-        },
         /*
         Virtual field would be a nice way to manage the geoJSON version of the data
         geoJSON: {
@@ -66,10 +35,6 @@ module.exports = function( db, sequelize, DataTypes ) {
         this.belongsTo(models.Account);
     }
 
-
-    // runtype : cron, or request
-
-
     ActionSequence.auth = Area.prototype.auth = {
         listableBy: 'all',
         viewableBy: 'all',
@@ -77,7 +42,6 @@ module.exports = function( db, sequelize, DataTypes ) {
         updateableBy: ['editor','owner', 'admin'],
         deleteableBy: ['editor','owner', 'admin'],
         toAuthorizedJSON: function(user, data) {
-            data.geoJSON = formatPolygonToGeoJson(data.polygon);
             return data;
         }
     }

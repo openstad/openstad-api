@@ -46,13 +46,12 @@ module.exports = function( db, sequelize, DataTypes ) {
     }
 
     Event.auth = Event.prototype.auth = {
-        listableBy: 'all',
-        viewableBy: 'all',
+        listableBy: 'admin',
+        viewableBy: 'admin',
         createableBy: ['editor','owner', 'admin'],
         updateableBy: ['editor','owner', 'admin'],
         deleteableBy: ['editor','owner', 'admin'],
         toAuthorizedJSON: function(user, data) {
-            data.geoJSON = formatPolygonToGeoJson(data.polygon);
             return data;
         }
     }
