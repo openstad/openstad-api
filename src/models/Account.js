@@ -7,12 +7,12 @@ var sanitize       = require('../util/sanitize');
 const isAccountActive = (account, site) => {
 	const accountStatus = account.status;
 
-	if (accountStatus === 'DENIED' || accountStatus === 'CLOSED') {
+	if (accountStatus === 'denied' || accountStatus === 'closed') {
 		return false;
 	}
 
 	// if set to trial always true
-	if (accountStatus === 'TRIAL') {
+	if (accountStatus === 'trial') {
 		return true;
 	}
 
@@ -54,10 +54,9 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultValue : 0,
 		},
 
-
 		status: {
-			type         : DataTypes.ENUM('TRIAL', 'ACTIVE', 'DENIED', 'CLOSED'),
-			defaultValue : 'TRIAL',
+			type         : DataTypes.ENUM('trial', 'active', 'denied', 'closed'),
+			defaultValue : 'trial',
 			allowNull    : false
 		},
 
