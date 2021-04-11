@@ -10,6 +10,18 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultValue : 'Nieuwe site',
 		},
 
+		//
+		accountId: {
+
+		},
+
+		// not used for business logic currently but usefull for administrative purposes
+		type: {
+			type         : DataTypes.ENUM('site', 'app'),
+			defaultValue : 'site',
+			allowNull    : false
+		},
+
 		title: {
 			type         : DataTypes.STRING(255),
 			allowNull    : true,
@@ -20,6 +32,54 @@ module.exports = function( db, sequelize, DataTypes ) {
 			type         : DataTypes.STRING(255),
 			allowNull    : false,
 			defaultValue : 'demo.openstad.nl',
+		},
+
+		live: {
+			type: DataTypes.JSON,
+			allowNull: false,
+			defaultValue: '{}',
+			get: function() {
+				let value = this.getDataValue('revisions');
+				try {
+					if (typeof value == 'string') {
+						value = JSON.parse(value);
+					}
+				} catch (err) {}
+
+				return value;
+			},
+			set: function(value) {
+				try {
+					if (typeof value == 'string') {
+						value = JSON.parse(value);
+					}
+				} catch (err) {}
+				this.setDataValue('revisions', value);
+			}
+		},
+
+		revisions: {
+			type: DataTypes.JSON,
+			allowNull: false,
+			defaultValue: '[]',
+			get: function() {
+				let value = this.getDataValue('revisions');
+				try {
+					if (typeof value == 'string') {
+						value = JSON.parse(value);
+					}
+				} catch (err) {}
+
+				return value;
+			},
+			set: function(value) {
+				try {
+					if (typeof value == 'string') {
+						value = JSON.parse(value);
+					}
+				} catch (err) {}
+				this.setDataValue('revisions', value);
+			}
 		},
 
 		config: {
@@ -68,7 +128,14 @@ module.exports = function( db, sequelize, DataTypes ) {
 	Site.scopes = function scopes() {
 		return {
 			defaultScope: {
+
 			},
+
+			withAccount: {
+				include: [{
+					model: db.Area
+				}]
+			}
 
 			withArea: {
 				include: [{
