@@ -59,21 +59,11 @@ module.exports = function( db, sequelize, DataTypes ) {
             defaultValue : 0,
         },
 
-        type: {
-            type         : DataTypes.ENUM('continuously', 'request'),
-            defaultValue : 'continuously',
-            allowNull    : false
-        },
 
         status: {
             type         : DataTypes.ENUM('active', 'inactive'),
             defaultValue : 'active',
             allowNull    : false
-        },
-
-        actionSequenceId: {
-            type         : DataTypes.INTEGER,
-            defaultValue : config.siteId && typeof config.siteId == 'number' ? config.siteId : 0,
         },
 
         priority : {

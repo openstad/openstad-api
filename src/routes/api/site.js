@@ -76,6 +76,7 @@ router.route('/')
 				//return checkHostStatus({id: result.id});
 			})
 			.catch(next)
+
 	})
 	.post(auth.useReqUser)
 	.post(refreshSiteConfigMw)

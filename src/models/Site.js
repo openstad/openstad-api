@@ -3,7 +3,6 @@ const merge = require('merge');
 module.exports = function( db, sequelize, DataTypes ) {
 
 	var Site = sequelize.define('site', {
-
 		name: {
 			type         : DataTypes.STRING(255),
 			allowNull    : true,
@@ -12,7 +11,8 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 		//
 		accountId: {
-
+			type         : DataTypes.INTEGER,
+			defaultValue : 0,
 		},
 
 		// not used for business logic currently but usefull for administrative purposes
@@ -133,9 +133,9 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 			withAccount: {
 				include: [{
-					model: db.Area
+					model: db.Account
 				}]
-			}
+			},
 
 			withArea: {
 				include: [{
@@ -148,6 +148,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 	Site.associate = function( models ) {
 		this.hasMany(models.Idea);
 		this.belongsTo(models.Area);
+		this.belongsTo(models.Account);
 	}
 
 	Site.configOptions = function () {
@@ -786,12 +787,12 @@ module.exports = function( db, sequelize, DataTypes ) {
 	}
 
 	Site.auth = Site.prototype.auth = {
-    listableBy: 'all',
-    viewableBy: 'all',
-    createableBy: 'admin',
-    updateableBy: 'admin',
-    deleteableBy: 'admin',
-  }
+		listableBy: ['admin', 'moderator', 'owner'],
+		viewableBy:  ['admin', 'moderator', 'owner'],
+		createableBy: ['admin', 'owner'],
+		updateableBy: ['admin', 'owner'],
+		deleteableBy: ['admin', 'owner'],
+  	}
 
 	return Site;
 
