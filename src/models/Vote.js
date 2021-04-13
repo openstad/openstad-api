@@ -39,7 +39,12 @@ module.exports = function( db, sequelize, DataTypes ) {
 		checked : {
 			type         : DataTypes.BOOLEAN,
 			allowNull    : true
-		}
+		},
+		irmaSignedVote: {
+			type         : DataTypes.TEXT,
+			allowNull    : true,
+			defaultValue : null
+		},
 	}, {
 		indexes: [{
 			fields : ['ideaId', 'userId', 'deletedAt'],
