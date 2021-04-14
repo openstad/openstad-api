@@ -17,6 +17,8 @@ const userhasModeratorRights = (user) => {
 	return user && (user.role === 'admin' || user.role === 'editor' || user.role === 'moderator');
 }
 
+// todo: error handling moet consistent
+
 // basis validaties
 // ----------------
 router
@@ -54,11 +56,13 @@ router
 	.get(function(req, res, next) {
     let signedresult = req.query && req.query.result;
     console.log(signedresult);
-    try {
-      signedresult = JSON.parse(signedresult)
-      req.signedresult = signedresult;
-    } catch (err) {
-      console.log(err);
+    if (signedresult) {
+      try {
+        signedresult = JSON.parse(signedresult)
+        req.signedresult = signedresult;
+      } catch (err) {
+        console.log(err);
+      }
     }
     let votes = [];
     if (signedresult) {
@@ -190,6 +194,14 @@ router
 		return next( isOk ? null : createError(400, 'Budget klopt niet') );
 	})
 
+// setup returnTo url
+	.get(function(req, res, next) {
+    let returnTo = req.query.returnTo
+    if (returnTo) returnTo += returnTo.match(/\?/) ? '' : '?';
+    req.returnTo = returnTo;
+    return next()
+  })
+
 // vote with irma 1
 // ----------------
 router
@@ -203,10 +215,11 @@ router
       irmaVote += '\n' + idea.title + ' (' + id + ')';
     })
     console.log(irmaVote);
+    console.log(req.query);
     let url = config.irma && config.irma.serverUrl && config.irma.serverUrl.replace('[[key]]', 'Uw%20keuze').replace('[[value]]', encodeURIComponent(irmaVote))
-    let redurectUrl = config.url + '/irma/site/' + req.site.id + '/vote-is-signed';
-    url += '&redirectUrl=' + encodeURIComponent(redurectUrl);
-    console.log(url);
+    let redirectUrl = config.url + '/irma/site/' + req.site.id + '/vote-is-signed';
+    redirectUrl += '?returnTo=' + req.query.redirectUrl;
+    url += '&redirectUrl=' + encodeURIComponent(redirectUrl);
     res.redirect(url);
   });
 
@@ -220,13 +233,8 @@ router
     if (!req.signedresult) return next(createError(403, 'Signed result not found'));
     if (!( req.signedresult.votingnumber && req.signedresult.message )) return next(createError(403, 'Signed result not found'));
     if (!req.ideas) return next(createError(403, 'Ideeen niet gevonden'));
-    res.json({
-      votingnumber: req.signedresult.votingnumber,
-      message: req.signedresult.message,
-      ideas: req.votes
-    })
+    return next();
   })
-
 
 // heb je al gestemd
 	.get(function(req, res, next) {
@@ -234,48 +242,61 @@ router
 			.scope(req.scope)
 			.findAll({ where: { irmaSignedVote: req.signedresult.votingnumber } })
 			.then(found => {
-				if (req.site.config.votes.voteType !== 'likes' && req.site.config.votes.withExisting == 'error' && found && found.length ) throw new Error('Je hebt al gestemd');
+				if (req.site.config.votes.voteType !== 'likes' && req.site.config.votes.withExisting == 'error' && found && found.length ) {
+          let returnTo = req.returnTo + ( req.returnTo.match(/\?/) ? '' : '?' );
+          return res.redirect(`${returnTo}&votedWithIRMAerror=Je%20hebt%20al%20gestemd`);
+        }
 				req.existingVotes = found.map(entry => entry.toJSON());
 				return next();
 			})
 			.catch(next)
 	})
 
-// dump result
+// withExisting 'replace'
 	.get(function(req, res, next) {
-    res.json({
-      votingnumber: req.signedresult.votingnumber,
-      message: req.signedresult.message,
-      ideas: req.votes
-    })
+    console.log('####################');
+    console.log(req.site.config.votes);
+		if (req.site.config.votes.withExisting == 'replace') {
+      let returnTo = req.returnTo + ( req.returnTo.match(/\?/) ? '' : '?' );
+      return res.redirect(`${returnTo}&votedWithIRMAerror=Config%20error:%20replace%20not%20yet%20implemented`);
+    }
+    return next();
+	})
+
+// withExisting 'error'
+	.get(function(req, res, next) {
+
+    Promise
+			.map(req.votes, function(vote) {
+        return db.Vote.create({
+          ...vote,
+          userId: 2,
+          irmaSignedVote: req.signedresult.votingnumber,
+        })
+      }).then(
+				result => {
+					req.result = result;
+					return next();
+				},
+				error => next(error)
+			)
+			.catch(next)
   })
 
-	.post(function( req, res, next ) {
+// done
+  .get(function(req, res, next) {
+    let returnTo = req.returnTo + ( req.returnTo.match(/\?/) ? '' : '?' );
+    return res.redirect(`${returnTo}&votedWithIRMA=1`);
+  })
 
-    // parse vote
-    let result = { what: 'STEM MET IRMA' };
-    let vote = req.query.vote;
-    try {
-      vote = JSON.parse(vote)
-    } catch (err) {}
-
-    let result = { what: 'STEM MET IRMA' };
-    let vote = req.query.vote;
-    try {
-      vote = JSON.parse(vote)
-    } catch (err) {}
-
-    let redirectUrl = req.query.redirectUrl;
-    if (!redirectUrl.match(/\?/)) redirectUrl = redirectUrl + '?';
-
-    result.vote = vote;
-
-    console.log(result);
-
-    res.redirect(`${redirectUrl}&votedWithIRMA=1`);
-
-	});
-
+// dump result
+//  .get(function(req, res, next) {
+//    res.json({
+//      votingnumber: req.signedresult.votingnumber,
+//      message: req.signedresult.message,
+//      ideas: req.votes
+//    })
+//  })
 
 module.exports = router;
 
