@@ -6,7 +6,7 @@ module.exports = function( db, sequelize, DataTypes ) {
     var Event = sequelize.define('event', {
         status: {
             type         : DataTypes.ENUM('activity', 'error', 'log', 'warning', 'update'),
-            defaultValue : 'TRIAL',
+            defaultValue : 'log',
             allowNull    : false
         },
 
@@ -36,7 +36,9 @@ module.exports = function( db, sequelize, DataTypes ) {
         },
 
         extraData : {
-
+            type: DataTypes.JSON,
+            allowNull : true,
+            defaultValue : {},
         }
     });
 

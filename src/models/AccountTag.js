@@ -3,9 +3,8 @@ var config = require('config')
 
 module.exports = function( db, sequelize, DataTypes ) {
 
-	var AccountTag = sequelize.define('accountTag', {
-	}, {
-    paranoid: false
+	var AccountTag = sequelize.define('accountTag', {}, {
+        paranoid: false
 	});
 
 	AccountTag.scopes = function scopes() {

@@ -43,12 +43,6 @@ const sendMail = (options) => {
 
 module.exports = function( db, sequelize, DataTypes ) {
     var Action = sequelize.define('action', {
-        id: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            unique: true
-        },
-
         siteId: {
             type         : DataTypes.INTEGER,
             defaultValue : 0,
@@ -101,13 +95,13 @@ module.exports = function( db, sequelize, DataTypes ) {
         validate: {},
     });
 
-    Account.scopes = function scopes() {
+    Action.scopes = function scopes() {
         return {
 
         }
     }
 
-    Account.associate = function( models ) {
+    Action.associate = function( models ) {
         this.hasMany(models.User, {constraints: false});
     }
 
@@ -390,7 +384,8 @@ module.exports = function( db, sequelize, DataTypes ) {
             });
 
             if (lastRun && lastRun.status === 'running') {
-                return throw new Error(`Last run with id ${lastRun.id} still has status running, new run not starting`);
+                throw new Error(`Last run with id ${lastRun.id} still has status running, new run not starting`);
+                return
             }
 
             // if it fails before we get to the end, currently the run will be stuck

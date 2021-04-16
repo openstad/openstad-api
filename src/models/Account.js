@@ -156,7 +156,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		this.hasMany(models.Order);
 		this.belongsTo(models.Site);
 
-		this.belongsTo(models.Product);
+		//this.belongsTo(models.Product);
 
 		this.belongsToMany(models.Tag, {through: 'accountTags'});
 	}

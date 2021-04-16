@@ -39,7 +39,7 @@ router.use( '/site/:siteId(\\d+)/tag', require('./tag') );
 
 router.use( '/site/:siteId(\\d+)/tour', require('./tour') );
 
-router.use( '/site/:siteId(\\d+)/app', require('./app') );
+//router.use( '/site/:siteId(\\d+)/app', require('./app') );
 
 router.use( '/site/:siteId(\\d+)/account', require('./account') );
 

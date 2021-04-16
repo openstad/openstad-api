@@ -37,7 +37,7 @@ module.exports = function( db, sequelize, DataTypes ) {
         extraData : {
             type: DataTypes.JSON,
             allowNull : true,
-            defaultValue : {},
+            defaultValue : '{}',
         }
     });
 
@@ -45,7 +45,7 @@ module.exports = function( db, sequelize, DataTypes ) {
         this.belongsTo(models.User);
     }
 
-    ActionRun.auth = Event.prototype.auth = {
+    ActionRun.auth = ActionRun.prototype.auth = {
         listableBy: 'admin',
         viewableBy: 'admin',
         createableBy: ['editor','owner', 'admin'],
@@ -56,6 +56,5 @@ module.exports = function( db, sequelize, DataTypes ) {
         }
     }
 
-
-    return Event;
+    return ActionRun;
 }

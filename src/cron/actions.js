@@ -14,7 +14,7 @@ module.exports = {
     runOnInit: false,
     onTick: async () => {
         try {
-            await db.Action.run();
+           // await db.Action.run();
         } catch (e) {
             console.log('Error in actions crons: ', e)
         }

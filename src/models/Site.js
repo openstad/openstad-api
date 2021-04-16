@@ -148,7 +148,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 	Site.associate = function( models ) {
 		this.hasMany(models.Idea);
 		this.belongsTo(models.Area);
-		this.belongsTo(models.Account);
+		//this.belongsTo(models.Account);
 	}
 
 	Site.configOptions = function () {

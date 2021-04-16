@@ -2,7 +2,7 @@ const convertDbPolygonToLatLng = require ('../util/convert-db-polygon-to-lat-lng
 const {formatPolygonToGeoJson} = require('../util/geo-json-formatter');
 
 module.exports = function( db, sequelize, DataTypes ) {
-    var ActionLog = sequelize.define('ActionLog', {
+    var ActionLog = sequelize.define('action_log', {
         status: {
             type         : DataTypes.ENUM('success', 'error', 'info'),
             defaultValue : 'info',
@@ -45,7 +45,7 @@ module.exports = function( db, sequelize, DataTypes ) {
         this.belongsTo(models.User);
     }
 
-    Event.auth = Event.prototype.auth = {
+    ActionLog.auth = ActionLog.prototype.auth = {
         listableBy: 'admin',
         viewableBy: 'admin',
         createableBy: ['editor','owner', 'admin'],
@@ -57,5 +57,5 @@ module.exports = function( db, sequelize, DataTypes ) {
     }
 
 
-    return Event;
+    return ActionLog;
 }
