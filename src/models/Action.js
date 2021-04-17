@@ -102,7 +102,7 @@ module.exports = function( db, sequelize, DataTypes ) {
     }
 
     Action.associate = function( models ) {
-        this.hasMany(models.User, {constraints: false});
+        this.belongsTo(models.User, {constraints: false});
     }
 
     Action.types = [
