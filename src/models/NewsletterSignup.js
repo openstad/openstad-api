@@ -113,20 +113,20 @@ module.exports = function( db, sequelize, DataTypes ) {
 
   // dit is hoe het momenteel werkt; ik denk niet dat dat de bedoeling is, maar ik volg nu
 	NewsletterSignup.auth = NewsletterSignup.prototype.auth = {
-    listableBy: 'editor',
-    viewableBy: ['editor', 'owner'],
-    createableBy: 'all',
-    updateableBy: 'admin',
-    deleteableBy: 'admin',
-    canConfirm: function(user, self) {
-      // all; specific checks are in the route (TODO: move those to here)
-      return true;
-    },
-    canSignout: function(user, self) {
-      // all; specific checks are in the route (TODO: move those to here)
-      return true;
-    },
-  }
+		listableBy: 'editor',
+		viewableBy: ['editor', 'owner'],
+		createableBy: 'all',
+		updateableBy: ['editor', 'owner'],
+		deleteableBy: ['editor', 'owner'],
+		canConfirm: function (user, self) {
+			// all; specific checks are in the route (TODO: move those to here)
+			return true;
+		},
+		canSignout: function (user, self) {
+			// all; specific checks are in the route (TODO: move those to here)
+			return true;
+		},
+	}
 
 	return NewsletterSignup;
 

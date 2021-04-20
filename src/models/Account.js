@@ -49,11 +49,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 			}
 		},
 
-		appId: {
-			type         : DataTypes.INTEGER,
-			defaultValue : 0,
-		},
-
 		status: {
 			type         : DataTypes.ENUM('trial', 'active', 'denied', 'closed'),
 			defaultValue : 'trial',
@@ -159,6 +154,23 @@ module.exports = function( db, sequelize, DataTypes ) {
 		//this.belongsTo(models.Product);
 
 		this.belongsToMany(models.Tag, {through: 'accountTags'});
+	}
+
+	// dit is hoe het momenteel werkt; ik denk niet dat dat de bedoeling is, maar ik volg nu
+	Account.auth = Account.prototype.auth = {
+		listableBy: 'editor',
+		viewableBy: ['editor', 'owner'],
+		createableBy: 'all',
+		updateableBy: ['editor', 'owner'],
+		deleteableBy: ['editor', 'owner'],
+		canConfirm: function (user, self) {
+			// all; specific checks are in the route (TODO: move those to here)
+			return true;
+		},
+		canSignout: function (user, self) {
+			// all; specific checks are in the route (TODO: move those to here)
+			return true;
+		},
 	}
 
 	return Account;
