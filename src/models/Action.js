@@ -53,7 +53,6 @@ module.exports = function( db, sequelize, DataTypes ) {
             defaultValue : 0,
         },
 
-
         status: {
             type         : DataTypes.ENUM('active', 'inactive'),
             defaultValue : 'active',
@@ -379,7 +378,7 @@ module.exports = function( db, sequelize, DataTypes ) {
         // trigger, resource created
         try {
             // Get last run
-            const lastRun = await db.ActionsRun.findOne({
+            const lastRun = await db.ActionRun.findOne({
                 order: [ [ 'createdAt', 'DESC' ]],
             });
 
@@ -389,58 +388,66 @@ module.exports = function( db, sequelize, DataTypes ) {
             }
 
             // if it fails before we get to the end, currently the run will be stuck
+            const currentRun = await db.ActionRun.create({ status: 'running'});
 
-            const currentRun = await db.ActionsRun.create({ status: 'running'});
+            try {
 
-            // Get last run date, or now, don't leave blanco otherwise a run can target all previous resources
-            // Running actions on lots of rows in the past. In same cases that might b
-            const lastRunDate = lastRun ? lastRun.createdAt : new Date().toISOString().slice(0, 19).replace('T', ' ');
+                // Get last run date, or now, don't leave blanco otherwise a run can target all previous resources
+                // Running actions on lots of rows in the past. In same cases that might b
+                const lastRunDate = lastRun ? lastRun.createdAt : new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-            const actions = db.Actions.findAll({
-                where: {
-                    //only fetch items that are always running
-                    type: 'continuously'
-                },
-                order: [ [ 'priority', 'DESC' ], [ 'createdAt', 'DESC' ]],
-            });
+                const actions = db.Actions.findAll({
+                    order: [['priority', 'DESC'], ['createdAt', 'DESC']],
+                });
 
-            for (var i = 0; i < actions.length; i++) {
-                const action = actions[i];
+                for (var i = 0; i < actions.length; i++) {
+                    const action = actions[i];
 
-                const actionType = db.Actions.types.find(actionType => actionType.name === action.type);
+                    const actionType = db.Actions.types.find(actionType => actionType.name === action.type);
 
-                if (!actionType) {
-                    throw new Error(`Action type ${action.type} not found in ActionSequence with id ${self.id}`);
-                }
+                    if (!actionType) {
+                        throw new Error(`Action type ${action.type} not found in ActionSequence with id ${self.id}`);
+                    }
 
-                // array, can be one or more
-                const selectionToActUpon = await action.getSelection(lastRunDate);
+                    //
+                    const selectionToActUpon = await action.getSelection(lastRunDate);
 
-                // there are also actions where all the resources should be bundled, or treated as one
-                for (var j = 0; j < selectionToActUpon.length; j++) {
-                    const selectedResource = selectionToActUpon[j];
+                    // there are also actions where all the resources should be bundled, or treated as one
+                    for (var j = 0; j < selectionToActUpon.length; j++) {
+                        const selectedResource = selectionToActUpon[j];
 
-                    try {
-                        // cron runs req, res will be empty, this will cause request actions to fail in case people try to run them as cron
-                        // which is perfectly fine, the act method should properly display an error here.
-                        await actionType.act(action, selectedResource, req, res);
+                        try {
+                            // cron runs req, res will be empty, this will cause request actions to fail in case people try to run them as cron
+                            // which is perfectly fine, the act method should properly display an error here.
+                            await actionType.act(action, selectedResource, req, res);
 
-                        await db.ActionLog.create({
-                            actionId: action.id,
-                            settings: settings,
-                            status: 'success'
-                        });
-                    } catch(e) {
-                        await db.ActionLog.create({
-                            actionId: action.id,
-                            settings: settings,
-                            status: 'error'
-                        });
+                            await db.ActionLog.create({
+                                actionId: action.id,
+                                log: {
+                                    resource: selectedResource.toJSON(),
+                                    action: action.toJSON(),
+                                    lastRunDate: lastRunDate
+                                },
+                                status: 'success'
+                            });
+                        } catch (e) {
+                            await db.ActionLog.create({
+                                actionId: action.id,
+                                log: {
+                                    'message': e
+                                },
+                                status: 'error'
+                            });
+                        }
                     }
                 }
+
+                await currentRun.update({ status: 'finished' });
+            } catch (e) {
+                await currentRun.update({ status: 'errored', log: `Error while executing ActionSequence with id ${self.id} with the following error:  ${e} `});
+                console.log('Error while executing ActionSequence with id ', self.id, ' with the following error: ', e);
             }
 
-            await currentRun.update({ status: 'finished' });
         } catch (e) {
             console.log('Error while executing ActionSequence with id ', self.id, ' with the following error: ', error);
         }
