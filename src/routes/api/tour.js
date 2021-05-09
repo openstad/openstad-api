@@ -201,7 +201,7 @@ router.route('/:tourId(\\d+)')
 
 
         tour
-            .authorizeData(data, 'update')
+          //  .authorizeData(data, 'update')
             .update(data)
             .then(result => {
                 console.log('result', result)

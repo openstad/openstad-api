@@ -156,77 +156,13 @@ module.exports = function (db, sequelize, DataTypes) {
     this.belongsToMany(models.Tag, {through: 'tourTags'});
   }
 
-  let canMutate = function(user, self) {
-    if (userHasRole(user, 'editor', self.userId) || userHasRole(user, 'admin', self.userId) || userHasRole(user, 'moderator', self.userId)) {
-      return true;
-    }
-
-
-    if (!userHasRole(user, 'owner', self.userId)) {
-      return false;
-    }
-
-    let config = self.site && self.site.config && self.site.config.ideas
-    let canEditAfterFirstLikeOrArg = config && config.canEditAfterFirstLikeOrArg || false
-		let voteCount = self.no + self.yes;
-		let argCount  = self.argumentsFor && self.argumentsFor.length && self.argumentsAgainst && self.argumentsAgainst.length;
-		return canEditAfterFirstLikeOrArg || ( !voteCount && !argCount );
-  }
-
 	Tour.auth = Tour.prototype.auth = {
-    listableBy: 'all',
-    viewableBy: 'all',
-    createableBy: 'all',
-    updateableBy: ['admin','editor','owner', 'moderator', 'all'],
-    deleteableBy: ['admin','editor','owner', 'moderator'],
-    canView: function(user, self) {
-      if (self && self.viewableByRole && self.viewableByRole != 'all' ) {
-        return userHasRole(user, self.viewableByRole, self.userId)
-      } else {
-        return true
-      }
-    },
-    canVote: function(user, self) {
-      // TODO: dit wordt niet gebruikt omdat de logica helemaal in de route zit. Maar hier zou dus netter zijn.
-      return false
-    },
-    canUpdate: canMutate,
-    canDelete: canMutate,
-    canAddPoll: canMutate,
-    toAuthorizedJSON: function(user, data, self) {
-
-      if (!self.auth.canView(user, self)) {
-        return {};
-      }
-
-	   /* if (idea.site.config.archivedVotes) {
-		    if (req.query.includeVoteCount && req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable) {
-			      result.yes = result.extraData.archivedYes;
-			      result.no = result.extraData.archivedNo;
-		     }
-	    }*/
-
-      delete data.site;
-      delete data.config;
-      // dit zou nu dus gedefinieerd moeten worden op site.config, maar wegens backward compatible voor nu nog even hier:
-	    if (data.extraData && data.extraData.phone) {
-		    delete data.extraData.phone;
-	    }
-      // wordt dit nog gebruikt en zo ja mag het er uit
-      if (!data.user) data.user = {};
-      data.user.isAdmin = userHasRole(user, 'editor');
-      // er is ook al een createDateHumanized veld; waarom is dit er dan ook nog?
-	    data.createdAtText = moment(data.createdAt).format('LLL');
-
-      data.can = {};
-      // if ( self.can('vote', user) ) data.can.vote = true;
-      if ( self.can('update', user) ) data.can.edit = true;
-      if ( self.can('delete', user) ) data.can.delete = true;
-      return data;
-
-      return data;
-    },
-  }
+      listableBy: 'all',
+      viewableBy: 'all',
+      createableBy: 'all',
+      updateableBy: ['admin','editor','owner', 'moderator', 'all'],
+      deleteableBy: ['admin','editor','owner', 'moderator'],
+    }
 
   return Tour;
 
