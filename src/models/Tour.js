@@ -176,8 +176,8 @@ module.exports = function (db, sequelize, DataTypes) {
 	Tour.auth = Tour.prototype.auth = {
     listableBy: 'all',
     viewableBy: 'all',
-    createableBy: 'member',
-    updateableBy: ['admin','editor','owner', 'moderator'],
+    createableBy: 'all',
+    updateableBy: ['admin','editor','owner', 'moderator', 'all'],
     deleteableBy: ['admin','editor','owner', 'moderator'],
     canView: function(user, self) {
       if (self && self.viewableByRole && self.viewableByRole != 'all' ) {

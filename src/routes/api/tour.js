@@ -99,14 +99,15 @@ router.route('/')
 					next(err)
 				});
 		} else if (req.user) {
-
+			req.body.accountId = req.user.accountId;
+			next();
 		}
 	})
 	.post(function(req, res, next) {
 		console.log('create', req.body);
 
 		const data = {
-      ...req.body,
+      		...req.body,
 		}
 
 		db.Tour
