@@ -309,7 +309,7 @@ router.route('/:userId(\\d+)')
                     return response.json()
                 }
 
-                throw createError('Updaten niet gelukt', response);
+                throw createError('User already exists, Try to login', response);
             })
             .then((json) => {
                 return db.User
