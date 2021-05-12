@@ -37,11 +37,15 @@ router.route('/')
 // ---------------
   .post(auth.can('Submission', 'create'))
 	.post(function(req, res, next) {
-		let data = {
+		const data = {
 			submittedData     : req.body.submittedData,
 			siteId      			: req.params.siteId,
 			userId      			: req.user.id,
 		};
+
+		if (req.body.formName) {
+			data.formName = req.body.formName
+		}
 
 		db.Submission
 			.authorizeData(data, 'create', req.user)
