@@ -14,6 +14,7 @@ on:
       - development
       - feature/*
       - release/*
+      - release-*
       - release
 
 jobs:
