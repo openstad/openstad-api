@@ -68,7 +68,10 @@ function sendNotificationMail( data ) {
   data.logo = siteConfig.getLogo();
 
 	let html;
-	if (data.template) {
+	
+	if (data.html) {
+    html = data.html
+  } else if (data.template) {
 		html = nunjucks.renderString(data.template, data)
 	} else {
 		html = nunjucks.render('notifications_admin.njk', data)
