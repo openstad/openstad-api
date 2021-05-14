@@ -14,7 +14,7 @@ module.exports = {
     const myConfig = Object.assign({}, config, site && site.config);
 
     const data = {};
-    data.html = nunjucks.renderString(data.template, data);
+    data.html = nunjucks.render(emailData.template, data);
     data.to = recipient.email;
     data.from = ( myConfig.notifications && ( myConfig.notifications.from || ( myConfig.notifications.admin && myConfig.notifications.admin.emailAddress ) ) ) || myConfig.mail.from; // Todo: move to helper method
     data.subject = emailData.subject;
