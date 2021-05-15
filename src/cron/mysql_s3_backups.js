@@ -3,6 +3,7 @@ const fs = require('fs'); // Needed for example below
 const mysqldump = require('mysqldump');
 const moment = require('moment')
 
+const cronTime =  process.env.S3_DBS_BACKUP_CRON_TIME ?  process.env.S3_DBS_BACKUP_CRON_TIME : '0 0 1 * * *';
 
 var Promise = require('bluebird');
 
@@ -77,9 +78,9 @@ const backupMysqlToS3 = async () => {
   S3_MYSQL_BUCKET
  */
 module.exports = {
-	cronTime: '0 0 1 * * *',
+	cronTime: cronTime,
 	runOnInit: false,
 	onTick: async function() {
-    backupMysqlToS3();
+        backupMysqlToS3();
 	}
 };
