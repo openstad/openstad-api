@@ -7,7 +7,7 @@ const db = require('../../db');
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const pagination = require('../../middleware/pagination');
 const {Op} = require('sequelize');
-const searchResults = require('../../middleware/search-results');
+const searchResults = require('../../middleware/search-results-user');
 const fetch = require('node-fetch');
 const rp = require('request-promise');
 
@@ -55,7 +55,7 @@ router
 
 router
     .all('*', function (req, res, next) {
-        console.log('req.user', req.user)
+
         req.scope = ['includeSite'];
         next();
     });
@@ -119,10 +119,7 @@ router.route('/')
 
     // create user
     // -----------
-    .post((req, res, next) => {
-        console.log('req', req.user.id, req.user.role)
-        next();
-    })
+
     .post(auth.can('User', 'create'))
     .post(function (req, res, next) {
         if (!req.site) return next(createError(401, 'Site niet gevonden'));
@@ -308,7 +305,6 @@ router.route('/:userId(\\d+)')
                 if (response.ok) {
                     return response.json()
                 }
-
                 throw createError('User already exists, Try to login', response);
             })
             .then((json) => {

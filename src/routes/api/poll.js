@@ -2,7 +2,7 @@ const createError = require('http-errors')
 const db          = require('../../db');
 const auth        = require('../../middleware/sequelize-authorization-middleware');
 const pagination  = require('../../middleware/pagination');
-const searchResults = require('../../middleware/search-results');
+const searchResults = require('../../middleware/search-results-static');
 
 const router = require('express-promise-router')({mergeParams: true});
 
@@ -47,13 +47,14 @@ router.route('/')
 
 		return db.Poll
 			.scope(...req.scope)
-			.findAndCountAll({ where, offset: req.pagination.offset, limit: req.pagination.limit })
+			.findAndCountAll({ where, offset: req.dbQuery.offset, limit: req.dbQuery.limit })
 			.then(function( result ) {
         result.rows.forEach((poll) => {
           if (req.query.withVoteCount) poll.countVotes(!req.query.withVotes);
         });
         req.results = result.rows;
-        req.pagination.count = result.count;
+        req.results = result.rows;
+        req.dbQuery.count = result.count;
         return next();
 			})
 			.catch(next);

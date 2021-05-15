@@ -119,7 +119,7 @@ router.route('/:choicesGuideId(\\d+)$')
 
     if (req.choicesguide.choicesGuideChoices) {
       json.choices = [];
-      req.choicesguide.choicesGuideChoices.sort((a,b) => a.seqnr > b.seqnr).forEach((choice) => {
+      req.choicesguide.choicesGuideChoices.sort((a,b) => a.seqnr - b.seqnr).forEach((choice) => {
         json.choices.push({
           id: choice.id,
           choicesGuideId: choice.choicesGuideId,
@@ -134,11 +134,11 @@ router.route('/:choicesGuideId(\\d+)$')
 
     if (req.choicesguide.choicesGuideQuestionGroups) {
       json.questiongroups = [];
-      req.choicesguide.choicesGuideQuestionGroups.sort((a,b) => a.seqnr > b.seqnr).forEach((group) => {
+      req.choicesguide.choicesGuideQuestionGroups.sort((a,b) => a.seqnr - b.seqnr).forEach((group) => {
         let choices;
         if (group.choicesGuideChoices) {
           choices = [];
-          group.choicesGuideChoices.sort((a,b) => a.seqnr > b.seqnr).forEach((choice) => {
+          group.choicesGuideChoices.sort((a,b) => a.seqnr - b.seqnr).forEach((choice) => {
             choices.push({
               id: choice.id,
               choicesGuideId: choice.choicesGuideId,
@@ -153,7 +153,7 @@ router.route('/:choicesGuideId(\\d+)$')
         let questions;
         if (group.choicesGuideQuestions) {
           questions = [];
-          group.choicesGuideQuestions.sort((a,b) => a.seqnr > b.seqnr).forEach((question) => {
+          group.choicesGuideQuestions.sort((a,b) => a.seqnr - b.seqnr).forEach((question) => {
             questions.push({
               id: question.id,
               questionGroupId: question.questionGroupId,
@@ -616,7 +616,7 @@ router.route('/:choicesGuideId(\\d+)(/questiongroup/:questionGroupId(\\d+))?/res
 // ------------
 
 	.get(auth.can('ChoicesGuideResult', 'list'))
-			 .get(auth.useReqUser)
+	.get(auth.useReqUser)
 	.get(function(req, res, next) {
 		let where = { choicesGuideId: req.choicesguide.id };
 		let choicesGuideQuestionGroupId = parseInt(req.params.choicesGuideQuestionGroupId);
@@ -632,6 +632,8 @@ router.route('/:choicesGuideId(\\d+)(/questiongroup/:questionGroupId(\\d+))?/res
 						extraData: entry.extraData,
 						userFingerprint: entry.userFingerprint,
 						result: entry.result,
+						createdAt: entry.createdAt,
+						updatedAt: entry.updatedAt,
 					};
 					return json;
 				});
