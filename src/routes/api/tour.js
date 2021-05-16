@@ -27,6 +27,10 @@ router
         //	if ()
         //	req.scope = ['includeTags'];
         req.scope.push({method: ['forSiteId', req.params.siteId]});
+
+        if (req.query.userId) {
+            req.scope.push({method: ['forUserId', req.query.userId]});
+        }
         next();
     });
 
@@ -78,6 +82,8 @@ router.route('/')
     .post(function (req, res, next) {
         const siteTourConfig = req.site && req.site.config && req.site.config.tour ? req.site.config.tour : {};
 
+
+
         // if site has fixed to one accountId make it static
         if (siteTourConfig.fixedAccountId) {
             req.body.accountId = siteTourConfig.fixedAccountId;
@@ -102,12 +108,15 @@ router.route('/')
             req.body.accountId = req.user.accountId;
             next();
         }
+
+
     })
     .post(function (req, res, next) {
         console.log('create', req.body);
 
         const data = {
             ...req.body,
+            userId: req.user.id
         }
 
         db.Tour
@@ -190,7 +199,7 @@ router.route('/:tourId(\\d+)')
     .put(function (req, res, next) {
         const tour = req.results;
 
-        //  if (!( tour && tour.can && tour.can('update') )) return next( new Error('You cannot update this tour') );
+        if (!( tour && tour.can && tour.can('update') )) return next( new Error('You cannot update this tour') );
         //	console.log('333', req.user.role)
 
         let data = {

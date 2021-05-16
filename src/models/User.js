@@ -51,7 +51,7 @@ module.exports = function (db, sequelize, DataTypes) {
         role: {
             type: DataTypes.STRING(32),
             allowNull: false,
-            defaultValue: 'anonymous',
+            defaultValue: 'member',
             validate: {
                 isIn: {
                     args: [['unknown', 'anonymous', 'member', 'admin', 'su', 'editor', 'moderator', 'superAdmin']],

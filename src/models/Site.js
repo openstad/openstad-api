@@ -15,6 +15,15 @@ module.exports = function (db, sequelize, DataTypes) {
 			allowNull    : false
 		},
 
+        userId: {
+            type: DataTypes.INTEGER,
+            auth:  {
+                updateableBy: 'editor',
+            },
+            allowNull: false,
+            defaultValue: 0,
+        },
+
 
         //
         accountId: {

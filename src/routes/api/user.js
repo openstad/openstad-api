@@ -276,6 +276,10 @@ router.route('/:userId(\\d+)')
 
         const data = req.body;
 
+        if (data.setRole) {
+            data.role = 'member';
+        }
+
         /**
          * Update the user API first
          */
