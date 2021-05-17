@@ -96,7 +96,7 @@
     <tr>
         <td></td>
         <td width="560">
-            {{ content | safe }}
+            {{ text | safe | nl2br }}
             {% if submittedData  %}
             <table cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="color: #000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; width:100%; border: solid 3px #f3f3f4;">
                 <tr>

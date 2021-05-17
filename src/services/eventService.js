@@ -54,7 +54,8 @@ const publish = async (db, siteId, ruleSetData) => {
       const emailData = {
         subject: notification_template.subject,
         text: notification_template.text,
-        template: notification_template.templateFile
+        template: notification_template.templateFile,
+        ...ruleSetData.instance.get()
       }
 
       recipients
