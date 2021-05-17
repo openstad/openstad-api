@@ -167,8 +167,8 @@ router
         // this is a slight hack to force anonymous to have member
         const memberConfig = req.site.config &&  req.site.config.member ? req.site.config.member : {};
 
-        if (memberConfig.defaultToMember) {
-            req.userData.role = !req.userData.role || req.userData.role === 'anonymous' ? 'member' : 'anonymous';
+        if (memberConfig.defaultToMember && (!req.userData.role || req.userData.role === 'anonymous')) {
+            req.userData.role = 'member';
         }
 
         let data = {
