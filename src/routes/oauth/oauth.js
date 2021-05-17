@@ -164,6 +164,13 @@ router
     })
     .get(function (req, res, next) {
 
+        // this is a slight hack to force anonymous to have member
+        const memberConfig = req.site.config &&  req.site.config.member ? req.site.config.member : {};
+
+        if (memberConfig.defaultToMember) {
+            req.userData.role = !req.userData.role || req.userData.role === 'anonymous' ? 'member' : 'anonymous';
+        }
+
         let data = {
             externalUserId: req.userData.user_id,
             externalAccessToken: req.userAccessToken,
