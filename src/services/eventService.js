@@ -1,6 +1,7 @@
 const jsonLogic = require('json-logic-js');
 const notificationService = require('./notificationService')
 
+// Todo: move to helper or util file
 /**
  * Checks if string is valid json
  * @param {string} str
@@ -19,13 +20,13 @@ function isJson(str) {
  * Publish an event
  * This method checks if there is any ruleset available for the published event
  *
- * @param {object} db
+ * @param {object} notificationRuleSet
  * @param {int} siteId
  * @param {object} ruleSetData
  * @returns {Promise<void>}
  */
-const publish = async (db, siteId, ruleSetData) => {
-  const ruleSets = await db.NotificationRuleSet
+const publish = async (notificationRuleSet, siteId, ruleSetData) => {
+  const ruleSets = await notificationRuleSet
     .scope('includeTemplate', 'includeRecipients')
     .findAll({where: { siteId, active: 1}})
 
@@ -42,6 +43,7 @@ const publish = async (db, siteId, ruleSetData) => {
       const recipients = notification_recipients.map(recipient => {
         const user = {}
         if (recipient.emailType === 'field') {
+          // get email field from resource instance, can be dot separated (e.g. submittedData.email)
           user.email = recipient.value.split('.').reduce((o,i)=>o[i], ruleSetData.instance)
         }
         if (recipient.emailType === 'fixed') {
@@ -58,6 +60,7 @@ const publish = async (db, siteId, ruleSetData) => {
         ...ruleSetData.instance.get()
       }
 
+      // Todo: instead of directly notify we should use a decent queue
       recipients
         .filter(recipient => recipient.email)
         .forEach(recipient => notificationService.notify(emailData, recipient, siteId));

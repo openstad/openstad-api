@@ -6,7 +6,7 @@ const Sequelize = require('sequelize');
  * @returns {*[]}
  */
 module.exports = function getSequelizeErrors (error) {
-  let errors = [];
+  const errors = [];
   if( typeof error == 'object' && error instanceof Sequelize.ValidationError ) {
     error.errors.forEach(function (error) {
       // notNull kent geen custom messages in deze versie van sequelize; zie https://github.com/sequelize/sequelize/issues/1500

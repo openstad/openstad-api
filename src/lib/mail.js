@@ -68,13 +68,13 @@ function sendNotificationMail( data ) {
   data.logo = siteConfig.getLogo();
 
 	let html;
-	
+
 	if (data.html) {
-    html = data.html
+	  html = data.html
   } else if (data.template) {
-		html = nunjucks.renderString(data.template, data)
+	  html = nunjucks.renderString(data.template, data)
 	} else {
-		html = nunjucks.render('notifications_admin.njk', data)
+	  html = nunjucks.render('notifications_admin.njk', data)
 	}
 
 	sendMail({
@@ -89,9 +89,9 @@ function sendNotificationMail( data ) {
 
 // send email to user that submitted a resource
 function sendThankYouMail (resource, resourceType, user) {
-  
+
   if (!resourceType) return console.error('sendThankYouMail error: resourceType not provided');
-  
+
   const url         = siteConfig.getCmsUrl();
   const hostname    = siteConfig.getCmsHostname();
   const sitename    = siteConfig.getTitle();
@@ -103,7 +103,7 @@ function sendThankYouMail (resource, resourceType, user) {
   const inzendingPath = (siteConfig.getFeedbackEmailInzendingPath(resourceType) && siteConfig.getFeedbackEmailInzendingPath(resourceType).replace(idRegex, resource.id).replace(/\[\[resourceType\]\]/, resourceType)) || "/";
   const inzendingURL  = url + inzendingPath;
   const logo =  siteConfig.getLogo();
-  
+
   let data    = {
     date: new Date(),
     user: user,
@@ -119,7 +119,7 @@ function sendThankYouMail (resource, resourceType, user) {
 
 	let html;
 	let template = siteConfig.getResourceFeedbackEmailTemplate(resourceType);
-	
+
 	if (template) {
     /**
      * This is for legacy reasons
@@ -145,7 +145,7 @@ function sendThankYouMail (resource, resourceType, user) {
   });
 
   let attachments = siteConfig.getResourceFeedbackEmailAttachments(resourceType) || siteConfig.getDefaultEmailAttachments();
-  
+
   try {
   sendMail({
     // in some cases the resource, like order or account has a different email from the submitted user, default to resource, otherwise send to owner of resource

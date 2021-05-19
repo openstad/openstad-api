@@ -28,7 +28,7 @@ module.exports = function (db, sequelize, DataTypes) {
       allowNull: false,
       defaultValue: {},
       get: function () {
-        // for some reaason this is not always done automatically
+        // for some reason this is not always done automatically
         let value = this.getDataValue('submittedData');
         try {
           if (typeof value == 'string') {
@@ -57,7 +57,7 @@ module.exports = function (db, sequelize, DataTypes) {
         eventType: 'CREATE',
         instance
       }
-      eventService.publish(db, parseInt(instance.siteId), ruleSetData);
+      eventService.publish(db.NotificationRuleSet, parseInt(instance.siteId), ruleSetData);
     }
   }
   });

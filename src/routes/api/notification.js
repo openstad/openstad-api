@@ -28,9 +28,9 @@ router.route('/template')
 
       return res.status(201).json(result.get({plain: true}));
     } catch (error) {
-      const sequalizeErrors = getSequelizeErrors(error)
-      if (sequalizeErrors.length > 0) {
-        res.status(422).json(sequalizeErrors);
+      const sequelizeErrors = getSequelizeErrors(error)
+      if (sequelizeErrors.length > 0) {
+        res.status(422).json(sequelizeErrors);
       } else {
         next(error);
       }
@@ -58,9 +58,9 @@ router.route('/template')
 
       return res.status(201).json(result.get({plain: true}));
     } catch (error) {
-      const sequalizeErrors = getSequelizeErrors(error)
-      if (sequalizeErrors.length > 0) {
-        res.status(422).json(sequalizeErrors);
+      const sequelizeErrors = getSequelizeErrors(error)
+      if (sequelizeErrors.length > 0) {
+        res.status(422).json(sequelizeErrors);
       } else {
         next(error);
       }
@@ -139,9 +139,9 @@ router.route('/ruleset')
 
       res.status(201).json(result.get({plain: true}));
     } catch (error) {
-      const sequalizeErrors = getSequelizeErrors(error)
-      if (sequalizeErrors.length > 0) {
-        res.status(422).json(sequalizeErrors);
+      const sequelizeErrors = getSequelizeErrors(error)
+      if (sequelizeErrors.length > 0) {
+        res.status(422).json(sequelizeErrors);
       } else {
         next(error);
       }
@@ -169,9 +169,9 @@ router.route('/ruleset')
 
       return res.status(200).json(result.get({plain: true}));
     } catch (error) {
-      const sequalizeErrors = getSequelizeErrors(error)
-      if (sequalizeErrors.length > 0) {
-        res.status(422).json(sequalizeErrors);
+      const sequelizeErrors = getSequelizeErrors(error)
+      if (sequelizeErrors.length > 0) {
+        res.status(422).json(sequelizeErrors);
       } else {
         next(error);
       }
@@ -215,9 +215,9 @@ router.route('/recipient')
 
       res.status(201).json(result.get({plain: true}));
     } catch (error) {
-      const sequalizeErrors = getSequelizeErrors(error)
-      if (sequalizeErrors.length > 0) {
-        res.status(422).json(sequalizeErrors);
+      const sequelizeErrors = getSequelizeErrors(error)
+      if (sequelizeErrors.length > 0) {
+        res.status(422).json(sequelizeErrors);
       } else {
         next(error);
       }
@@ -243,9 +243,9 @@ router.route('/recipient')
 
       return res.status(201).json(result.get({plain: true}));
     } catch (error) {
-      const sequalizeErrors = getSequelizeErrors(error)
-      if (sequalizeErrors.length > 0) {
-        res.status(422).json(sequalizeErrors);
+      const sequelizeErrors = getSequelizeErrors(error)
+      if (sequelizeErrors.length > 0) {
+        res.status(422).json(sequelizeErrors);
       } else {
         next(error);
       }

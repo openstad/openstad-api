@@ -1464,7 +1464,6 @@ module.exports = function (db, sequelize, DataTypes) {
             }
 
             return resolve();
-
           }).catch(err => {
             throw err;
           })

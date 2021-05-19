@@ -27,7 +27,7 @@ module.exports = ( db, sequelize, DataTypes ) => {
     viewableBy: 'admin',
     createableBy: 'admin',
     updateableBy: 'admin',
-    deleteableBy: 'admin',
+    deleteableBy: 'admin'
   };
 
   return NotificationTemplate;
