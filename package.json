@@ -10,7 +10,8 @@
     "test:unit": "jest --no-cache --config jest.config.js",
     "test:unit:watch": "jest --watch --no-cache",
     "test:e2e": "jest --no-cache --config jest-e2e.config.js --forceExit",
-    "test:e2e:debug": "jest --no-cache --config jest-e2e.config.js --verbose --forceExit"
+    "test:e2e:debug": "jest --no-cache --config jest-e2e.config.js --verbose --forceExit",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@kubernetes/client-node": "^0.12.2",
@@ -54,10 +55,16 @@
     "ws": "^7.3.1"
   },
   "devDependencies": {
+    "husky": "^6.0.0",
     "jest": "^25.5.4",
+    "lint-staged": "^11.0.0",
+    "prettier": "^2.3.0",
     "sequelize-mock": "^0.10.2",
     "supertest": "^4.0.2"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "lint-staged": {
+    "*.{js,css,md}": "prettier --write"
+  }
 }
