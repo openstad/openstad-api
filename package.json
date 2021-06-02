@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node migrate.js && node server.js",
-    "dev": "nodemon server.js ",
+    "dev": "nodemon --inspect=0.0.0.0:9229 server.js ",
     "test": "npm run test:unit",
     "test:unit": "jest --no-cache --config jest.config.js",
     "test:unit:watch": "jest --watch --no-cache",
@@ -33,6 +33,7 @@
     "http-errors": "^1.8.0",
     "ip": "^1.1.5",
     "isomorphic-fetch": "^3.0.0",
+    "joi": "^17.4.0",
     "jsonwebtoken": "^8.5.1",
     "mariadb": "^2.5.0",
     "marked": "^0.7.0",
