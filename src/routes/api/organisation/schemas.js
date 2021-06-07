@@ -3,8 +3,12 @@ const Joi = require('joi');
 exports.createOrganisation = Joi.object({
   name: Joi.string().required(),
   street: Joi.string().required().max(2048),
-  zip: Joi.string().required().max(6),
+  zip: Joi.string()
+    .regex(/^[1-9][0-9]{3} ?(?!sa|sd|ss)[a-zA-Z]{2}$/)
+    .trim()
+    .required(),
   phone: Joi.string().required().max(10),
+  district: Joi.string().required(),
   email: Joi.string().email().required(),
   website: Joi.string().uri(),
   facebook: Joi.string()
@@ -43,6 +47,7 @@ exports.updateOrganisation = Joi.object({
   name: Joi.string(),
   street: Joi.string().max(2048),
   zip: Joi.string().max(6),
+  district: Joi.string(),
   phone: Joi.string().max(10),
   email: Joi.string().email(),
   website: Joi.string().uri(),

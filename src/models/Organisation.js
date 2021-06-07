@@ -26,10 +26,10 @@ module.exports = function (db, sequelize, DataTypes) {
         allowNull: false,
       },
 
-      // Area?
-      // district: {
-      //   type: DataTypes.INTEGER,
-      // },
+      district: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
 
       phone: {
         type: DataTypes.STRING(10),
@@ -204,7 +204,6 @@ module.exports = function (db, sequelize, DataTypes) {
 
   Organisation.associate = function (models) {
     this.hasMany(models.User);
-    this.belongsTo(models.Area);
     this.belongsTo(models.Site);
     this.belongsToMany(models.Tag, {
       through: 'organisationTags',

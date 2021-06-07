@@ -35,7 +35,6 @@ router.post(
         });
         await organisation.addUser(req.user, { transaction });
         await organisation.setTags(values.tagIds, { transaction });
-        await organisation.setArea(values.areaId, { transaction });
 
         await transaction.commit();
         await organisation.reload();
@@ -137,11 +136,6 @@ router.put(
           ...query,
           include: [db.Tag],
         });
-
-        // Update area
-        if (values.areaId) {
-          await organisation.setArea(values.areaId, { transaction });
-        }
 
         // Update tags
         if (values.tagIds) {

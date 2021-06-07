@@ -12,13 +12,13 @@ module.exports = {
           \`siteId\` INTEGER DEFAULT 0, 
           \`name\` VARCHAR(255) NOT NULL, 
           \`street\` VARCHAR(255) NOT NULL, 
-          \`zip\` VARCHAR(6) NOT NULL, 
+          \`zip\` VARCHAR(10) NOT NULL, 
+          \`district\` VARCHAR(255) NOT NULL, 
           \`phone\` VARCHAR(10) NOT NULL, 
           \`email\` VARCHAR(255) NOT NULL, 
           \`website\` VARCHAR(2048), 
           \`facebook\` VARCHAR(2048), 
           \`instagram\` VARCHAR(2048), 
-          \`areaId\` INTEGER,
           \`status\` enum('PENDING', 'VERIFIED', 'DENIED') NOT NULL DEFAULT 'PENDING',
           \`contactName\` VARCHAR(255) NOT NULL,
           \`contactPosition\` VARCHAR(255) NOT NULL,
@@ -32,8 +32,7 @@ module.exports = {
           \`updatedAt\` DATETIME NOT NULL, 
           \`deletedAt\` DATETIME, 
           PRIMARY KEY (\`id\`), 
-          FOREIGN KEY (\`siteId\`) REFERENCES \`sites\` (\`id\`) ON DELETE SET NULL ON UPDATE CASCADE,
-          FOREIGN KEY (\`areaId\`) REFERENCES \`areas\` (\`id\`) ON DELETE SET NULL ON UPDATE CASCADE
+          FOREIGN KEY (\`siteId\`) REFERENCES \`sites\` (\`id\`) ON DELETE SET NULL ON UPDATE CASCADE
         )
         ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -51,8 +50,8 @@ module.exports = {
           \`createdAt\` DATETIME NOT NULL, 
           \`updatedAt\` DATETIME NOT NULL, 
           PRIMARY KEY (\`organisationId\`, \`tagId\`), 
-          FOREIGN KEY (\`organisationId\`) REFERENCES \`organisations\` (\`id\`) ON DELETE SET NULL ON UPDATE CASCADE,
-          FOREIGN KEY (\`tagId\`) REFERENCES \`tags\` (\`id\`) ON DELETE SET NULL ON UPDATE CASCADE
+          FOREIGN KEY (\`organisationId\`) REFERENCES \`organisations\` (\`id\`) ON UPDATE CASCADE,
+          FOREIGN KEY (\`tagId\`) REFERENCES \`tags\` (\`id\`) ON UPDATE CASCADE
         )
         ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 			`);
