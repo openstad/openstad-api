@@ -1,0 +1,36 @@
+name: Integration
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  # Build job creates a docker image and publishes it to the registry
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_PUBLIC_USERNAME: savvycodes
+      DOCKER_IMAGE_NAME: openstad-api
+
+    # Enable docker
+    services:
+      docker:
+        image: docker
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set outputs
+        id: vars
+        run: |
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+          echo "::set-output name=branch::$(echo ${{github.event.pull_request.head.ref}} | sed 's/\//-/g')"
+
+      - name: Build API container
+        run: docker build -t ${DOCKER_PUBLIC_USERNAME}/${DOCKER_IMAGE_NAME}:${{ steps.vars.outputs.branch }}-${{ steps.vars.outputs.sha_short }} .
+
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Publish container
+        run: docker push ${DOCKER_PUBLIC_USERNAME}/${DOCKER_IMAGE_NAME}:${{ steps.vars.outputs.branch }}-${{ steps.vars.outputs.sha_short }}
