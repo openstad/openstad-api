@@ -24,7 +24,7 @@ jobs:
         id: vars
         run: |
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-          echo "::set-output name=branch::$(git rev-parse --abbrev-ref HEAD | sed 's/\//-/g')"
+          echo "::set-output name=branch::$(echo ${{github.event.pull_request.head.ref}} | sed 's/\//-/g')"
 
       - name: Build API container
         run: docker build -t ${DOCKER_PUBLIC_USERNAME}/${DOCKER_IMAGE_NAME}:${{ steps.vars.outputs.branch }}-${{ steps.vars.outputs.sha_short }} .
