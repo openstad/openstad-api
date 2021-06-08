@@ -56,13 +56,28 @@ router.post(
  */
 router.get(`/`, async function listOrganisations(req, res, next) {
   try {
-    const organisations = await db.Organisation.findAll({
+    const organisations = await db.Organisation.findAndCountAll({
       where: {
         siteId: req.site.id,
       },
     });
 
-    return res.json(organisations);
+    return res.json({
+      metadata: {
+        page: 1,
+        pageSize: 25,
+        pageCount: 1,
+        totalCount: organisations.count,
+        links: {
+          self: '',
+          first: '',
+          last: '',
+          previous: '',
+          next: '',
+        },
+      },
+      records: organisations.rows,
+    });
   } catch (err) {
     return next(createError(500, err.message));
   }
@@ -130,6 +145,10 @@ router.put(
           },
           transaction,
         };
+
+        if (req.user.role !== 'admin') {
+          delete values.status;
+        }
 
         await db.Organisation.update(values, query);
         const organisation = await db.Organisation.findOne({
