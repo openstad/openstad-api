@@ -50,6 +50,8 @@ function sendMail( options ) {
     });
   }
 
+
+
   mailTransporter.getTransporter().sendMail(
     merge(defaultSendMailOptions, options),
     function( error, info ) {
@@ -165,8 +167,9 @@ function sendNewsletterSignupConfirmationMail( newslettersignup, user ) {
   const url         = siteConfig.getCmsUrl();
   const hostname    = siteConfig.getCmsHostname();
   const sitename    = siteConfig.getTitle();
-  let fromAddress = siteConfig.getFeedbackEmailFrom() || config.email;
-  if ( fromAddress.match(/^.+<(.+)>$/, '$1') ) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
+  let fromAddress   = siteConfig.getFeedbackEmailFrom('newslettersignup') || config.email;
+
+  //if ( fromAddress.match(/^.+<(.+)>$/, '$1') ) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
 
 	const confirmationUrl = siteConfig.getNewsletterSignupConfirmationEmailUrl().replace(/\[\[token\]\]/, newslettersignup.confirmToken)
   const logo = siteConfig.getLogo();
@@ -174,6 +177,7 @@ function sendNewsletterSignupConfirmationMail( newslettersignup, user ) {
   const data    = {
     date: new Date(),
     user: user,
+      newslettersignup: newslettersignup,
     HOSTNAME: hostname,
     SITENAME: sitename,
 		confirmationUrl,
@@ -198,12 +202,15 @@ function sendNewsletterSignupConfirmationMail( newslettersignup, user ) {
 
   const attachments = siteConfig.getNewsletterSignupConfirmationEmailAttachments();
 
+  const newsletterConfig = siteConfig.getResourceConfig('newslettersignup');
+
   sendMail({
     to: newslettersignup.email,
     from: fromAddress,
     subject: siteConfig.getNewsletterSignupConfirmationEmailSubject() || 'Bedankt voor je aanmelding',
     html: html,
     text: text,
+    bcc: newsletterConfig.bcc ? newsletterConfig.bcc : false,
     attachments,
   });
 
