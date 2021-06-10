@@ -60,6 +60,9 @@ module.exports = function (db, sequelize, DataTypes) {
       through: 'organisationTags',
       constraints: false,
     });
+    this.belongsToMany(models.Event, {
+      through: 'eventTag',
+    });
     this.belongsTo(models.Site);
   };
 
