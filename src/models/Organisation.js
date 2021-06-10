@@ -72,12 +72,6 @@ module.exports = function (db, sequelize, DataTypes) {
         allowNull: true,
       },
 
-      status: {
-        type: DataTypes.ENUM('PENDING', 'VERIFIED', 'DENIED'),
-        defaultValue: 'PENDING',
-        allowNull: false,
-      },
-
       contactName: {
         type: DataTypes.STRING(255),
         allowNull: false,

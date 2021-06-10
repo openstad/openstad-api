@@ -19,7 +19,6 @@ module.exports = {
           \`website\` VARCHAR(2048), 
           \`facebook\` VARCHAR(2048), 
           \`instagram\` VARCHAR(2048), 
-          \`status\` enum('PENDING', 'VERIFIED', 'DENIED') NOT NULL DEFAULT 'PENDING',
           \`contactName\` VARCHAR(255) NOT NULL,
           \`contactPosition\` VARCHAR(255) NOT NULL,
           \`contactEmail\` VARCHAR(255) NOT NULL,

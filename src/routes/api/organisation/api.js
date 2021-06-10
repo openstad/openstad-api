@@ -146,10 +146,6 @@ router.put(
           transaction,
         };
 
-        if (req.user.role !== 'admin') {
-          delete values.status;
-        }
-
         await db.Organisation.update(values, query);
         const organisation = await db.Organisation.findOne({
           ...query,

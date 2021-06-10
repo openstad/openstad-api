@@ -67,5 +67,4 @@ exports.updateOrganisation = Joi.object({
       }
     ),
   tagIds: Joi.array().items(Joi.number()).min(1),
-  status: Joi.string().valid('PENDING', 'VERIFIED', 'DENIED'),
 }).options({ stripUnknown: true });

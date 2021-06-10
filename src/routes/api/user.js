@@ -124,6 +124,14 @@ router
       siteId: req.params.siteId,
     });
 
+    /**
+     * For now a way to filter on event providers since they don't have a seperate role
+     * but just a column in the database
+     */
+    if (req.user && req.user.role === 'admin' && req.query.showEventProviders) {
+      queryConditions.isEventProvider = true;
+    }
+
     db.User.scope(...req.scope)
       .findAndCountAll({
         ...dbQuery,
