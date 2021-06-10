@@ -188,11 +188,7 @@ function sendNewsletterSignupConfirmationMail( newslettersignup, user ) {
 
 	let html;
 	let template = siteConfig.getNewsletterSignupConfirmationEmailTemplate();
-	if (template) {
-		html = nunjucks.renderString(template, data);
-	} else {
-		html = nunjucks.render('confirm_newsletter_signup.njk', data);
-	}
+	console.log('newsletter', template);
 
   const text = htmlToText.fromString(html, {
     ignoreImage: true,
