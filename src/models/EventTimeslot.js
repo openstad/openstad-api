@@ -4,15 +4,6 @@ module.exports = function (db, sequelize, DataTypes) {
   const EventTimeslot = sequelize.define(
     'eventTimeslot',
     {
-      // eventId: {
-      //   type: DataTypes.INTEGER,
-      //   allowNull: false,
-      // },
-
-      date: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
       startTime: {
         type: DataTypes.DATE,
         allowNull: false,

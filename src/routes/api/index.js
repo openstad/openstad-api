@@ -64,6 +64,7 @@ router.use('/area', require('./area'));
 
 // organisations for event-planner module
 router.use('/site/:siteId(\\d+)/organisation', require('./organisation'));
+router.use('/site/:siteId(\\d+)/event', require('./event'));
 
 router.use('/repo', require('./externalSite'));
 

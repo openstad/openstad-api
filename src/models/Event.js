@@ -77,7 +77,7 @@ module.exports = function (db, sequelize, DataTypes) {
     this.belongsToMany(models.Tag, {
       through: 'eventTag',
     });
-    this.hasMany(models.EventTimeslot);
+    this.hasMany(models.EventTimeslot, { as: 'slots' });
   };
 
   Event.auth = Event.prototype.auth = {

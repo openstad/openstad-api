@@ -44,7 +44,6 @@ module.exports = {
 
       CREATE TABLE \`eventTimeslots\` (
         \`id\` int(11) NOT NULL AUTO_INCREMENT,
-        \`date\` datetime NOT NULL,
         \`startTime\` datetime NOT NULL,
         \`endTime\` datetime NOT NULL,
         \`createdAt\` datetime NOT NULL,
