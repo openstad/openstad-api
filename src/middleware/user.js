@@ -85,7 +85,7 @@ function parseJwt(authorizationHeader) {
 	let token = authorizationHeader.replace(/^bearer /i, '');
 	console.log('token 111', token, typeof token);
 
-	if (!token) {
+	if (!token || token === 'undefined') {
 		console.log('token herhereh', token);
 		return false;
 	}
