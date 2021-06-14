@@ -15,7 +15,10 @@ async function canUpdateOrganisationPolicy(organisationId, user, site) {
   await isEventProvider(user, site);
 
   // You can only update your own organisation unless you are an admin
-  if (user.role !== 'admin' && user.organisationId !== organisationId) {
+  if (
+    user.role !== 'admin' &&
+    user.organisationId !== parseInt(organisationId)
+  ) {
     throw createError(403, 'Je kunt deze organisatie niet aanpassen');
   }
 
