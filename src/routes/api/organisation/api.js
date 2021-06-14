@@ -60,6 +60,7 @@ router.get(`/`, async function listOrganisations(req, res, next) {
       where: {
         siteId: req.site.id,
       },
+      include: [db.Tag],
     });
 
     return res.json({
@@ -89,7 +90,9 @@ router.get(`/`, async function listOrganisations(req, res, next) {
 router.get(`/me`, async function listOwnOrganisation(req, res, next) {
   try {
     const organisation =
-      (await db.Organisation.findByPk(req.user.organisationId)) || {};
+      (await db.Organisation.findByPk(req.user.organisationId, {
+        include: [db.Tag],
+      })) || {};
 
     return res.json(organisation);
   } catch (err) {
@@ -105,7 +108,8 @@ router.get(
   async function getOrganisation(req, res, next) {
     try {
       const organisation = await db.Organisation.findByPk(
-        req.params.organisationId
+        req.params.organisationId,
+        { include: [db.Tag] }
       );
 
       if (!organisation) {
