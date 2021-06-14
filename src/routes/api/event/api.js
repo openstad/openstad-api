@@ -143,13 +143,13 @@ router.patch(
       const event = res.locals.event;
       await event.update(values, { transaction });
 
-      // Update or create timeslots
+      // Create or update slots
       if (values.slots) {
-        const slots = values.slots.map((slot) => ({
-          ...slot,
-          eventId: res.locals.event.id,
-        }));
-
+        /**
+         * @todo: due to the way the form in the frontend is designed we can't keep track of the timeslots that are new and the once that are edited, for now we remove all slots and instert new ones. Off course not what you want since attendees might be thight to slots in the future.
+         * 
+         * Old code (that updates or creates slots):
+         * 
         await Promise.all(
           slots.map((slot) => {
             if (slot.id) {
@@ -161,6 +161,19 @@ router.patch(
             return db.EventTimeslot.create(slot, { transaction });
           })
         );
+         */
+        const slots = values.slots.map((slot) => ({
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          eventId: event.id,
+        }));
+
+        await db.EventTimeslot.destroy({
+          where: { eventId: event.id },
+          transaction,
+        });
+
+        await db.EventTimeslot.bulkCreate(slots, { transaction });
       }
 
       if (values.tagIds) {
