@@ -61,6 +61,10 @@ router.get(`/`, async function listOrganisations(req, res, next) {
         siteId: req.site.id,
       },
       include: [db.Tag],
+      order: [
+        ['id', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
     });
 
     return res.json({

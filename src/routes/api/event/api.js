@@ -63,6 +63,10 @@ router.get('/', async function listEvents(req, res, next) {
       where: {
         siteId: req.params.siteId,
       },
+      order: [
+        ['id', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
     };
 
     if (req.query.organisationId) {
