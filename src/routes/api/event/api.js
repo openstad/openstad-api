@@ -1,6 +1,7 @@
 const express = require('express');
 const createError = require('http-errors');
 const log = require('debug')('app:http:api-event');
+const { Op } = require('sequelize');
 
 const db = require('../../../db');
 const sanitize = require('../../../util/sanitize');
@@ -11,6 +12,7 @@ const schemas = require('./schemas');
 const isEventProvider = require('../organisation/policies/is-event-provider');
 const hasOrganisation = require('./policies/has-organisation');
 const withTransaction = require('./middleware/with-transaction');
+const dbQuery = require('./middleware/db-query');
 
 const router = express.Router({ mergeParams: true });
 
@@ -57,46 +59,28 @@ router.post(
 /**
  * List events
  */
-router.get('/', async function listEvents(req, res, next) {
+router.get('/', dbQuery, async function listEvents(req, res, next) {
   try {
-    const query = {
-      where: {
-        siteId: req.params.siteId,
-      },
-      order: [
-        ['id', 'DESC'],
-        ['createdAt', 'DESC'],
-      ],
-    };
+    const query = res.locals.query;
 
-    if (req.query.organisationId) {
-      query.where.organisationId = req.query.organisationId;
-    }
-
-    const events = await db.Event.findAndCountAll({
-      ...query,
-      include: [
-        { model: db.EventTimeslot, as: 'slots' },
-        db.Organisation,
-        db.Tag,
-      ],
-    });
+    const count = await db.Event.count(query);
+    const events = await db.Event.findAll(query);
 
     return res.json({
       metadata: {
         page: 1,
-        pageSize: 25,
-        pageCount: 1,
-        totalCount: events.count,
+        pageSize: query.limit,
+        pageCount: Math.ceil(count / query.limit),
+        totalCount: count,
         links: {
-          self: '',
-          first: '',
-          last: '',
-          previous: '',
-          next: '',
+          self: null,
+          first: null,
+          last: null,
+          previous: null,
+          next: null,
         },
       },
-      records: events.rows,
+      records: events,
     });
   } catch (err) {
     return next(err);

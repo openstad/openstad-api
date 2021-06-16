@@ -59,3 +59,15 @@ exports.patchEvent = Joi.object({
     .min(1),
   tagIds: Joi.array().items(Joi.number()).min(1),
 }).options({ stripUnknown: true });
+
+exports.queryEvents = Joi.object({
+  page: Joi.number().default(0),
+  organisationId: Joi.number(),
+  q: Joi.string().allow(null, ''),
+  dates: Joi.alternatives().try(Joi.array().items(Joi.date()), Joi.date()),
+  tagIds: Joi.alternatives().try(Joi.array().items(Joi.number()), Joi.number()),
+  districts: Joi.alternatives().try(
+    Joi.array().items(Joi.string()),
+    Joi.string()
+  ),
+}).options({ stripUnknown: true });
