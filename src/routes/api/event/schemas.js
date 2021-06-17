@@ -52,7 +52,7 @@ exports.patchEvent = Joi.object({
     .items(
       Joi.object({
         id: Joi.number(),
-        startTime: Joi.date().iso().greater('now'),
+        startTime: Joi.date().iso(),
         endTime: Joi.date().iso().greater(Joi.ref('startTime')),
       })
     )
