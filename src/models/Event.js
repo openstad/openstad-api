@@ -54,7 +54,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
       information: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT(),
       },
 
       image: {

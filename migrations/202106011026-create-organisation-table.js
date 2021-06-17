@@ -5,7 +5,6 @@ var db = require('../src/db').sequelize;
  */
 module.exports = {
   up: function () {
-    console.log('organisations table');
     try {
       return db.query(`
         CREATE TABLE IF NOT EXISTS \`organisations\` (
