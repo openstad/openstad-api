@@ -18,12 +18,12 @@ module.exports = function (db, sequelize, DataTypes) {
 
       street: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true,
       },
 
       zip: {
         type: DataTypes.STRING(6),
-        allowNull: false,
+        allowNull: true,
       },
 
       district: {
@@ -142,7 +142,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
       municipalityContactEmail: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true,
         validate: {
           isEmail: {
             msg: 'Geen geldig emailadres',
@@ -168,7 +168,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
       municipalityContactPhone: {
         type: DataTypes.STRING(10),
-        allowNull: false,
+        allowNull: true,
         auth: {
           listableBy: ['editor', 'owner'],
           viewableBy: ['editor', 'owner'],
@@ -178,7 +178,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
       municipalityContactStatement: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
         auth: {
           listableBy: ['editor', 'owner'],
           viewableBy: ['editor', 'owner'],
@@ -212,10 +212,6 @@ module.exports = function (db, sequelize, DataTypes) {
     updateableBy: ['editor', 'owner'],
     deleteableBy: ['editor', 'owner'],
   };
-
-  // Organisation.sync()
-  //   .then(() => log('synced organisation'))
-  //   .catch(console.error);
 
   return Organisation;
 };

@@ -2,11 +2,9 @@ const Joi = require('joi');
 
 exports.createOrganisation = Joi.object({
   name: Joi.string().required(),
-  street: Joi.string().required().max(2048),
-  zip: Joi.string()
-    .regex(/^[1-9][0-9]{3} ?(?!sa|sd|ss)[a-zA-Z]{2}$/)
-    .required(),
-  phone: Joi.string().required().max(10),
+  street: Joi.string().max(2048),
+  zip: Joi.string().regex(/^[1-9][0-9]{3} ?(?!sa|sd|ss)[a-zA-Z]{2}$/),
+  phone: Joi.string().max(10),
   district: Joi.string().required(),
   email: Joi.string().email().required(),
   website: Joi.string().uri(),
@@ -33,13 +31,13 @@ exports.createOrganisation = Joi.object({
   contactName: Joi.string().required(),
   contactPosition: Joi.string().required(),
   contactEmail: Joi.string().email().required(),
-  contactPhone: Joi.string().min(10).max(10).required(),
+  contactPhone: Joi.string().max(10).required(),
 
   // Municipality contact details
   municipalityContactName: Joi.string().required(),
-  municipalityContactEmail: Joi.string().email().required(),
-  municipalityContactPhone: Joi.string().min(10).max(10).required(),
-  municipalityContactStatement: Joi.string().required(),
+  municipalityContactEmail: Joi.string().email(),
+  municipalityContactPhone: Joi.string().min(10).max(10),
+  municipalityContactStatement: Joi.string(),
 }).options({ stripUnknown: true });
 
 exports.updateOrganisation = Joi.object({
