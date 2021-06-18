@@ -1,7 +1,7 @@
 const express = require('express');
 const createError = require('http-errors');
 const log = require('debug')('app:http:api-event');
-const { Op } = require('sequelize');
+const difference = require('lodash.difference');
 
 const db = require('../../../db');
 const sanitize = require('../../../util/sanitize');
@@ -129,15 +129,26 @@ router.patch(
       }
 
       const event = res.locals.event;
-      await event.update(values, { transaction });
 
-      // Create or update slots
+      // Create, update or remove slots
       if (values.slots) {
-        /**
-         * @todo: due to the way the form in the frontend is designed we can't keep track of the timeslots that are new and the once that are edited, for now we remove all slots and instert new ones. Off course not what you want since attendees might be thight to slots in the future.
-         * 
-         * Old code (that updates or creates slots):
-         * 
+        const slotsToRemove = difference(
+          event.slots.map((s) => s.id),
+          values.slots.filter((s) => s.id).map((s) => s.id)
+        );
+
+        await db.EventTimeslot.destroy({
+          where: { id: slotsToRemove },
+          transaction,
+        });
+
+        const slots = values.slots.map((slot) => ({
+          id: slot.id || null,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          eventId: event.id,
+        }));
+
         await Promise.all(
           slots.map((slot) => {
             if (slot.id) {
@@ -149,24 +160,16 @@ router.patch(
             return db.EventTimeslot.create(slot, { transaction });
           })
         );
-         */
-        const slots = values.slots.map((slot) => ({
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          eventId: event.id,
-        }));
 
-        await db.EventTimeslot.destroy({
-          where: { eventId: event.id },
-          transaction,
-        });
-
-        await db.EventTimeslot.bulkCreate(slots, { transaction });
+        delete values.slots;
       }
 
       if (values.tagIds) {
         await event.setTags(values.tagIds, { transaction });
+        delete values.tagIds;
       }
+
+      await event.update(values, { transaction });
 
       await transaction.commit();
       await event.reload();
