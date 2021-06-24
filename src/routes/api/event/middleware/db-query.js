@@ -13,7 +13,7 @@ module.exports = async function (req, res, next) {
       where: {
         siteId: req.params.siteId,
       },
-      limit: 25,
+      // limit: 25,
       offset: req.query.page * 25 || 0 * 25,
       order: [
         ['id', 'DESC'],
