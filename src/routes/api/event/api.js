@@ -4,7 +4,6 @@ const log = require('debug')('app:http:api-event');
 const difference = require('lodash.difference');
 
 const db = require('../../../db');
-const sanitize = require('../../../util/sanitize');
 const hasPolicies = require('../../../middleware/has-policies');
 const validateSchema = require('../../../middleware/validate-schema');
 const fetchEventByOrganisation = require('./middleware/fetch-event-by-organisation');
@@ -32,8 +31,6 @@ router.post(
         siteId: req.params.siteId,
         organisationId: req.user.organisationId,
       };
-
-      values.description = sanitize.summary(values.description);
 
       const event = await db.Event.create(values, {
         include: [
@@ -124,9 +121,6 @@ router.patch(
     const transaction = res.locals.transaction;
     try {
       const values = req.body;
-      if (values.description) {
-        values.description = sanitize.summary(values.description);
-      }
 
       const event = res.locals.event;
 

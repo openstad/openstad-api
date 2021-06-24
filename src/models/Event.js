@@ -44,8 +44,8 @@ module.exports = function (db, sequelize, DataTypes) {
 
       // Price is in cents
       price: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
+        type: DataTypes.TEXT(),
+        allowNull: true,
       },
 
       attendees: {
