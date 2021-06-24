@@ -9,20 +9,16 @@ exports.createOrganisation = Joi.object({
   email: Joi.string().email().required(),
   website: Joi.string().uri(),
   facebook: Joi.string()
+    .allow('', null)
     .uri()
     .regex(
-      /(?:(?:http|https):\/\/)?(?:www.)?(?:m.)?facebook.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[?\w\-]*\/)?(?:profile.php\?id=(?=\d.*))?([\w\-]*)?/m,
-      {
-        invert: true,
-      }
+      /(?:(?:http|https):\/\/)?(?:www.)?(?:m.)?facebook.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[?\w\-]*\/)?(?:profile.php\?id=(?=\d.*))?([\w\-]*)?/m
     ),
   instagram: Joi.string()
+    .allow('', null)
     .uri()
     .regex(
-      /https?:\/\/(www\.)?instagram\.com\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,30}(?:[A-Za-z0-9_]))?)(\/)?/,
-      {
-        invert: true,
-      }
+      /https?:\/\/(www\.)?instagram\.com\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)(\/)?/
     ),
   areaId: Joi.number(),
   tagIds: Joi.array().items(Joi.number()).min(1).required(),
@@ -49,20 +45,16 @@ exports.updateOrganisation = Joi.object({
   email: Joi.string().email(),
   website: Joi.string().uri(),
   facebook: Joi.string()
+    .allow('', null)
     .uri()
     .regex(
-      /(?:(?:http|https):\/\/)?(?:www.)?(?:m.)?facebook.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[?\w\-]*\/)?(?:profile.php\?id=(?=\d.*))?([\w\-]*)?/m,
-      {
-        invert: true,
-      }
+      /(?:(?:http|https):\/\/)?(?:www.)?(?:m.)?facebook.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[?\w\-]*\/)?(?:profile.php\?id=(?=\d.*))?([\w\-]*)?/m
     ),
   instagram: Joi.string()
+    .allow('', null)
     .uri()
     .regex(
-      /https?:\/\/(www\.)?instagram\.com\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,30}(?:[A-Za-z0-9_]))?)/,
-      {
-        invert: true,
-      }
+      /https?:\/\/(www\.)?instagram\.com\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)/
     ),
   tagIds: Joi.array().items(Joi.number()).min(1),
 }).options({ stripUnknown: true });
