@@ -15,11 +15,9 @@ module.exports = async function (req, res, next) {
       },
       // limit: 25,
       offset: req.query.page * 25 || 0 * 25,
-      order: [
-        ['id', 'DESC'],
-        ['createdAt', 'DESC'],
-      ],
       include: [db.Organisation],
+      // order all events on starttime
+      order: [[{ model: db.EventTimeslot, as: 'slots' }, 'startTime', 'ASC']],
     };
 
     if (req.query.organisationId) {
@@ -79,6 +77,11 @@ module.exports = async function (req, res, next) {
         model: db.EventTimeslot,
         as: 'slots',
         required: true,
+        where: {
+          startTime: {
+            [Op.gte]: moment().startOf('day'),
+          },
+        },
       });
     }
 
