@@ -65,7 +65,7 @@ router.get('/', dbQuery, async function listEvents(req, res, next) {
 
     return res.json({
       metadata: {
-        page: 1,
+        page: req.query.page || 1,
         pageSize: query.limit,
         pageCount: Math.ceil(count / query.limit),
         totalCount: count,

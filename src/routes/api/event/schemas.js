@@ -61,7 +61,7 @@ exports.patchEvent = Joi.object({
 }).options({ stripUnknown: true });
 
 exports.queryEvents = Joi.object({
-  page: Joi.number().default(0),
+  page: Joi.number().default(1),
   organisationId: Joi.number(),
   q: Joi.string().allow(null, ''),
   dates: Joi.alternatives().try(Joi.array().items(Joi.date()), Joi.date()),
