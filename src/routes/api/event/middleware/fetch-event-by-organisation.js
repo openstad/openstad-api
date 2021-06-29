@@ -6,6 +6,7 @@ module.exports = async function fetchEventByOrganisation(req, res, next) {
   try {
     const query = {
       where: {
+        id: req.params.eventId,
         siteId: req.params.siteId,
         organisationId: req.user.organisationId,
       },
@@ -16,7 +17,7 @@ module.exports = async function fetchEventByOrganisation(req, res, next) {
       delete query.where.organisationId;
     }
 
-    const event = await db.Event.findByPk(req.params.eventId, query);
+    const event = await db.Event.findOne(query);
     if (!event) {
       throw createError(404, 'Geen event gevonden');
     }

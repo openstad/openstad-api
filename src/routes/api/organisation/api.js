@@ -111,10 +111,12 @@ router.get(
   `/:organisationId(\\d+)`,
   async function getOrganisation(req, res, next) {
     try {
-      const organisation = await db.Organisation.findByPk(
-        req.params.organisationId,
-        { include: [db.Tag] }
-      );
+      const organisation = await db.Organisation.findOne({
+        where: {
+          id: req.params.organisationId,
+        },
+        include: [db.Tag],
+      });
 
       if (!organisation) {
         return next(
