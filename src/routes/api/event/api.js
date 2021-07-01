@@ -20,9 +20,11 @@ const router = express.Router({ mergeParams: true });
  */
 router.post(
   `/`,
-  hasPolicies(isEventProvider, hasOrganisation),
-  validateSchema(schemas.createEvent),
-  withTransaction,
+  [
+    hasPolicies(isEventProvider, hasOrganisation),
+    validateSchema(schemas.createEvent),
+    withTransaction,
+  ],
   async function createEvent(req, res, next) {
     const transaction = res.locals.transaction;
     try {
@@ -56,7 +58,7 @@ router.post(
 /**
  * List events
  */
-router.get('/', dbQuery, async function listEvents(req, res, next) {
+router.get('/', [dbQuery], async function listEvents(req, res, next) {
   try {
     const query = res.locals.query;
 
@@ -113,10 +115,12 @@ router.get('/:eventId(\\d+)', async function getEvent(req, res, next) {
  */
 router.patch(
   '/:eventId(\\d+)',
-  hasPolicies(isEventProvider, hasOrganisation),
-  validateSchema(schemas.patchEvent),
-  fetchEventByOrganisation,
-  withTransaction,
+  [
+    hasPolicies(isEventProvider, hasOrganisation),
+    validateSchema(schemas.patchEvent),
+    fetchEventByOrganisation,
+    withTransaction,
+  ],
   async function updateEvent(req, res, next) {
     const transaction = res.locals.transaction;
     try {
@@ -180,8 +184,7 @@ router.patch(
  */
 router.delete(
   '/:eventId(\\d+)',
-  hasPolicies(isEventProvider, hasOrganisation),
-  fetchEventByOrganisation,
+  [hasPolicies(isEventProvider, hasOrganisation), fetchEventByOrganisation],
   async function deleteEvent(req, res, next) {
     try {
       const event = res.locals.event;

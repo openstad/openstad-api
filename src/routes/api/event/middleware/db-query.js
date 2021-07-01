@@ -73,7 +73,8 @@ module.exports = async function (req, res, next) {
         },
       });
     } else {
-      query.include.push({
+      // Only include events that are in the future
+      const include = {
         model: db.EventTimeslot,
         as: 'slots',
         required: true,
@@ -82,7 +83,16 @@ module.exports = async function (req, res, next) {
             [Op.gte]: moment().startOf('day'),
           },
         },
-      });
+      };
+
+      // If you filter on organisation and you are part of the organisation then also fetch events from the past, this allows you to edit events from the past.
+      if (
+        req.query.organisationId &&
+        req.user.organisationId === req.query.organisationId
+      ) {
+        delete include.where;
+      }
+      query.include.push(include);
     }
 
     res.locals.query = query;
