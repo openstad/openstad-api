@@ -12,6 +12,7 @@ const isEventProvider = require('../organisation/policies/is-event-provider');
 const hasOrganisation = require('./policies/has-organisation');
 const withTransaction = require('./middleware/with-transaction');
 const dbQuery = require('./middleware/db-query');
+const sanitizeFields = require('../../../middleware/sanitize-fields');
 
 const router = express.Router({ mergeParams: true });
 
@@ -23,6 +24,7 @@ router.post(
   [
     hasPolicies(isEventProvider, hasOrganisation),
     validateSchema(schemas.createEvent),
+    sanitizeFields('information', 'description'),
     withTransaction,
   ],
   async function createEvent(req, res, next) {
@@ -118,6 +120,7 @@ router.patch(
   [
     hasPolicies(isEventProvider, hasOrganisation),
     validateSchema(schemas.patchEvent),
+    sanitizeFields('information', 'description'),
     fetchEventByOrganisation,
     withTransaction,
   ],
