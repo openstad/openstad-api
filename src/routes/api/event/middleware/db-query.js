@@ -13,12 +13,12 @@ module.exports = async function (req, res, next) {
       where: {
         siteId: req.params.siteId,
       },
-      // limit: 25,
-      // offset: (req.query.page - 1) * 25,
       // order all events on starttime
       order: [[{ model: db.EventTimeslot, as: 'slots' }, 'startTime', 'ASC']],
       include: [db.Organisation],
-      // subQuery: false,
+      subQuery: false,
+      limit: 60,
+      offset: (req.query.page - 1) * 60,
     };
 
     if (req.query.organisationId) {
