@@ -80,8 +80,8 @@ module.exports = async function (req, res, next) {
         as: 'slots',
         required: true,
         where: {
-          startTime: {
-            [Op.gte]: moment().startOf('day'),
+          endTime: {
+            [Op.gte]: moment(),
           },
         },
       };
