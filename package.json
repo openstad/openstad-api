@@ -57,6 +57,7 @@
     "ws": "^7.3.1"
   },
   "devDependencies": {
+    "faker": "^5.5.3",
     "husky": "^6.0.0",
     "jest": "^25.5.4",
     "lint-staged": "^11.0.0",
