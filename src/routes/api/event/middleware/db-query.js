@@ -18,6 +18,7 @@ module.exports = async function (req, res, next) {
       include: [db.Organisation],
       // order all events on starttime
       order: [[{ model: db.EventTimeslot, as: 'slots' }, 'startTime', 'ASC']],
+      subQuery: false,
     };
 
     if (req.query.organisationId) {
