@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, fn } = require('sequelize');
 const moment = require('moment');
 
 const db = require('../../../../db');
@@ -13,12 +13,16 @@ module.exports = async function (req, res, next) {
       where: {
         siteId: req.params.siteId,
       },
-      // order all events on starttime
-      order: [[{ model: db.EventTimeslot, as: 'slots' }, 'startTime', 'ASC']],
       include: [db.Organisation],
       subQuery: false,
-      limit: 60,
-      offset: (req.query.page - 1) * 60,
+      // Disabled limit for now because it remove results
+      // limit: 60,
+      logging: console.log,
+      // offset: (req.query.page - 1) * 60,
+      order: [
+        [{ model: db.EventTimeslot, as: 'slots' }, 'startTime', 'ASC'],
+        ['name', 'ASC'],
+      ],
     };
 
     if (req.query.organisationId) {
@@ -80,8 +84,8 @@ module.exports = async function (req, res, next) {
         as: 'slots',
         required: true,
         where: {
-          endTime: {
-            [Op.gte]: moment(),
+          startTime: {
+            [Op.gte]: fn('NOW'),
           },
         },
       };

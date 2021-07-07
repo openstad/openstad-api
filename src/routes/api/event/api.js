@@ -64,14 +64,14 @@ router.get('/', [dbQuery], async function listEvents(req, res, next) {
   try {
     const query = res.locals.query;
 
-    const count = await db.Event.count(query);
+    const count = await db.Event.count({ ...query, distinct: true });
     const events = await db.Event.findAll(query);
 
     return res.json({
       metadata: {
         page: req.query.page || 1,
         pageSize: query.limit,
-        pageCount: Math.ceil(count / query.limit),
+        pageCount: 1,
         totalCount: count,
         links: {
           self: null,
