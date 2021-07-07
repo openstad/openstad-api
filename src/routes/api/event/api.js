@@ -51,6 +51,7 @@ router.post(
       await transaction.commit();
       await event.reload();
 
+      apicache.clear();
       return res.status(201).json(event);
     } catch (err) {
       await transaction.rollback();
@@ -180,6 +181,7 @@ router.patch(
 
       await transaction.commit();
       await event.reload();
+      apicache.clear();
       return res.json(event);
     } catch (err) {
       await transaction.rollback();
@@ -200,6 +202,7 @@ router.delete(
 
       await event.destroy();
 
+      apicache.clear();
       return res.status(204).send();
     } catch (err) {
       return next(err);
