@@ -16,6 +16,9 @@ const dbQuery = require('./middleware/db-query');
 const sanitizeFields = require('../../../middleware/sanitize-fields');
 
 const router = express.Router({ mergeParams: true });
+apicache.options({
+  respectCacheControl: true,
+});
 const cache = apicache.middleware;
 
 /**
