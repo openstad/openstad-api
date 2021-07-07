@@ -2,7 +2,7 @@ const express = require('express');
 const createError = require('http-errors');
 const log = require('debug')('app:http:api-event');
 const difference = require('lodash.difference');
-const apicache = require('apicache');
+const apicache = require('apicache-plus');
 
 const db = require('../../../db');
 const hasPolicies = require('../../../middleware/has-policies');
@@ -16,10 +16,12 @@ const dbQuery = require('./middleware/db-query');
 const sanitizeFields = require('../../../middleware/sanitize-fields');
 
 const router = express.Router({ mergeParams: true });
-apicache.options({
-  respectCacheControl: true,
-});
-const cache = apicache.middleware;
+
+const cache = apicache.options({
+  headers: {
+    'cache-control': 'no-cache',
+  },
+}).middleware;
 
 /**
  * Create event
@@ -68,7 +70,10 @@ router.post(
  */
 router.get(
   '/',
-  [cache('1 hour'), dbQuery],
+  [
+    cache('1 hour', (req) => req.headers['cache-control'] !== 'no-cache'),
+    dbQuery,
+  ],
   async function listEvents(req, res, next) {
     try {
       const query = res.locals.query;
