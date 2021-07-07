@@ -2,6 +2,7 @@ const express = require('express');
 const createError = require('http-errors');
 const log = require('debug')('app:http:api-event');
 const difference = require('lodash.difference');
+const apicache = require('apicache');
 
 const db = require('../../../db');
 const hasPolicies = require('../../../middleware/has-policies');
@@ -15,6 +16,7 @@ const dbQuery = require('./middleware/db-query');
 const sanitizeFields = require('../../../middleware/sanitize-fields');
 
 const router = express.Router({ mergeParams: true });
+const cache = apicache.middleware;
 
 /**
  * Create event
@@ -60,33 +62,37 @@ router.post(
 /**
  * List events
  */
-router.get('/', [dbQuery], async function listEvents(req, res, next) {
-  try {
-    const query = res.locals.query;
+router.get(
+  '/',
+  [cache('1 hour'), dbQuery],
+  async function listEvents(req, res, next) {
+    try {
+      const query = res.locals.query;
 
-    const count = await db.Event.count({ ...query, distinct: true });
-    const events = await db.Event.findAll(query);
+      const count = await db.Event.count({ ...query, distinct: true });
+      const events = await db.Event.findAll(query);
 
-    return res.json({
-      metadata: {
-        page: req.query.page || 1,
-        pageSize: query.limit,
-        pageCount: 1,
-        totalCount: count,
-        links: {
-          self: null,
-          first: null,
-          last: null,
-          previous: null,
-          next: null,
+      return res.json({
+        metadata: {
+          page: req.query.page || 1,
+          pageSize: query.limit,
+          pageCount: 1,
+          totalCount: count,
+          links: {
+            self: null,
+            first: null,
+            last: null,
+            previous: null,
+            next: null,
+          },
         },
-      },
-      records: events,
-    });
-  } catch (err) {
-    return next(err);
+        records: events,
+      });
+    } catch (err) {
+      return next(err);
+    }
   }
-});
+);
 
 /**
  * Get event by id

@@ -85,7 +85,7 @@ module.exports = async function (req, res, next) {
         required: true,
         where: {
           startTime: {
-            [Op.gte]: fn('NOW'),
+            [Op.gte]: moment().startOf('day').toDate(),
           },
         },
       };
