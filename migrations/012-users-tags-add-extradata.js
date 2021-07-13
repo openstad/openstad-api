@@ -4,7 +4,7 @@ module.exports = {
 	up: function() {
 		try {
 			return db.query(`
-			  ALTER TABLE users ADD COLUMN extraData JSON NULL AFTER zipcode;
+			    ALTER TABLE users ADD COLUMN extraData JSON NULL AFTER zipcode;
 				ALTER TABLE tags ADD COLUMN extraData JSON NULL AFTER name;
 			`);
 		} catch(e) {

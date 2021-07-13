@@ -28,6 +28,10 @@ module.exports = function (db, sequelize, DataTypes) {
             }
         },
 
+        currency: {
+            type: DataTypes.STRING(5),
+            defaultValue: 'EUR'
+        },
 
         sku: {
             type: DataTypes.STRING(255),
@@ -57,6 +61,11 @@ module.exports = function (db, sequelize, DataTypes) {
             set: function (text) {
                 if (text) this.setDataValue('name', sanitize.title(text.trim()));
             }
+        },
+
+        subscription: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         },
 
         description: {
@@ -104,6 +113,12 @@ module.exports = function (db, sequelize, DataTypes) {
         status: {
             type: DataTypes.ENUM('OPEN', 'CLOSED', 'ACCEPTED', 'DENIED', 'BUSY', 'DONE'),
             defaultValue: 'OPEN',
+            allowNull: false
+        },
+
+        subscriptionInterval: {
+            type: DataTypes.ENUM('14 days', '12 months', '1 week', '1 month'),
+            defaultValue: '1 month',
             allowNull: false
         },
 
