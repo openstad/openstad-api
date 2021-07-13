@@ -488,7 +488,7 @@ router.route('/:orderId(\\d+)/payment')
                             };
 
                             const subscription = await mollieClient.customers_subscriptions.create(mollieOptions);
-                            
+
                             const extraData = user.extraData;
                             extraData.mollieSubscriptionId = subscription.id;
                             await user.update({extraData});
