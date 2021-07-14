@@ -201,6 +201,7 @@ router.route('/')
             total: calculateOrderTotal(req.body.orderItems, req.orderFees),
             extraData: {
                 isSubscription: req.subscriptionProduct ? true : false,
+                subscriptionInterval: req.subscriptionProduct.subscriptionInterval,
                 currency: firstOrderItem.product.currency,
                 orderNote: req.body.orderNote,
                 test: 'add something'
@@ -483,10 +484,10 @@ router.route('/:orderId(\\d+)/payment')
                                     value: req.order.total.toString(),
                                     currency: req.order.extraData.currency
                                 },
-                                description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
+                                description:  req.order.description,
                                 //  redirectUrl: paymentApiUrl,
-                                interval: req.subscriptionProduct.subscriptionInterval,
-                                webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment'
+                                interval: req.order.extraData.subscriptionInterval
+                                //webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.orders.id + '/payment'
                             };
 
                             console.log('mollieOptions', mollieOptions);
