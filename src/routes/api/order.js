@@ -487,7 +487,7 @@ router.route('/:orderId(\\d+)/payment')
                                 description:  req.order.description,
                                 //  redirectUrl: paymentApiUrl,
                                 interval: req.order.extraData.subscriptionInterval
-                                //webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.orders.id + '/payment'
+                                webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.order.id + '/payment'
                             };
 
                             console.log('mollieOptions', mollieOptions);
