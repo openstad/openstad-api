@@ -315,8 +315,8 @@ router.route('/')
                 const mollieOptions = {
                     customerId: customerId,
                     amount: {
-                        value: req.order.total,
-                        currency: req.order.extraData.currency
+                        value: req.results.total,
+                        currency: req.results.extraData.currency
                     },
                     description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
                     redirectUrl: paymentApiUrl,
