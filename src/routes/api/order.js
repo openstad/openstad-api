@@ -474,7 +474,10 @@ router.route('/:orderId(\\d+)/payment')
 
                     if (req.order.extraData && req.order.extraData.isSubscription && req.order.userId) {
                         try {
-                            const user = await db.User.find({id: req.order.userId});
+                            console.log('req.order', req.order);
+
+                            const user = await db.User.findOne({id: req.order.userId});
+                            console.log('user', user);
 
                             const mollieOptions = {
                                 customerId: user.extraData.mollieCustomerId,
@@ -488,10 +491,15 @@ router.route('/:orderId(\\d+)/payment')
                                 webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment'
                             };
 
+                            console.log('mollieOptions', mollieOptions);
+
                             const subscription = await mollieClient.customers_subscriptions.create(mollieOptions);
 
                             const extraData = user.extraData;
                             extraData.mollieSubscriptionId = subscription.id;
+
+                            console.log('extraData', extraData);
+
                             await user.update({extraData});
                         } catch(e) {
                             next(e)
