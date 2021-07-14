@@ -201,6 +201,7 @@ router.route('/')
             total: calculateOrderTotal(req.body.orderItems, req.orderFees),
             extraData: {
                 isSubscription: req.subscriptionProduct ? true : false,
+                currency: firstOrderItem.product.currency,
                 orderNote: req.body.orderNote,
                 test: 'add something'
             }
@@ -314,8 +315,8 @@ router.route('/')
                 const mollieOptions = {
                     customerId: customerId,
                     amount: {
-                        value: req.results.total.toString(),
-                        currency: 'EUR'
+                        value: req.order.total,
+                        currency: req.order.extraData.currency
                     },
                     description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
                     redirectUrl: paymentApiUrl,
@@ -340,9 +341,6 @@ router.route('/')
     })
     .post(function (req, res, next) {
         const orderJson = req.results.get({plain: true});
-
-        console.log('orderJson', orderJson)
-        console.log('req.results', req.results)
 
         const returnValues = {
             ...orderJson,
@@ -483,7 +481,7 @@ router.route('/:orderId(\\d+)/payment')
                                 customerId: user.extraData.mollieCustomerId,
                                 amount: {
                                     value: req.results.total.toString(),
-                                    currency: req.subscriptionProduct.currency ? req.subscriptionProduct.currency : 'EUR'
+                                    currency: req.results.extraData.currency 
                                 },
                                 description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
                                 //  redirectUrl: paymentApiUrl,
