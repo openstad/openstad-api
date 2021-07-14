@@ -19,7 +19,7 @@ module.exports = function( req, res, next ) {
   if (req.path.match('^(/api/site(/[^/]*)?)$')) return next();
 
   const siteId = getSiteId(req.path);
-  if (!siteId || typeof siteId !== 'number') return next(new createError('400', 'Site niet gevonden'));
+  if (!siteId || typeof siteId !== 'number') return next(new createError('400', 'Site niet gevonden for siteId ' + siteId + ' and path ' + req.path));
 
   const where = { id: siteId }
 
