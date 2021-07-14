@@ -14,3 +14,5 @@ module.exports = {
         return db.query(`ALTER TABLE accounts DROP paymentStatus;`);
     }
 }
+
+

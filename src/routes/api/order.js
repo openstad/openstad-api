@@ -332,6 +332,7 @@ router.route('/')
                 req.results.extraData.paymentUrl = payment.getCheckoutUrl();
                 await req.results.save();
 
+                next();
             } catch (error) {
                 next(error);
             }
