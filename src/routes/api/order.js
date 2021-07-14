@@ -480,8 +480,8 @@ router.route('/:orderId(\\d+)/payment')
                             const mollieOptions = {
                                 customerId: user.extraData.mollieCustomerId,
                                 amount: {
-                                    value: req.results.total.toString(),
-                                    currency: req.results.extraData.currency 
+                                    value: req.order.total.toString(),
+                                    currency: req.order.extraData.currency
                                 },
                                 description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
                                 //  redirectUrl: paymentApiUrl,
