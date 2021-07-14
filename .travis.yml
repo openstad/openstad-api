@@ -33,10 +33,9 @@ deploy:
   # master automatically pushes new docker container with latest tag to docker
   - provider: script
     #script not yet tested
-    script: bash docker_publish_latest
+    script: bash docker_publish_development
     on:
       branch: master
-
   - provider: script
     #script not yet tested
     script: bash docker_publish_tag
