@@ -456,7 +456,6 @@ router.route('/:orderId(\\d+)/payment')
          */
         mollieClient.payments.get(paymentId)
             .then(async payment => {
-                console.log('Payment payment', payment);
 
                 if (payment.isPaid() && req.order.paymentStatus !== 'PAID') {
                     req.order.set('paymentStatus', 'PAID');
@@ -473,7 +472,8 @@ router.route('/:orderId(\\d+)/payment')
                         try {
                             console.log('req.order', req.order);
 
-                            const user = await db.User.findOne({id: req.order.userId});
+                            const user = await db.User.findOne({where: {id: req.order.userId}});
+
                             console.log('user', user);
 
                             const mollieOptions = {
