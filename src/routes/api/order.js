@@ -460,19 +460,13 @@ router.route('/:orderId(\\d+)/payment')
                 if (payment.isPaid() && req.order.paymentStatus !== 'PAID') {
                     req.order.set('paymentStatus', 'PAID');
 
-                    req.order
-                        .save()
-                        .then(() => {
-                            mail.sendThankYouMail(req.order, req.user, req.site);
-                            done(req.order.id, req.order.hash, true);
-                        })
-                        .catch(next);
+                    await req.order.save();
+                    const user = await db.User.findOne({where: {id: req.order.userId}});
 
                     if (req.order.extraData && req.order.extraData.isSubscription && req.order.userId) {
                         try {
                             console.log('req.order', req.order);
 
-                            const user = await db.User.findOne({where: {id: req.order.userId}});
 
                             console.log('user', user);
 
@@ -505,6 +499,9 @@ router.route('/:orderId(\\d+)/payment')
                         }
                     }
 
+
+                    mail.sendThankYouMail(req.order, 'order', user);
+                    done(req.order.id, req.order.hash, true);
 
                 } else if (payment.isCanceled()) {
                     req.order.set('paymentStatus', 'CANCELLED');
