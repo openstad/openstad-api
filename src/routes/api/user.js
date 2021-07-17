@@ -30,7 +30,7 @@ const formatOAuthApiUrl = (site, which = 'default') => {
 
 const filterBody = (req, res, next) => {
     const data = {};
-    const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole'];
+    const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole', 'password'];
 
     keys.forEach((key) => {
         if (req.body[key]) {
@@ -279,6 +279,8 @@ router.route('/:userId(\\d+)')
         if (data.setRole) {
             data.role = 'member';
         }
+
+        console.log('update req.body', req.body);
 
         /**
          * Update the user API first

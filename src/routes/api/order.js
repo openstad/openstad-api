@@ -469,8 +469,6 @@ router.route('/:orderId(\\d+)/payment')
                         })
                         .catch(next);
 
-
-
                     if (req.order.extraData && req.order.extraData.isSubscription && req.order.userId) {
                         try {
                             console.log('req.order', req.order);
@@ -496,6 +494,8 @@ router.route('/:orderId(\\d+)/payment')
 
                             const extraData = user.extraData;
                             extraData.mollieSubscriptionId = subscription.id;
+                            extraData.isActiveSubscriber = true;
+                            extraData.subscriptionPaymentProvider = 'mollie';
 
                             console.log('extraData', extraData);
 
@@ -506,7 +506,6 @@ router.route('/:orderId(\\d+)/payment')
                     }
 
 
-                    console.log('req.order.extraData', req.order.extraData);
                 } else if (payment.isCanceled()) {
                     req.order.set('paymentStatus', 'CANCELLED');
 
