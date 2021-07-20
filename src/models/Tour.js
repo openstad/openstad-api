@@ -173,11 +173,11 @@ module.exports = function (db, sequelize, DataTypes) {
     }
 
     Tour.auth = Tour.prototype.auth = {
-        listableBy: 'all',
+        listableBy: ['admin', 'editor',  'moderator'],
         viewableBy: 'all', // ['admin', 'editor', 'owner', 'moderator'],
-        createableBy: 'all',
-        updateableBy: ['admin', 'editor', 'owner', 'moderator', 'all'],
-        deleteableBy: ['admin', 'editor', 'owner', 'moderator'],
+        createableBy: ['admin', 'editor',  'moderator'],
+        updateableBy: ['admin', 'editor',  'moderator'],
+        deleteableBy: ['admin', 'editor',  'moderator'],
     }
 
     return Tour;
