@@ -117,7 +117,7 @@ module.exports = function (db, sequelize, DataTypes) {
                 this.setDataValue('config', this.parseConfig(value));
             },
             auth: {
-                viewableBy: 'admin',
+                viewableBy: ['admin', 'moderator'],
             },
         },
 
