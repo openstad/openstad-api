@@ -138,7 +138,12 @@ router.route('/:siteIdOrDomain') //(\\d+)
     .put(oauthClients.withAllForSite)
     .put(function (req, res, next) {
         const site = req.results;
+
+        console.log('req.user', req.user);
+
         if (!(site && site.can && site.can('update'))) return next(new Error('You cannot update this site'));
+
+        console.log('req.body', req.body)
 
         req.results
             .authorizeData(req.body, 'update')

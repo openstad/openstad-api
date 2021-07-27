@@ -17,13 +17,19 @@ module.exports = async function getUser( req, res, next ) {
 			return nextWithEmptyUser(req, res, next);
 		}
 		const userId = getUserId(req.headers['x-authorization']);
+
 		const which = req.query.useOauth || 'default';
+
 		const siteOauthConfig = (req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which]) || {};
+
 		if(userId === null) {
 			return nextWithEmptyUser(req, res, next);
 		}
 
 		const userEntity = await getUserInstance(userId, siteOauthConfig);
+
+
+
 		req.user = userEntity
 		// Pass user entity to template view.
 		res.locals.user = userEntity;
@@ -83,10 +89,8 @@ function getUserId(authorizationHeader) {
  */
 function parseJwt(authorizationHeader) {
 	let token = authorizationHeader.replace(/^bearer /i, '');
-	console.log('token 111', token, typeof token);
 
 	if (!token || token === 'undefined') {
-		console.log('token herhereh', token);
 		return false;
 	}
 
@@ -102,7 +106,11 @@ function parseJwt(authorizationHeader) {
 async function getUserInstance( user, siteOauthConfig ) {
 	const dbUser = await db.User.findByPk(user.id);
 
+	console.log('dbUser.externalAccessToken', dbUser.externalAccessToken)
+
 	if (!dbUser || !dbUser.externalUserId || !dbUser.externalAccessToken) {
+		console.log('empty user')
+
 		return user.fixed ? dbUser : {};
 	}
 
@@ -111,6 +119,9 @@ async function getUserInstance( user, siteOauthConfig ) {
 	const authServerGetUserPath = siteOauthConfig['auth-server-get-user-path'] || config.authorization['auth-server-get-user-path'];
 	const authClientId = siteOauthConfig['auth-client-id'] || config.authorization['auth-client-id'];
 	const url = (authServerUrl + authServerGetUserPath).replace(/\[\[clientId\]\]/, authClientId);
+	console.log('siteOauthConfig', siteOauthConfig);
+
+	console.log('url', url)
 
 	try {
 		const response = await fetch(url, {
@@ -121,6 +132,8 @@ async function getUserInstance( user, siteOauthConfig ) {
 			mode: 'cors',
 		});
 
+		//console.log('response', response)
+
 		if (!response.ok) {
 			throw new Error('Error fetching user')
 		}
@@ -129,8 +142,13 @@ async function getUserInstance( user, siteOauthConfig ) {
 
 		authUser.role = authUser.role || user.role || 'member';
 
+	//	console.log('authUser', authUser)
+
+
 		return merge(dbUser, authUser);
 	} catch(error) {
+		console.log('error', error)
+
 		// Todo: Do we always need to reset user token when an error occurs?
 		console.error(error);
 		return await resetUserToken(dbUser);

@@ -488,7 +488,7 @@ router.route('/:orderId(\\d+)/payment')
 
                             const extraData = user.extraData;
                             extraData.mollieSubscriptionId = subscription.id;
-                            extraData.isActiveSubscriber = true;
+                            extraData.isActiveSubscriber = 'yes';
                             extraData.subscriptionPaymentProvider = 'mollie';
 
                             console.log('extraData', extraData);
