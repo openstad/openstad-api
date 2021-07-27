@@ -807,7 +807,7 @@ module.exports = function (db, sequelize, DataTypes) {
         // only default values are viewable, not the config etc. this is only for admin, very sensitive data
         viewableBy: ['admin', 'moderator', 'owner', 'all'],
         createableBy: ['all'],
-        updateableBy: ['admin', 'owner'],
+        updateableBy: ['admin', 'owner', 'moderator'],
         deleteableBy: ['admin', 'owner'],
     }
 
