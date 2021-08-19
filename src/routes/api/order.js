@@ -107,11 +107,11 @@ router.route('/')
     // -----------
     .post(auth.can('Order', 'create'))
     .post(function (req, res, next) {
-        if (!req.site) return next(createError(401, 'Site niet gevonden'));
+        if (!req.site) return next(createError(403, 'Site niet gevonden'));
         return next();
     })
     .post(function (req, res, next) {
-        if (!(req.site.config && req.site.config.order && req.site.config.order.canCreateNewOrders)) return next(createError(401, 'Order mogen niet aangemaakt worden'));
+        if (!(req.site.config && req.site.config.order && req.site.config.order.canCreateNewOrders)) return next(createError(403, 'Order mogen niet aangemaakt worden'));
         return next();
     })
     .post(function (req, res, next) {
@@ -150,7 +150,7 @@ router.route('/')
                 })
                 .catch(next)
         } else {
-            next(createError(401, 'No order items send with order request'));
+            next(createError(403, 'No order items send with order request'));
         }
     })
     /*
@@ -440,7 +440,7 @@ router.route('/:orderId(\\d+)/payment')
         }
 
         /*	if (!req.order.extraData.paymentIds.includes(paymentId)) {
-                return next(createError(401, 'Payment ID not for this order'));
+                return next(createError(403, 'Payment ID not for this order'));
             }*/
 
         const mollieApiKey = req.site.config && req.site.config.payment && req.site.config.payment.mollieApiKey ? req.site.config.payment.mollieApiKey : '';
@@ -463,11 +463,11 @@ router.route('/:orderId(\\d+)/payment')
                     await req.order.save();
                     const user = await db.User.findOne({where: {id: req.order.userId}});
 
+                    console.log('req.order', req.order)
+
                     if (req.order.extraData && req.order.extraData.isSubscription && req.order.userId) {
                         try {
                             console.log('req.order', req.order);
-
-
                             console.log('user', user);
 
                             const mollieOptions = {

@@ -673,7 +673,7 @@ router.route('/:choicesGuideId(\\d+)(/questiongroup/:questionGroupId(\\d+))?/res
 			return next();
 		}
 
-		return next(createError(401, 'Je mag niet insturen op deze site'));
+		return next(createError(403, 'Je mag niet insturen op deze site'));
 	})
 
 
@@ -683,7 +683,7 @@ router.route('/:choicesGuideId(\\d+)(/questiongroup/:questionGroupId(\\d+))?/res
     let isActive = req.choicesguide.config && req.choicesguide.config.isActive
 
     if ( isActive == false || isActive == "false" || isActive == 0 || isActive == "0" ) {
-		  return next(createError(401, 'De keuzewijzer is gesloten'));
+		  return next(createError(403, 'De keuzewijzer is gesloten'));
     }
 
     return next();

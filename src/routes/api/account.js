@@ -64,11 +64,11 @@ router.route('/')
 // -----------
 	.post(auth.can('Account', 'create'))
 	.post(function(req, res, next) {
-		if (!req.site) return next(createError(401, 'Site niet gevonden'));
+		if (!req.site) return next(createError(403, 'Site niet gevonden'));
 		return next();
 	})
 	.post(function( req, res, next ) {
-		if (!(req.site.config && req.site.config.account && req.site.config.account.canCreateNewAccounts)) return next(createError(401, 'Account mogen niet aangemaakt worden'));
+		if (!(req.site.config && req.site.config.account && req.site.config.account.canCreateNewAccounts)) return next(createError(403, 'Account mogen niet aangemaakt worden'));
 		return next();
 	})
 	.post(function(req, res, next) {

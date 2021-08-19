@@ -48,8 +48,8 @@ router.route('/')
     next();
   })
   .post(function(req, res, next) {
-    if (!req.body.name) return next(createError(401, 'Geen naam opgegeven'));
-    if (!req.body.polygon) return next(createError(401, 'Geen polygoon opgegeven'));
+    if (!req.body.name) return next(createError(403, 'Geen naam opgegeven'));
+    if (!req.body.polygon) return next(createError(403, 'Geen polygoon opgegeven'));
     return next();
   })
   .post(function(req, res, next) {

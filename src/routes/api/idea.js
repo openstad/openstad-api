@@ -162,11 +162,11 @@ router.route('/')
   // -----------
   .post(auth.can('Idea', 'create'))
   .post(function(req, res, next) {
-    if (!req.site) return next(createError(401, 'Site niet gevonden'));
+    if (!req.site) return next(createError(403, 'Site niet gevonden'));
     return next();
   })
   .post(function(req, res, next) {
-    if (!(req.site.config && req.site.config.ideas && req.site.config.ideas.canAddNewIdeas)) return next(createError(401, 'Inzenden is gesloten'));
+    if (!(req.site.config && req.site.config.ideas && req.site.config.ideas.canAddNewIdeas)) return next(createError(403, 'Inzenden is gesloten'));
     return next();
   })
   .post(function(req, res, next) {

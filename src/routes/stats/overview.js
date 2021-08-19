@@ -97,7 +97,7 @@ router.route('/')
         if (isViewable) {
             return next();
         } else {
-            return next(createError(401, 'Je kunt deze statistieken niet bekijken'));
+            return next(createError(403, 'Je kunt deze statistieken niet bekijken'));
         }
     })
     .get((req, res, next) => {
@@ -248,7 +248,7 @@ router.route('/')
                 [result, fields] = await req.mysqlConnection.execute(query.sql, query.variables);
             } catch (e) {
                 console.log('Error while executing statistic query: ', JSON.stringify(query), ' with error: ', e);
-                return next(createError(401, 'Error while executing statistic query: ' + e));
+                return next(createError(403, 'Error while executing statistic query: ' + e));
             }
 
             return {

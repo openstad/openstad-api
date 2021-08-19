@@ -122,17 +122,17 @@ router.route('/')
 
     .post(auth.can('User', 'create'))
     .post(function (req, res, next) {
-        if (!req.site) return next(createError(401, 'Site niet gevonden'));
+        if (!req.site) return next(createError(403, 'Site niet gevonden'));
         return next();
     })
     .post(function (req, res, next) {
-        if (!(req.site.config && req.site.config.users && req.site.config.users.canCreateNewUsers)) return next(createError(401, 'Gebruikers mogen niet aangemaakt worden'));
+        if (!(req.site.config && req.site.config.users && req.site.config.users.canCreateNewUsers)) return next(createError(403, 'Gebruikers mogen niet aangemaakt worden'));
         return next();
     })
     .post(filterBody)
     .post(function (req, res, next) {
         // Look for an Openstad user with this e-mail
-        if (!req.body.email) return next(createError(401, 'E-mail is a required field'));
+        if (!req.body.email) return next(createError(403, 'E-mail is a required field'));
 
         const authServerUrl = formatOAuthApiUrl(req.site, 'default');
         const apiCredentials = formatOAuthApiCredentials(req.site, 'default');
@@ -311,7 +311,7 @@ router.route('/:userId(\\d+)')
                 if (response.ok) {
                     return response.json()
                 }
-                throw createError('User already exists, Try to login', response);
+                throw createError(401, 'User already exists, Try to login', response);
             })
             .then((json) => {
                 return db.User

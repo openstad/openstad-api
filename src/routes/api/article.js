@@ -80,11 +80,11 @@ router.route('/')
 // -----------
 	.post(auth.can('Article', 'create'))
 	.post(function(req, res, next) {
-		if (!req.site) return next(createError(401, 'Site niet gevonden'));
+		if (!req.site) return next(createError(403, 'Site niet gevonden'));
 		return next();
 	})
 	.post(function( req, res, next ) {
-		if (!(req.site.config && req.site.config.articles && req.site.config.articles.canAddNewArticles)) return next(createError(401, 'Inzenden is gesloten'));
+		if (!(req.site.config && req.site.config.articles && req.site.config.articles.canAddNewArticles)) return next(createError(403, 'Inzenden is gesloten'));
 		return next();
 	})
 	.post(function(req, res, next) {

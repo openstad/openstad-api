@@ -34,7 +34,7 @@ extend(SequelizeStore.prototype, {
 		})
 		.then(function( isValidToken ) {
 			if( !isValidToken ) {
-				throw createError(401, 'Ongeldige link');
+				throw createError(403, 'Ongeldige link');
 			}
 			
 			return item.originUrl || '';

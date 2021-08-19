@@ -52,7 +52,7 @@ router.route('*')
 		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');
 
 		if (!req.user) {
-			return next(createError(401, 'Geen gebruiker gevonden'));
+			return next(createError(403, 'Geen gebruiker gevonden'));
 		}
 
 		if (req.site.config.votes.requiredUserRole == 'anonymous' && ( req.user.role == 'anonymous' || req.user.role == 'member' || hasModeratorRights )) {
@@ -67,7 +67,7 @@ router.route('*')
 			return next();
 		}
 
-		return next(createError(401, 'Je mag niet stemmen op deze site'));
+		return next(createError(403, 'Je mag niet stemmen op deze site'));
 	})
 
   // scopes

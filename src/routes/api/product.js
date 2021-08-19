@@ -65,11 +65,11 @@ router.route('/')
 // -----------
 	.post(auth.can('Product', 'create'))
 	.post(function(req, res, next) {
-		if (!req.site) return next(createError(401, 'Site niet gevonden'));
+		if (!req.site) return next(createError(403, 'Site niet gevonden'));
 		return next();
 	})
 	.post(function( req, res, next ) {
-		if (!(req.site.config && req.site.config.product && req.site.config.product.canCreateNewProducts)) return next(createError(401, 'Product mogen niet aangemaakt worden'));
+		if (!(req.site.config && req.site.config.product && req.site.config.product.canCreateNewProducts)) return next(createError(403, 'Product mogen niet aangemaakt worden'));
 		return next();
 	})
 	/**
