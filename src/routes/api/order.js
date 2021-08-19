@@ -476,7 +476,7 @@ router.route('/:orderId(\\d+)/payment')
                                     value: req.order.total.toString(),
                                     currency: req.order.extraData.currency
                                 },
-                                description:  req.order.description,
+                                description:  req.order.description ? req.order.description : 'Subscription order at ' +  req.site.title,
                                 //  redirectUrl: paymentApiUrl,
                                 interval: req.order.extraData.subscriptionInterval,
                                 webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.order.id + '/payment'
