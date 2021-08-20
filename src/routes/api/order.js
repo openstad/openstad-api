@@ -287,8 +287,7 @@ router.route('/')
             const mollieClient = createMollieClient({apiKey: mollieApiKey});
 
             console.log('paymentProvider', paymentProvider)
-            console.log('req.user', req.user)
-            console.log('req.subscriptionProduct', req.subscriptionProduct);
+
 
             try {
                 let customerId;
@@ -325,6 +324,9 @@ router.route('/')
                     //	webhookUrl:  paymentApiUrl,
                 }
 
+                if (req.subscriptionProduct) {
+                    mollieOptions['sequenceType'] = 'first';
+                }
 
                 const payment = await mollieClient.payments.create(mollieOptions);
 
