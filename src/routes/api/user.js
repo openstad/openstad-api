@@ -197,7 +197,7 @@ router.route('/')
             })
             .then(found => {
                 if (found) {
-                    throw new Error('User already exists');
+                    throw createError(401, 'User already exists');
                 } else {
                     next();
                 }
@@ -280,8 +280,6 @@ router.route('/:userId(\\d+)')
             data.role = 'member';
         }
 
-        console.log('update req.body', req.body);
-
         /**
          * Update the user API first
          */
@@ -311,6 +309,7 @@ router.route('/:userId(\\d+)')
                 if (response.ok) {
                     return response.json()
                 }
+
                 throw createError(401, 'User already exists, Try to login', response);
             })
             .then((json) => {
