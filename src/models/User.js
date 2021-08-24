@@ -388,19 +388,21 @@ module.exports = function (db, sequelize, DataTypes) {
         },
       },
 
-      /**
+      
+    },
+
+    /**
        * Used to check if user can create events and manage its own organisation
        */
-       isEventProvider: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-        auth: {
-          listableBy: ['editor', 'owner'],
-          viewableBy: ['editor', 'owner'],
-          createableBy: ['editor', 'owner'],
-          updateableBy: ['editor', 'owner'],
-        },
+     isEventProvider: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      auth: {
+        listableBy: ['editor', 'owner'],
+        viewableBy: ['editor', 'owner'],
+        createableBy: ['editor', 'owner'],
+        updateableBy: ['editor', 'owner'],
       },
     },
 
