@@ -64,8 +64,6 @@ router
     .route('(/site/:siteId)?/digest-login')
     .get(function (req, res, next) {
 
-        console.log('req.query.code', req.query.code);
-
         // use the code to get an access token
         let code = req.query.code;
 

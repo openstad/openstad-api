@@ -29,7 +29,7 @@ module.exports = function (db, sequelize, DataTypes) {
             auth: {
                 listableBy: 'admin',
                 viewableBy: 'admin',
-                createableBy: 'admin',
+                createableBy: 'moderator',
                 updateableBy: 'admin',
             },
             allowNull: true,

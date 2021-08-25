@@ -212,7 +212,6 @@ router.route('/')
             externalUserId: req.oAuthUser.id
         };
 
-
         db.User
             .authorizeData(data, 'create', req.user)
             .create(data)

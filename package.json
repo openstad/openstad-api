@@ -46,6 +46,7 @@
     "nodemon": "^1.17.5",
     "nunjucks": "^3.2.2",
     "pmx": "^1.6.7",
+    "pusher": "^5.0.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "sanitize-html": "^1.27.5",
