@@ -3,6 +3,7 @@ const createError = require('http-errors');
 const log = require('debug')('app:http:api-event');
 const difference = require('lodash.difference');
 const apicache = require('apicache-plus');
+const { parseAsync, transforms: { flatten } } = require('json2csv')
 
 const db = require('../../../db');
 const hasPolicies = require('../../../middleware/has-policies');
@@ -217,5 +218,38 @@ router.delete(
     }
   }
 );
+
+/**
+ * Export
+ */
+router.get('/export', [dbQuery], async function exportEvents(req, res, next) {
+  try {
+    const query = res.locals.query;
+
+    if (!req.query.dates) {
+      const timeslotInclude = query.include.find(
+        (include) => include.as === 'slots'
+      );
+      if (timeslotInclude) {
+        delete timeslotInclude.where;
+      }
+    }
+
+    if (query.limit) {
+      delete query.limit;
+    }
+    if (query.offset) {
+      delete query.offset;
+    }
+
+    const events = await db.Event.findAll(query);
+
+    const csv = await parseAsync(JSON.parse(JSON.stringify(events)), { transforms: [flatten({ objects: true, arrays: true })] })
+    res.setHeader('content-type', 'text/csv')
+    return res.send(csv)
+  } catch (err) {
+    return next(err);
+  }
+});
 
 module.exports = router;
