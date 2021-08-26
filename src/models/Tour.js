@@ -20,12 +20,10 @@ const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraD
 module.exports = function (db, sequelize, DataTypes) {
 
     var Tour = sequelize.define('tour', {
-
-
         accountId: {
             type: DataTypes.INTEGER,
             auth: {
-                updateableBy: 'editor',
+                updateableBy: 'admin',
             },
             allowNull: false,
             defaultValue: 0,
@@ -34,16 +32,25 @@ module.exports = function (db, sequelize, DataTypes) {
         status: {
             type: DataTypes.ENUM('CONCEPT', 'CLOSED', 'ACCEPTED', 'DENIED', 'BUSY'),
             auth: {
-                updateableBy: 'editor',
+                updateableBy: 'admin',
             },
             defaultValue: 'CONCEPT',
             allowNull: false
         },
 
-        userId: {
+        versionNumber: {
             type: DataTypes.INTEGER,
             auth: {
-                updateableBy: 'editor',
+                updateableBy: 'admin',
+            },
+            allowNull: false,
+            defaultValue: 0,
+        },
+
+        accountId: {
+            type: DataTypes.INTEGER,
+            auth: {
+                updateableBy: 'moderator',
             },
             allowNull: false,
             defaultValue: 0,
@@ -71,7 +78,39 @@ module.exports = function (db, sequelize, DataTypes) {
             }
         },
 
-        live: getExtraDataConfig(DataTypes.JSON, 'tours'),
+        live: {
+            type: DataTypes.JSON,
+            allowNull: false,
+            defaultValue: '[]',
+            get: function () {
+                let value = this.getDataValue('live');
+                try {
+                    if (typeof value == 'string') {
+                        value = JSON.parse(value);
+                    }
+                } catch (err) {
+                }
+
+                return value;
+            },
+            set: function (value) {
+                try {
+                    if (typeof value == 'string') {
+                        value = JSON.parse(value);
+                    }
+                } catch (err) {
+                }
+                this.setDataValue('live', value);
+            }
+        },
+
+        lastPublishedAt: {
+            auth:  {
+                updateableBy: 'moderator',
+            },
+            type: DataTypes.DATE,
+            allowNull: true
+        },
 
         revisions: {
             type: DataTypes.JSON,

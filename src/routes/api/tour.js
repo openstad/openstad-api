@@ -195,7 +195,7 @@ router.route('/:tourId(\\d+)')
     if (req.query.resource) {
       const revisions = req.results.revisions;
       const latestRevision = revisions && revisions.length > 0 && revisions[revisions.length - 1] && revisions[revisions.length - 1] ? revisions[revisions.length - 1] : {};
-      const resources =  latestRevision && latestRevision.resources ? latestRevision.resources : [];
+      const resources = latestRevision && latestRevision.resources ? latestRevision.resources : [];
       const resourceData = resources.find(resource => resource.name === req.query.resource);
 
       res.json(resourceData ? resourceData : [])
@@ -216,9 +216,6 @@ router.route('/:tourId(\\d+)')
     let data = {
       ...req.body,
     }
-
-    console.log('data', data)
-
 
     tour
       //  .authorizeData(data, 'update')
@@ -247,7 +244,6 @@ router.route('/:tourId(\\d+)')
   .put(function (req, res, next) {
     res.json(req.results);
   })
-
   // delete idea
   // ---------
   .delete(auth.can('Tour', 'delete'))
@@ -258,6 +254,49 @@ router.route('/:tourId(\\d+)')
         res.json({"tour": "deleted"});
       })
       .catch(next);
+  })
+
+router.route('/:tourId(\\d+)/publish')
+  .all(function (req, res, next) {
+    const tourId = parseInt(req.params.tourId);
+
+    db.Tour
+      .scope(...req.scope)
+      .findOne({
+        where: {id: tourId}
+      })
+      .then(found => {
+        if (!found) throw new Error('tour not found');
+        req.results = found;
+        next();
+      })
+      .catch(next);
+  })
+  .put(auth.useReqUser)
+  .put(function (req, res, next) {
+    const tour = req.results;
+
+    if (!(tour && tour.can && tour.can('update'))) return next(new Error('You cannot update this tour'));
+    //	console.log('333', req.user.role)
+
+    let version = tour.get('versionNumber');
+    version  = version ? version + 1 : 1;
+
+    tour
+      //  .authorizeData(data, 'update')
+      .update({
+        live: tour.get('revisions'),
+        versionNumber: version,
+        lastPublishedAt: db.sequelize.literal('NOW()'),
+      })
+      .then(async (result) => {
+        req.results = result;
+        next()
+      })
+      .catch(next);
+  })
+  .put(function (req, res, next) {
+    res.json(req.results);
   })
 
 module.exports = router;
