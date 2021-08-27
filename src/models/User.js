@@ -387,6 +387,23 @@ module.exports = function (db, sequelize, DataTypes) {
           this.setDataValue('zipCode', zipCode);
         },
       },
+
+      
+    },
+
+    /**
+       * Used to check if user can create events and manage its own organisation
+       */
+     isEventProvider: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      auth: {
+        listableBy: ['editor', 'owner'],
+        viewableBy: ['editor', 'owner'],
+        createableBy: ['editor', 'owner'],
+        updateableBy: ['editor', 'owner'],
+      },
     },
 
     // signedUpForNewsletter: {
@@ -524,6 +541,7 @@ module.exports = function (db, sequelize, DataTypes) {
     this.hasMany(models.Vote);
     this.hasMany(models.Argument);
     this.belongsTo(models.Site);
+    this.belongsTo(models.Organisation);
     this.hasMany(models.User, { as: 'thisUserOnOtherSites', sourceKey: 'externalUserId', foreignKey: 'externalUserId' });
   }
 

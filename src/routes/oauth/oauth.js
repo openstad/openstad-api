@@ -9,7 +9,7 @@ const URL = require('url').URL;
 const db = require('../../db');
 const OAuthApi = require('../../services/oauth-api');
 
-let router = express.Router({mergeParams: true});
+let router = express.Router({ mergeParams: true });
 
 // TODO: gebruik de oauth-api service
 
@@ -309,7 +309,8 @@ router
             "createdAt": req.user.createdAt,
             "updatedAt": req.user.updatedAt,
             "deletedAt": req.user.deletedAt,
-            'votes': req.user.votes
+            'votes': req.user.votes,
+            'isEventProvider': req.user.isEventProvider || false,
         };
         res.json(data);
     })

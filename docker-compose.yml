@@ -1,0 +1,22 @@
+version: '3.4'
+services:
+  db:
+    image: mysql:5
+    environment:
+      - MYSQL_ROOT_PASSWORD=openstad
+      - MYSQL_DATABASE=openstad-api
+      - MYSQL_USER=openstad
+      - MYSQL_PASSWORD=openstad
+    ports:
+      - 3306:3306
+    volumes:
+      - openstad-api-db-data:/var/lib/mysql
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui
+
+volumes:
+  openstad-api-db-data:

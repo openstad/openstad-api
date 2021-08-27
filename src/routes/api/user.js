@@ -3,19 +3,23 @@ const Sequelize = require('sequelize');
 const express = require('express');
 const createError = require('http-errors');
 const config = require('config');
-const db = require('../../db');
-const auth = require('../../middleware/sequelize-authorization-middleware');
-const pagination = require('../../middleware/pagination');
-const {Op} = require('sequelize');
-const searchResults = require('../../middleware/search-results-user');
+const { Op } = require('sequelize');
 const fetch = require('node-fetch');
 const merge = require('merge');
+const rp = require('request-promise');
+const debug = require('debug')(`app:${__filename}`);
+
+const db = require('../../db');
+
+const auth = require('../../middleware/sequelize-authorization-middleware');
+const pagination = require('../../middleware/pagination');
+const searchResults = require('../../middleware/search-results-user');
 const OAuthApi = require('../../services/oauth-api');
 const OAuthUser = require('../../services/oauth-user');
 
 const filterBody = (req, res, next) => {
   const data = {};
-  const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole'];
+  const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole', 'isEventProvider'];
 
   keys.forEach((key) => {
     if (req.body[key]) {
@@ -26,7 +30,7 @@ const filterBody = (req, res, next) => {
   req.body = data;
 
   next();
-}
+};
 
 const router = express.Router({mergeParams: true});
 
@@ -47,7 +51,7 @@ router.route('/')
   })
   .get(pagination.init)
   .get(function (req, res, next) {
-    let {dbQuery} = req;
+    let { dbQuery } = req;
 
     if (!dbQuery.where) {
       dbQuery.where = {};
@@ -72,10 +76,19 @@ router.route('/')
      * Add siteId to query conditions
      * @type {{siteId: *}}
      */
-    const queryConditions = Object.assign(dbQuery.where, {siteId: req.params.siteId});
+    const queryConditions = Object.assign(dbQuery.where, {
+      siteId: req.params.siteId,
+    });
 
-    db.User
-      .scope(...req.scope)
+    /**
+     * For now a way to filter on event providers since they don't have a seperate role
+     * but just a column in the database
+     */
+    if (req.user && req.user.role === 'admin' && req.query.showEventProviders) {
+      queryConditions.isEventProvider = true;
+    }
+
+    db.User.scope(...req.scope)
       .findAndCountAll({
         ...dbQuery,
         where: queryConditions,
@@ -102,7 +115,14 @@ router.route('/')
     return next();
   })
   .post(function (req, res, next) {
-    if (!(req.site.config && req.site.config.users && req.site.config.users.canCreateNewUsers)) return next(createError(401, 'Gebruikers mogen niet aangemaakt worden'));
+    if (
+      !(
+        req.site.config &&
+        req.site.config.users &&
+        req.site.config.users.canCreateNewUsers
+      )
+    )
+      return next(createError(401, 'Gebruikers mogen niet aangemaakt worden'));
     return next();
   })
   .post(filterBody)
@@ -163,18 +183,21 @@ router.route('/')
       ...req.body,
       siteId: req.site.id,
       role: req.body.role ? req.body.role : 'member',
-      externalUserId: req.oAuthUser.id
+      externalUserId: req.oAuthUser.id,
     };
 
     db.User
       .authorizeData(data, 'create', req.user)
       .create(data)
-      .then(result => {
+      .then((result) => {
         return res.json(result);
       })
       .catch(function (error) {
         // todo: dit komt uit de oude routes; maak het generieker
-        if (typeof error == 'object' && error instanceof Sequelize.ValidationError) {
+        if (
+          typeof error == 'object' &&
+          error instanceof Sequelize.ValidationError
+        ) {
           let errors = [];
 
           error.errors.forEach(function (error) {
@@ -302,13 +325,12 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
 router.route('/:userId(\\d+)')
   .all(function (req, res, next) {
     const userId = parseInt(req.params.userId) || 1;
-    db.User
-      .scope(...req.scope)
+    db.User.scope(...req.scope)
       .findOne({
         where: {id: userId, siteId: req.params.siteId},
         //where: { id: userId }
       })
-      .then(found => {
+      .then((found) => {
         if (!found) throw new Error('User not found');
         req.results = found;
         next();
@@ -332,10 +354,10 @@ router.route('/:userId(\\d+)')
   .put(auth.useReqUser)
   .put(filterBody)
   .put(function (req, res, next) {
-
     const user = req.results;
 
-    if (!(user && user.can && user.can('update'))) return next(new Error('You cannot update this User'));
+    if (!(user && user.can && user.can('update')))
+      return next(new Error('You cannot update this User'));
 
     let userId = parseInt(req.params.userId, 10);
     let externalUserId = req.results.externalUserId;
@@ -409,7 +431,7 @@ router.route('/:userId(\\d+)')
           })
           .catch(err => {
             console.log(err);
-            throw(err)
+            throw err;
           });
       })
       .then((result) => {
