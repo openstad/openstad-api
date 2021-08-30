@@ -244,9 +244,15 @@ router.get('/export', [dbQuery], async function exportEvents(req, res, next) {
 
     const events = await db.Event.findAll(query);
 
-    const csv = await parseAsync(JSON.parse(JSON.stringify(events)), { transforms: [flatten({ objects: true, arrays: true })] })
-    res.setHeader('content-type', 'text/csv')
-    return res.send(csv)
+    if (req.get('content-type') === 'application/json') {
+      return res.json(events)
+    } else {
+      // default to csv
+      const csv = await parseAsync(JSON.parse(JSON.stringify(events)), { transforms: [flatten({ objects: true, arrays: true })] })
+      res.setHeader('content-type', 'text/csv')
+      return res.send(csv)
+    }
+
   } catch (err) {
     return next(err);
   }
