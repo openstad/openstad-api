@@ -310,6 +310,7 @@ defaultConfig.ignoreBruteForce = process.env.IGNORE_BRUTE_FORCE_IP ? [process.en
 defaultConfig.database.user = process.env.API_DATABASE_USER || defaultConfig.database.user;
 defaultConfig.database.password = process.env.API_DATABASE_PASSWORD || defaultConfig.database.password;
 defaultConfig.database.database = process.env.API_DATABASE_DATABASE || defaultConfig.database.database;
+defaultConfig.database.port = process.env.API_DATABASE_PORT || defaultConfig.database.port;
 defaultConfig.database.host = process.env.API_DATABASE_HOST || defaultConfig.database.host;
 defaultConfig.emailAddress = process.env.API_EMAILADDRESS || defaultConfig.emailAddress;
 defaultConfig.express.port = process.env.API_EXPRESS_PORT || defaultConfig.express_port;
