@@ -294,11 +294,11 @@ router.route('/')
     const paymentApiUrl = config.url + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment';
 
     if (paymentProvider === 'paystack') {
-      const payStackApiKey = paymentConfig.paystackApiKey ? paymentConfig.paystackApiKey : '';
+      const paystackApiKey = paymentConfig.paystackApiKey ? paymentConfig.paystackApiKey : '';
 
-      const PaystackClient = new PayStack(payStackApiKey);
+      const PaystackClient = new PayStack(paystackApiKey);
 
-      const customerUserKey = payStackApiKey + 'CustomerId';
+      const customerUserKey = paystackApiKey + 'CustomerId';
 
       let customerId;
 
@@ -535,8 +535,8 @@ router.route('/:orderId(\\d+)/payment')
     if (paymentProvider === 'paystack') {
       try {
         const paystackReference = req.order.extraData && req.order.extraData.paystackReference ? req.order.extraData.paystackReference : 'xxx';
-        const payStackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.payStackApiKey ? req.site.config.payment.payStackApiKey : '';
-        const PaystackClient = new PayStack(payStackApiKey);
+        const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
+        const PaystackClient = new PayStack(paystackApiKey);
 
         let verifyResponse = await PaystackClient.verifyTransaction({
           reference: paystackReference
@@ -655,8 +655,8 @@ router.route('/:orderId(\\d+)/payment')
   })
 
 router.route('/paystack', function(req, res) {
-  const payStackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.payStackApiKey ? req.site.config.payment.payStackApiKey : '';
-  const hash = crypto.createHmac('sha512', payStackApiKey).update(JSON.stringify(req.body)).digest('hex');
+  const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
+  const hash = crypto.createHmac('sha512', paystackApiKey).update(JSON.stringify(req.body)).digest('hex');
 
   if (hash === req.headers['x-paystack-signature']) {
     // Retrieve the request's body
