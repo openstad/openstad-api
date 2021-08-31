@@ -559,6 +559,10 @@ router.route('/:orderId(\\d+)/payment')
 
           await user.update({extraData});
         }
+
+        mail.sendThankYouMail(req.order, 'order', user);
+        done(req.order.id, req.order.hash, true);
+
       } catch (e) {
         next(e)
       }
@@ -618,6 +622,7 @@ router.route('/:orderId(\\d+)/payment')
                 extraData.subscriptionPaymentProvider = 'mollie';
 
                 await user.update({extraData});
+
               } catch (e) {
                 next(e)
               }
@@ -649,7 +654,7 @@ router.route('/paystack', function(req, res) {
   const payStackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.payStackApiKey ? req.site.config.payment.payStackApiKey : '';
   const hash = crypto.createHmac('sha512', payStackApiKey).update(JSON.stringify(req.body)).digest('hex');
 
-  if (hash == req.headers['x-paystack-signature']) {
+  if (hash === req.headers['x-paystack-signature']) {
     // Retrieve the request's body
     var event = req.body;
     switch(event.name) {
