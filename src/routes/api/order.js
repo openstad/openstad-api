@@ -37,17 +37,16 @@ const fetchOrderMw = function (req, res, next) {
 }
 
 const calculateOrderTotal = (orderItems, orderFees) => {
-
   let totals = 0.00;
 
   if (orderItems.length === 1 && orderItems[0].quantity === 1) {
-    totals = orderItems[0].price.toFixed(2);
+    totals = orderItems[0].price;
   } else {
     orderItems.forEach(item => {
       let price = item.product.price;
       let qty = item.quantity;
       let amount = price * qty;
-      amount = amount.toFixed(2);
+      amount = amount;
 
       totals += amount;
     });
@@ -325,8 +324,18 @@ router.route('/')
           await req.user.update({extraData})
         }
 
+        let total = req.results.total;
+
+        console.log('Math. total before toFixed',total)
+
+        total = total.toFixed ? total.toFixed(2) : total;
+
+        console.log('Math. total.toFixed',total)
+
+        console.log('Math.round((total * 100))', Math.round((total * 100)))
+
         const paystackOptions = {
-          amount: (req.results.total.toFixed(2) * 100), // Paystack wants cents
+          amount: Math.round((total * 100)), // Paystack wants cents
           email: req.user.email,
           callback_url: paymentApiUrl,
         }
