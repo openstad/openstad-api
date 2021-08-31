@@ -37,15 +37,21 @@ const fetchOrderMw = function (req, res, next) {
 }
 
 const calculateOrderTotal = (orderItems, orderFees) => {
+
   let totals = 0.00;
 
-  orderItems.forEach(item => {
-    let price = item.product.price;
-    let qty = item.quantity;
-    let amount = price * qty;
+  if (orderItems.length === 1 && orderItems[0].quantity === 1) {
+    totals = orderItems[0].price.toFixed(2);
+  } else {
+    orderItems.forEach(item => {
+      let price = item.product.price;
+      let qty = item.quantity;
+      let amount = price * qty;
+      amount = amount.toFixed(2);
 
-    totals += amount;
-  });
+      totals += amount;
+    });
+  }
 
   orderFees.forEach(fee => {
     let price = fee.price;
@@ -204,7 +210,7 @@ router.route('/')
       total: calculateOrderTotal(req.body.orderItems, req.orderFees),
       extraData: {
         isSubscription: req.subscriptionProduct ? true : false,
-        subscriptionInterval: req.subscriptionProduct.subscriptionInterval,
+        subscriptionInterval: req.subscriptionProduct ? req.subscriptionProduct.subscriptionInterval : '',
         paystackPlanCode: req.subscriptionProduct && req.subscriptionProduct.extraData ? req.subscriptionProduct.extraData.paystackPlanCode : '',
         subscriptionProductId: req.subscriptionProduct.id,
         currency: firstOrderItem.product.currency,
@@ -287,7 +293,9 @@ router.route('/')
 
     if (paymentProvider === 'paystack') {
       const payStackApiKey = paymentConfig.paystackApiKey ? paymentConfig.paystackApiKey : '';
+
       const PaystackClient = new PayStack(payStackApiKey);
+
       const customerUserKey = payStackApiKey + 'CustomerId';
 
       let customerId;
@@ -318,7 +326,7 @@ router.route('/')
         }
 
         const paystackOptions = {
-          amount: req.results.total, // 5,000 Naira (remember you have to pass amount in kobo)
+          amount: (req.results.total.toFixed(2) * 100), // Paystack wants cents
           email: req.user.email,
           callback_url: paymentApiUrl,
         }
