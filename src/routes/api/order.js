@@ -227,7 +227,6 @@ router.route('/')
       .then(result => {
         req.results = result;
         console.log('result order', req.results)
-
         next();
       })
       .catch(function (error) {
@@ -355,16 +354,18 @@ router.route('/')
         createTransactionResponse = createTransactionResponse.body;
         console.log('createTransactionResponse', createTransactionResponse);
 
-        req.results.extraData.paymentUrl = createTransactionResponse.data.authorization_url;
-        req.results.extraData.paystackAccessCode = createTransactionResponse.data.access_code;
-        req.results.extraData.paystackReference = createTransactionResponse.data.reference;
+        const orderExtraData =  req.results.extraData;
+        orderExtraData.paymentUrl = createTransactionResponse.data.authorization_url;
+        orderExtraData.paystackAccessCode = createTransactionResponse.data.access_code;
+        orderExtraData.paystackReference = createTransactionResponse.data.reference;
+        orderExtraData.paymentProvider = paymentProvider;
 
+        req.redirectUrl = orderExtraData.paymentUrl;
 
-        req.results.extraData.paymentProvider = paymentProvider;
+        await req.results.update({
+          extraData: orderExtraData
+        });
 
-        req.redirectUrl = req.results.extraData.paymentUrl;
-
-        await req.results.save();
         next();
 
       } catch (error) {
@@ -420,14 +421,17 @@ router.route('/')
 
         const payment = await mollieClient.payments.create(mollieOptions);
 
-        req.results.extraData = req.results.extraData ? req.results.extraData : [];
-        req.results.extraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
-        req.results.extraData.paymentIds.push(payment.id);
-        req.results.extraData.paymentUrl = payment.getCheckoutUrl();
-        req.results.extraData.paymentProvider = paymentProvider;
+        const orderExtraData = req.results.extraData ? req.results.extraData : {};
+        orderExtraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
+        orderExtraData.paymentIds.push(payment.id);
+        orderExtraData.paymentUrl = payment.getCheckoutUrl();
+        orderExtraData.paymentProvider = paymentProvider;
 
-        req.redirectUrl = req.results.extraData.paymentUrl;
-        await req.results.save();
+        req.redirectUrl = orderExtraData.paymentUrl;
+
+        await req.results.update({
+          extraData: orderExtraData
+        });
 
         next();
       } catch (error) {
@@ -596,7 +600,6 @@ router.route('/:orderId(\\d+)/payment')
 
             await req.order.save();
             const user = await db.User.findOne({where: {id: req.order.userId}});
-
 
             if (req.order.extraData && req.order.extraData.isSubscription && req.order.userId) {
               try {
