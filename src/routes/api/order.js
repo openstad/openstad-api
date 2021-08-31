@@ -362,7 +362,7 @@ router.route('/')
         req.redirectUrl = req.results.extraData.paymentUrl;
 
         await req.results.save();
-
+        next();
 
       } catch (error) {
         next(error);
