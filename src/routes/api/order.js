@@ -535,6 +535,7 @@ router.route('/:orderId(\\d+)/payment')
     }
 
     const paymentProvider = req.order.extraData && req.order.extraData.paymentProvider ? req.order.extraData.paymentProvider : 'mollie';
+    const user = await db.User.findOne({where: {id: req.order.userId}});
 
     if (paymentProvider === 'paystack') {
       try {
