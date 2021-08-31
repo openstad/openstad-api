@@ -344,7 +344,7 @@ router.route('/')
           paystackOptions['plan'] = req.subscriptionProduct.extraData.paystackPlanCode;
         }
 
-        let createTransactionResponse = PaystackClient.initializeTransaction(paystackOptions);
+        let createTransactionResponse = await PaystackClient.initializeTransaction(paystackOptions);
 
         createTransactionResponse = typeof createTransactionResponse === 'string' ? JSON.parse(createTransactionResponse) : createTransactionResponse;
         console.log('createTransactionResponse', createTransactionResponse);
@@ -535,7 +535,7 @@ router.route('/:orderId(\\d+)/payment')
         const payStackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.payStackApiKey ? req.site.config.payment.payStackApiKey : '';
         const PaystackClient = new PayStack(payStackApiKey);
 
-        let verifyResponse = PaystackClient.verifyTransaction({
+        let verifyResponse = await PaystackClient.verifyTransaction({
           reference: paystackReference
         });
 
@@ -647,7 +647,7 @@ router.route('/:orderId(\\d+)/payment')
 
 router.route('/paystack', function(req, res) {
   const payStackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.payStackApiKey ? req.site.config.payment.payStackApiKey : '';
-  var hash = crypto.createHmac('sha512', payStackApiKey).update(JSON.stringify(req.body)).digest('hex');
+  const hash = crypto.createHmac('sha512', payStackApiKey).update(JSON.stringify(req.body)).digest('hex');
 
   if (hash == req.headers['x-paystack-signature']) {
     // Retrieve the request's body
