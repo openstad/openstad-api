@@ -45,6 +45,7 @@
     "nodemailer": "^6.4.14",
     "nodemon": "^1.17.5",
     "nunjucks": "^3.2.2",
+    "paystack-node": "^0.3.0",
     "pmx": "^1.6.7",
     "pusher": "^5.0.0",
     "request": "^2.88.2",
