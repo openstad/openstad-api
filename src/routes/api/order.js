@@ -182,6 +182,8 @@ router.route('/')
   })
   */
   .post(function (req, res, next) {
+    const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
+    const paymentProvider = paymentConfig.provider ? paymentConfig.provider : 'mollie';
 
     const firstOrderItem = req.body.orderItems[0];
     // console.log('firstOrderItem', firstOrderItem.produ);
@@ -209,6 +211,7 @@ router.route('/')
       total: calculateOrderTotal(req.body.orderItems, req.orderFees),
       extraData: {
         isSubscription: req.subscriptionProduct ? true : false,
+        paymentProvider: paymentProvider,
         subscriptionInterval: req.subscriptionProduct ? req.subscriptionProduct.subscriptionInterval : '',
         paystackPlanCode: req.subscriptionProduct && req.subscriptionProduct.extraData ? req.subscriptionProduct.extraData.paystackPlanCode : '',
         subscriptionProductId: req.subscriptionProduct.id,
@@ -643,9 +646,10 @@ router.route('/:orderId(\\d+)/payment')
           }
         })
         .catch(error => {
-          console.log('Error', error)
+          console.log('Error', error);
+          next(e);
           // don't through an error for now
-          done(req.order.id, req.order.hash);
+         // done(req.order.id, req.order.hash);
         });
     }
   })
