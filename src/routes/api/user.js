@@ -30,7 +30,7 @@ const formatOAuthApiUrl = (site, which = 'default') => {
 
 const filterBody = (req, res, next) => {
     const data = {};
-    const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode'];
+    const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'password','extraData', 'listableByRole', 'detailsViewableByRole', 'password'];
     const adminKeys = ['extraData', 'listableByRole', 'detailsViewableByRole', 'password'];
 
     console.log('req.boyd', req.body)
@@ -137,7 +137,6 @@ router.route('/')
     .post(function (req, res, next) {
         console.log('Step 2 create a user')
         console.log('reqboy', req.body)
-
 
         // Look for an Openstad user with this e-mail
         if (!req.body.email) return next(createError(403, 'E-mail is a required field'));
