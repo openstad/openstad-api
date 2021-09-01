@@ -5,6 +5,7 @@ const auth = require('../../middleware/sequelize-authorization-middleware');
 const iap = require('in-app-purchase');
 const {JWT} = require('google-auth-library');
 const {google} = require('googleapis');
+const assert = require('assert')
 
 let router = express.Router({mergeParams: true});
 
@@ -15,7 +16,8 @@ router
     next();
   });
 
-router.route('/', async function (req, res, next) {
+router.route('/')
+  .all(async function (req, res, next) {
   try {
     const {email, firstName, lastName} = req;
     const {appType, purchase} = req.body;
