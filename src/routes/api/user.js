@@ -30,7 +30,8 @@ const formatOAuthApiUrl = (site, which = 'default') => {
 
 const filterBody = (req, res, next) => {
     const data = {};
-    const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole', 'password'];
+    const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode'];
+    const adminKeys = ['extraData', 'listableByRole', 'detailsViewableByRole', 'password'];
 
     console.log('req.boyd', req.body)
 
@@ -228,7 +229,7 @@ router.route('/')
         console.log('data', data)
 
         db.User
-            .authorizeData(data, 'create', req.user, null, req.site)
+            //.authorizeData(data, 'create', req.user, null, req.site)
             .create(data)
             .then(result => {
                 return res.json(result);
