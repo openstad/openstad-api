@@ -15,6 +15,7 @@
   "dependencies": {
     "@kubernetes/client-node": "^0.12.0",
     "@mollie/api-client": "^3.2.4",
+    "assert": "^2.0.0",
     "aws-sdk": "^2.706.0",
     "bcrypt": "^3.0.6",
     "co": "^4.6.0",
@@ -29,8 +30,11 @@
     "express-promise-router": "^3.0.3",
     "express-session": "^1.17.1",
     "fuzzysort": "^1.1.4",
+    "google-auth-library": "^7.8.0",
+    "googleapis": "^85.0.0",
     "html-to-text": "^5.1.1",
     "http-errors": "^1.8.0",
+    "in-app-purchase": "^1.11.4",
     "ip": "^1.1.5",
     "isomorphic-fetch": "^3.0.0",
     "jsonwebtoken": "^8.5.1",
@@ -42,6 +46,7 @@
     "mysql2": "^2.3.0",
     "mysqldump": "^3.2.0",
     "nested-object-assign": "^1.0.3",
+    "node-apple-receipt-verify": "^1.10.0",
     "nodemailer": "^6.4.14",
     "nodemon": "^1.17.5",
     "nunjucks": "^3.2.2",
@@ -54,6 +59,7 @@
     "sequelize": "^5.22.3",
     "umzug": "^2.3.0",
     "useragent": "^2.3.0",
+    "uuid": "^8.3.2",
     "ws": "^7.3.1"
   },
   "devDependencies": {

@@ -14,6 +14,7 @@ const router = express.Router({mergeParams: true});
 const generateToken = require('../../util/generate-token');
 const PayStack = require('paystack-node')
 const crypto = require('crypto');
+const subscriptionService = require('../../services/subscription');
 
 
 const fetchOrderMw = function (req, res, next) {
@@ -288,154 +289,184 @@ router.route('/')
       .catch(next)
   })
   .post(async function (req, res, next) {
-    const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
-    const paymentProvider = paymentConfig.provider ? paymentConfig.provider : 'mollie';
-    const paymentApiUrl = config.url + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment';
 
-    if (paymentProvider === 'paystack') {
-      const paystackApiKey = paymentConfig.paystackApiKey ? paymentConfig.paystackApiKey : '';
+    const { authToken, appleReceipt } = body;
 
-      const PaystackClient = new PayStack(paystackApiKey);
-
-      const customerUserKey = paystackApiKey + 'CustomerId';
-
-      let customerId;
-
+    if (appleReceipt) {
+      appleReceiptVerify.config({
+        secret: process.env.APPLE_SHARED_SECRET,
+        //  environment: [process.env.APPLE_APP_STORE_ENV],
+        //  excludeOldTransactions: true,
+      });
       try {
-        if (req.user.extraData && req.user.extraData[customerUserKey]) {
-          customerId = req.user.extraData[customerUserKey];
-        } else {
-          let createCustomerResponse = await PaystackClient.createCustomer({
-            email: req.user.email,
-            first_name: req.user.firstName,
-            last_name: req.user.lastName,
-            //phone: '+2347135548369'
-          });
-
-          createCustomerResponse = typeof createCustomerResponse === 'string' ? JSON.parse(createCustomerResponse) : createCustomerResponse;
-          createCustomerResponse = createCustomerResponse.body;
-
-          console.log('createCustomerResponse', createCustomerResponse);
-
-          customerId = createCustomerResponse.data.customer_code;
-
-          const extraData = req.user.extraData;
-
-          extraData[customerUserKey] = customerId;
-
-          await req.user.update({extraData})
-        }
-
-        let total = req.results.total;
-
-        console.log('Math. total before toFixed',total)
-
-        total = total.toFixed ? total.toFixed(2) : total;
-
-        console.log('Math. total.toFixed',total)
-
-        console.log('Math.round((total * 100))', Math.round((total * 100)))
-
-        const paystackOptions = {
-          amount: Math.round((total * 100)), // Paystack wants cents
-          email: req.user.email,
-          callback_url: paymentApiUrl,
-        }
-
-        if (req.subscriptionProduct) {
-          paystackOptions['plan'] = req.subscriptionProduct.extraData.paystackPlanCode;
-        }
-
-        let createTransactionResponse = await PaystackClient.initializeTransaction(paystackOptions);
-
-        createTransactionResponse = typeof createTransactionResponse === 'string' ? JSON.parse(createTransactionResponse) : createTransactionResponse;
-        console.log('createTransactionResponse', createTransactionResponse);
-
-        createTransactionResponse = createTransactionResponse.body;
-        console.log('createTransactionResponse', createTransactionResponse);
-
-        const orderExtraData =  req.results.extraData;
-        orderExtraData.paymentUrl = createTransactionResponse.data.authorization_url;
-        orderExtraData.paystackAccessCode = createTransactionResponse.data.access_code;
-        orderExtraData.paystackReference = createTransactionResponse.data.reference;
-        orderExtraData.paymentProvider = paymentProvider;
-
-        req.redirectUrl = orderExtraData.paymentUrl;
-
-        await req.results.update({
-          extraData: orderExtraData
+        // attempt to verify receipt
+        const products = await appleReceiptVerify.validate({
+          excludeOldTransactions: true,
+          receipt: receipt
         });
+        // check if products exist
+        if (Array.isArray(products)) {
 
-        next();
-
-      } catch (error) {
-        next(error);
+          // get the latest purchased product (subscription tier)
+          let { expirationDate } = products[0];
+          // convert ms to secs
+          let expirationUnix = Math.round(expirationDate / 1000);
+          // persist in database
+          /* coming up next */
+        }
+      } catch(e) {
+        // transaction receipt is invalid
       }
 
-    } else if (paymentProvider === 'mollie') {
-      const mollieApiKey = paymentConfig.mollieApiKey ? paymentConfig.mollieApiKey : '';
+    } else {
 
-      // google pay, apple pay, paystack,
-      const mollieClient = createMollieClient({apiKey: mollieApiKey});
-      const customerUserKey = mollieApiKey + 'CustomerId';
 
-      console.log('paymentProvider', paymentProvider)
+      const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
+      const paymentProvider = paymentConfig.provider ? paymentConfig.provider : 'mollie';
+      const paymentApiUrl = config.url + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment';
 
-      try {
+      if (paymentProvider === 'paystack') {
+        const paystackApiKey = paymentConfig.paystackApiKey ? paymentConfig.paystackApiKey : '';
+
+        const PaystackClient = new PayStack(paystackApiKey);
+
+        const customerUserIdKey = paystackApiKey + 'CustomerId';
+        const customerUserCodeKey = paystackApiKey + 'CustomerCode';
+
         let customerId;
-        console.log('req.user.extraData', req.user.extraData);
 
-        if (req.user.extraData && req.user.extraData[customerUserKey]) {
-          customerId = req.user.extraData[customerUserKey];
-        } else {
-          const customer = await mollieClient.customers.create({
-            name: req.user.firstName + ' ' + req.user.lastName,
+        try {
+          if (req.user.extraData && req.user.extraData[customerUserKey]) {
+            customerId = req.user.extraData[customerUserKey];
+          } else {
+            let createCustomerResponse = await PaystackClient.createCustomer({
+              email: req.user.email,
+              first_name: req.user.firstName,
+              last_name: req.user.lastName,
+              //phone: '+2347135548369'
+            });
+
+            createCustomerResponse = typeof createCustomerResponse === 'string' ? JSON.parse(createCustomerResponse) : createCustomerResponse;
+            createCustomerResponse = createCustomerResponse.body;
+
+            console.log('createCustomerResponse', createCustomerResponse);
+
+            customerId = createCustomerResponse.data.id;
+
+            const extraData = req.user.extraData;
+
+            extraData[customerUserIdKey] = createCustomerResponse.data.id;
+            extraData[customerUserCodeKey] = createCustomerResponse.data.code;
+
+
+            await req.user.update({extraData})
+          }
+
+          let total = req.results.total;
+
+          total = total.toFixed ? total.toFixed(2) : total;
+
+          const paystackOptions = {
+            amount: Math.round((total * 100)), // Paystack wants cents
             email: req.user.email,
+            callback_url: paymentApiUrl,
+          }
+
+          if (req.subscriptionProduct) {
+            paystackOptions['plan'] = req.subscriptionProduct.extraData.paystackPlanCode;
+          }
+
+          let createTransactionResponse = await PaystackClient.initializeTransaction(paystackOptions);
+
+          createTransactionResponse = typeof createTransactionResponse === 'string' ? JSON.parse(createTransactionResponse) : createTransactionResponse;
+          console.log('createTransactionResponse', createTransactionResponse);
+
+          createTransactionResponse = createTransactionResponse.body;
+          console.log('createTransactionResponse', createTransactionResponse);
+
+          const orderExtraData = req.results.extraData;
+          orderExtraData.paymentUrl = createTransactionResponse.data.authorization_url;
+          orderExtraData.paystackAccessCode = createTransactionResponse.data.access_code;
+          orderExtraData.paystackReference = createTransactionResponse.data.reference;
+          orderExtraData.paymentProvider = paymentProvider;
+
+          req.redirectUrl = orderExtraData.paymentUrl;
+
+          await req.results.update({
+            extraData: orderExtraData
           });
 
-          const extraData = req.user.extraData;
+          next();
 
-          extraData[customerUserKey] = customer.id;
-
-          await req.user.update({extraData})
-
-          customerId = req.user.extraData[customerUserKey];
+        } catch (error) {
+          next(error);
         }
 
+      } else if (paymentProvider === 'mollie') {
+        const mollieApiKey = paymentConfig.mollieApiKey ? paymentConfig.mollieApiKey : '';
 
-        const mollieOptions = {
-          customerId: customerId,
-          amount: {
-            value: req.results.total,
-            currency: req.results.extraData.currency
-          },
-          description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
-          redirectUrl: paymentApiUrl,
-          webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment'
-          //	webhookUrl:  paymentApiUrl,
+        // google pay, apple pay, paystack,
+        const mollieClient = createMollieClient({apiKey: mollieApiKey});
+        const customerUserKey = mollieApiKey + 'CustomerId';
+
+        console.log('paymentProvider', paymentProvider)
+
+        try {
+          let customerId;
+          console.log('req.user.extraData', req.user.extraData);
+
+          if (req.user.extraData && req.user.extraData[customerUserKey]) {
+            customerId = req.user.extraData[customerUserKey];
+          } else {
+            const customer = await mollieClient.customers.create({
+              name: req.user.firstName + ' ' + req.user.lastName,
+              email: req.user.email,
+            });
+
+            const extraData = req.user.extraData;
+
+            extraData[customerUserKey] = customer.id;
+
+            await req.user.update({extraData})
+
+            customerId = req.user.extraData[customerUserKey];
+          }
+
+
+          const mollieOptions = {
+            customerId: customerId,
+            amount: {
+              value: req.results.total,
+              currency: req.results.extraData.currency
+            },
+            description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
+            redirectUrl: paymentApiUrl,
+            webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment'
+            //	webhookUrl:  paymentApiUrl,
+          }
+
+          if (req.subscriptionProduct) {
+            mollieOptions['sequenceType'] = 'first';
+          }
+
+          const payment = await mollieClient.payments.create(mollieOptions);
+
+          const orderExtraData = req.results.extraData ? req.results.extraData : {};
+          orderExtraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
+          orderExtraData.paymentIds.push(payment.id);
+          orderExtraData.paymentUrl = payment.getCheckoutUrl();
+          orderExtraData.paymentProvider = paymentProvider;
+
+          req.redirectUrl = orderExtraData.paymentUrl;
+
+          await req.results.update({
+            extraData: orderExtraData
+          });
+
+          next();
+        } catch (error) {
+          next(error);
         }
-
-        if (req.subscriptionProduct) {
-          mollieOptions['sequenceType'] = 'first';
-        }
-
-        const payment = await mollieClient.payments.create(mollieOptions);
-
-        const orderExtraData = req.results.extraData ? req.results.extraData : {};
-        orderExtraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
-        orderExtraData.paymentIds.push(payment.id);
-        orderExtraData.paymentUrl = payment.getCheckoutUrl();
-        orderExtraData.paymentProvider = paymentProvider;
-
-        req.redirectUrl = orderExtraData.paymentUrl;
-
-        await req.results.update({
-          extraData: orderExtraData
-        });
-
-        next();
-      } catch (error) {
-        next(error);
       }
     }
   })
@@ -550,8 +581,6 @@ router.route('/:orderId(\\d+)/payment')
         verifyResponse = typeof verifyResponse === 'string' ? JSON.parse(verifyResponse) : verifyResponse;
         verifyResponse = verifyResponse.body;
 
-        console.log('VerifyResponse data', verifyResponse)
-
         if (verifyResponse.data.status === 'success') {
           req.order.set('paymentStatus', 'PAID');
 
@@ -559,13 +588,14 @@ router.route('/:orderId(\\d+)/payment')
 
           const user = await db.User.findOne({where: {id: req.order.userId}});
 
-          const extraData = user.extraData;
-          extraData.paystackPlanCode = req.order.extraData.paystackPlanCode;
-          extraData.isActiveSubscriber = 'yes';
-          extraData.subscriptionProductId = req.order.extraData.subscriptionProductId;
-          extraData.subscriptionPaymentProvider = 'paystack';
-
-          await user.update({extraData});
+          await subscriptionService.update({
+            user,
+            provider: 'paystack',
+            subscriptionActive : true,
+            subscriptionProductId: req.order.extraData.subscriptionProductId,
+            siteId: req.site.id,
+            paystackPlanCode:  req.order.extraData.paystackPlanCode
+          });
         }
 
         mail.sendThankYouMail(req.order, 'order', user);
@@ -576,8 +606,6 @@ router.route('/:orderId(\\d+)/payment')
       }
 
     } else {
-
-
       if (!req.order.extraData && !req.order.extraData.paymentIds && !req.order.extraData.paymentIds[0]) {
         return next(createError(500, 'No Payment IDs found for this order'));
       }
@@ -600,6 +628,7 @@ router.route('/:orderId(\\d+)/payment')
             req.order.set('paymentStatus', 'PAID');
 
             await req.order.save();
+
             const user = await db.User.findOne({where: {id: req.order.userId}});
 
             if (req.order.extraData && req.order.extraData.isSubscription && req.order.userId) {
@@ -621,14 +650,14 @@ router.route('/:orderId(\\d+)/payment')
 
                 const subscription = await mollieClient.customers_subscriptions.create(mollieOptions);
 
-                const extraData = user.extraData;
-
-                extraData.mollieSubscriptionId = subscription.id;
-                extraData.isActiveSubscriber = 'yes';
-                extraData.subscriptionProductId = req.order.extraData.subscriptionProductId;
-                extraData.subscriptionPaymentProvider = 'mollie';
-
-                await user.update({extraData});
+                await subscriptionService.update({
+                  user,
+                  provider: 'mollie',
+                  subscriptionActive : true,
+                  subscriptionProductId: req.order.extraData.subscriptionProductId,
+                  siteId: req.site.id,
+                  mollieSubscriptionId: subscription.id
+                });
 
               } catch (e) {
                 next(e)
@@ -658,30 +687,80 @@ router.route('/:orderId(\\d+)/payment')
     }
   })
 
-router.route('/paystack', function(req, res) {
-  const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
-  const hash = crypto.createHmac('sha512', paystackApiKey).update(JSON.stringify(req.body)).digest('hex');
 
-  if (hash === req.headers['x-paystack-signature']) {
-    // Retrieve the request's body
-    var event = req.body;
-    switch(event.name) {
-      case "subscription.create":
-        // code block
 
-        console.log('Event subscription.create', event);
+router.route('/check-subscriptions', async function(req, res) {
 
-        break;
-      case "paymentrequest.success":
+  const paystackFilterKey = 'subscriptionPaymentProvider';
+  const paystackFilterValue = 'paystack';
 
-        console.log('Event paymentrequest.success', event);
+  const paystackUsers = await db.User
+    .findAll({
+      [Sequelize.Op.and] : sequelize.literal(`extraData->"$.${paystackFilterKey}"='${paystackFilterValue}'`)
+    });
 
-        break;
-      default:
-      // code block
+  await paystackUsers.forEach(async (user) =>{
+    const paystackPlanCode = user.extraData.paystackPlanCode;
+
+    const paystackReference = req.order.extraData && req.order.extraData.paystackReference ? req.order.extraData.paystackReference : 'xxx';
+    const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
+    const PaystackClient = new PayStack(paystackApiKey);
+
+    const customerId = user.extraData[paystackApiKey + 'CustomerId'];
+
+    try {
+      const subscriptionsResponse = await PaystackClient.getSubscriptions({
+        perPage: 100, //
+        customer: customerId
+      });
+      // see docs:https://paystack.com/docs/api/#subscription-list
+
+      const subscriptions = Array.isArray(subscriptionsResponse.data) ? subscriptionsResponse.data : [];
+
+      subscriptions.forEach((subscription) => {
+        if (subscription.status === 'active') {
+
+        } else {
+
+        }
+      });
+
+    } catch (e) {
+
     }
-  }
-  res.send(200);
+
+  });
+
+  const mollieFilterKey = 'subscriptionPaymentProvider';
+  const mollieFilterValue = 'mollie';
+
+  const mollieUsers = await db.User
+    .findAll({
+      [Sequelize.Op.and] : sequelize.literal(`extraData->"$.${mollieFilterKey}"='${mollieFilterValue}'`)
+    });
+
+  mollieUsers.forEach((user) =>{
+    try {
+
+
+    } catch (e) {
+
+    }
+  });
+
+
+  const stripeFilterKey = 'subscriptionPaymentProvider';
+  const stripeFilterValue = 'stripe';
+
+  const stripeUsers = await db.User
+    .findAll({
+      [Sequelize.Op.and] : sequelize.literal(`extraData->"$.${stripeFilterKey}"='${stripeFilterValue}'`)
+    });
+
+  res.json({
+    paystackUsers: paystackUsers,
+    mollieUsers: mollieUsers,
+  });
 });
 
 

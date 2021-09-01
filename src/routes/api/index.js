@@ -37,6 +37,9 @@ router.use( '/site/:siteId(\\d+)(/idea/:ideaId(\\d+))?/poll', require('./poll') 
 // tags
 router.use( '/site/:siteId(\\d+)/tag', require('./tag') );
 
+// payment
+router.use( '/site/:siteId(\\d+)/payment-iap', require('./payment-iap') );
+
 router.use( '/site/:siteId(\\d+)/tour', require('./tour') );
 
 //router.use( '/site/:siteId(\\d+)/app', require('./app') );
