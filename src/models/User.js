@@ -29,7 +29,7 @@ module.exports = function (db, sequelize, DataTypes) {
             auth: {
                 listableBy: 'admin',
                 viewableBy: 'admin',
-                createableBy: 'moderator',
+                createableBy: 'all',
                 updateableBy: 'admin',
             },
             allowNull: true,
@@ -126,7 +126,7 @@ module.exports = function (db, sequelize, DataTypes) {
             auth: {
                 listableBy: ['editor', 'owner'],
                 viewableBy: ['editor', 'owner'],
-                createableBy: ['editor', 'owner'],
+                createableBy: 'all',
                 updateableBy: ['editor', 'owner'],
             },
             allowNull: true,
@@ -192,7 +192,7 @@ module.exports = function (db, sequelize, DataTypes) {
             auth: {
                 listableBy: ['editor', 'owner'],
                 viewableBy: 'all',
-                createableBy: ['editor', 'owner'],
+                createableBy: 'all',
                 updateableBy: ['editor', 'owner'],
             },
             allowNull: true,
@@ -206,7 +206,7 @@ module.exports = function (db, sequelize, DataTypes) {
             auth: {
                 listableBy: ['editor', 'owner'],
                 viewableBy: 'all',
-                createableBy: ['editor', 'owner'],
+                createableBy: 'all',
                 updateableBy: ['editor', 'owner'],
             },
             allowNull: true,

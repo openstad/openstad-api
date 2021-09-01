@@ -216,6 +216,8 @@ router.route('/')
             .catch(next);
     })
     .post(function (req, res, next) {
+        console.log('req.body', req.body)
+
         const data = {
             ...req.body,
             siteId: req.site.id,
@@ -223,8 +225,10 @@ router.route('/')
             externalUserId: req.oAuthUser.id
         };
 
+        console.log('data', data)
+
         db.User
-            .authorizeData(data, 'create', req.user)
+            .authorizeData(data, 'create', req.user, null, req.site)
             .create(data)
             .then(result => {
                 return res.json(result);
