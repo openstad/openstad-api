@@ -32,6 +32,8 @@ const filterBody = (req, res, next) => {
     const data = {};
     const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole', 'password'];
 
+    console.log('req.boyd', req.body)
+
     keys.forEach((key) => {
         if (req.body[key]) {
             data[key] = req.body[key];
@@ -126,11 +128,16 @@ router.route('/')
         return next();
     })
     .post(function (req, res, next) {
+        console.log('Step 1')
     //    if (!(req.site.config && req.site.config.users && req.site.config.users.canCreateNewUsers)) return next(createError(403, 'Gebruikers mogen niet aangemaakt worden'));
         return next();
     })
     .post(filterBody)
     .post(function (req, res, next) {
+        console.log('Step 2 create a user')
+        console.log('reqboy', req.body)
+
+
         // Look for an Openstad user with this e-mail
         if (!req.body.email) return next(createError(403, 'E-mail is a required field'));
 
@@ -162,6 +169,8 @@ router.route('/')
      * then create it
      */
     .post(function (req, res, next) {
+        console.log('Step 3 create a user if note exists')
+
         if (req.oAuthUser) {
             next();
         } else {
@@ -189,6 +198,8 @@ router.route('/')
     })
     // check if user not already exists in API
     .post(function (req, res, next) {
+        console.log('Step 4 check if a user exists')
+
         db.User
             .scope(...req.scope)
             .findOne({
