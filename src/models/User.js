@@ -16,6 +16,12 @@ module.exports = function (db, sequelize, DataTypes) {
         siteId: {
             type: DataTypes.INTEGER,
             defaultValue: config.siteId && typeof config.siteId == 'number' ? config.siteId : 0,
+            auth: {
+                listableBy: 'admin',
+                viewableBy: 'admin',
+                createableBy: 'anonymous',
+                updateableBy: 'admin',
+            }
         },
 
         accountId: {
@@ -29,7 +35,7 @@ module.exports = function (db, sequelize, DataTypes) {
             auth: {
                 listableBy: 'admin',
                 viewableBy: 'admin',
-                createableBy: 'all',
+                createableBy: 'anonymous',
                 updateableBy: 'admin',
             },
             allowNull: true,
@@ -79,7 +85,7 @@ module.exports = function (db, sequelize, DataTypes) {
 					const memberRole = 'member';
 
 					// this is the role for User on which action is performed, not of the user doing the update
-                    actionUserRole = actionUserRole || self.role;
+          actionUserRole = actionUserRole || self.role;
 
 					// by default return anonymous role if none of the conditions are met
 					let roleToReturn;
@@ -126,7 +132,7 @@ module.exports = function (db, sequelize, DataTypes) {
             auth: {
                 listableBy: ['editor', 'owner'],
                 viewableBy: ['editor', 'owner'],
-                createableBy: 'all',
+                createableBy: 'anonymous',
                 updateableBy: ['editor', 'owner'],
             },
             allowNull: true,
@@ -192,7 +198,7 @@ module.exports = function (db, sequelize, DataTypes) {
             auth: {
                 listableBy: ['editor', 'owner'],
                 viewableBy: 'all',
-                createableBy: 'all',
+                createableBy: 'anonymous',
                 updateableBy: ['editor', 'owner'],
             },
             allowNull: true,
@@ -206,7 +212,7 @@ module.exports = function (db, sequelize, DataTypes) {
             auth: {
                 listableBy: ['editor', 'owner'],
                 viewableBy: 'all',
-                createableBy: 'all',
+                createableBy: 'anonymous',
                 updateableBy: ['editor', 'owner'],
             },
             allowNull: true,
