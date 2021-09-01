@@ -120,13 +120,13 @@ router.route('/')
     // create user
     // -----------
 
-    .post(auth.can('User', 'create'))
+   // .post(auth.can('User', 'create'))
     .post(function (req, res, next) {
         if (!req.site) return next(createError(403, 'Site niet gevonden'));
         return next();
     })
     .post(function (req, res, next) {
-        if (!(req.site.config && req.site.config.users && req.site.config.users.canCreateNewUsers)) return next(createError(403, 'Gebruikers mogen niet aangemaakt worden'));
+    //    if (!(req.site.config && req.site.config.users && req.site.config.users.canCreateNewUsers)) return next(createError(403, 'Gebruikers mogen niet aangemaakt worden'));
         return next();
     })
     .post(filterBody)
