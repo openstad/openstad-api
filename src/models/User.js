@@ -125,7 +125,136 @@ module.exports = function (db, sequelize, DataTypes) {
             defaultValue: false
         },
 
-        extraData: getExtraDataConfig(DataTypes.JSON, 'users'),
+        siteData : {
+            type: DataTypes.JSON,
+            allowNull : true,
+            defaultValue : {},
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                createableBy: 'anonymous',
+                updateableBy: ['editor', 'owner'],
+            },
+        },
+
+        subscriptionData : {
+            type: DataTypes.JSON,
+            allowNull : true,
+            defaultValue : {},
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                createableBy: ['editor'],
+                updateableBy: ['editor'],
+            },
+        },
+
+        extraData:  {
+            type: DataTypes.JSON,
+            allowNull: false,
+            defaultValue: {},
+            get: function () {
+                let value =  this.getDataValue('extraData');
+                try {
+                    if (typeof value == 'string') {
+                        value = JSON.parse(value);
+                    }
+                } catch (err) {
+                }
+
+                return value;
+            },
+            set: function (value) {
+                try {
+                    if (typeof value == 'string') {
+                        value = JSON.parse(value);
+                    }
+                } catch (err) {
+                }
+
+                let oldValue =  this.getDataValue('extraData') || {};
+
+                // new images replace old images
+                if (value && value.images) {
+                    oldValue.images = [];
+                }
+
+                try {
+                    if (typeof oldValue == 'string') {
+                        oldValue = JSON.parse(oldValue) || {};
+                    }
+                } catch (err) {
+                }
+
+                function fillValue(old, val) {
+                    old = old || {};
+                    Object.keys(old).forEach((key) => {
+                        if (val[key] && typeof val[key] == 'object') {
+                            return fillValue(old[key], val[key]);
+                        }
+                        if (val[key] === null) {
+                            // send null to delete fields
+                            delete val[key];
+                        } else if (typeof val[key] == 'undefined') {
+                            // not defined in put data; use old val
+                            val[key] = old[key];
+                        }
+
+                        if (typeof val[key] === 'string') {
+                            val[key] = sanitize.safeTags(val[key]);
+                        }
+                    });
+                }
+
+                fillValue(oldValue, value);
+
+                // ensure images is always an array
+                if (value.images && typeof value.images === 'string') {
+                    value.images = [value.images];
+                }
+
+                this.setDataValue('extraData', value);
+            },
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                updateableBy: ['editor', 'owner'],
+                authorizeData: function(data, action, user, self, site) {
+
+                    if (!site) return; // todo: die kun je ophalen als eea. async is
+                    data = data || self.extraData;
+                    data = typeof data === 'object' ? data : {};
+                    let result = {};
+
+                    let userId = self.userId;
+                    if (self.toString().match('SequelizeInstance:user')) { // TODO: find a better check
+                        userId = self.id
+                    }
+
+                    if (data) {
+                        Object.keys(data).forEach((key) => {
+
+                            let testRole = site.config && site.config['users'] && site.config['users'].extraData && site.config['users'].extraData[key] && site.config['users'].extraData[key].auth && site.config['users'].extraData[key].auth[action+'ableBy'];
+                            testRole = testRole || self.rawAttributes.extraData.auth[action+'ableBy'];
+                            testRole = testRole || ( self.auth && self.auth[action+'ableBy'] ) || [];
+                            if (!Array.isArray(testRole)) testRole = [testRole];
+
+                            if (testRole.includes('detailsViewableByRole')) {
+                                if (self.detailsViewableByRole) {
+                                    testRole = [ self.detailsViewableByRole, 'owner' ];
+                                }
+                            }
+
+                            if (userHasRole(user, testRole, userId)) {
+                                result[key] = data[key];
+                            }
+                        });
+                    }
+
+                    return result;
+                },
+            }
+        },
 
         email: {
             type: DataTypes.STRING(255),
@@ -197,7 +326,7 @@ module.exports = function (db, sequelize, DataTypes) {
             type: DataTypes.STRING(64),
             auth: {
                 listableBy: ['editor', 'owner'],
-                viewableBy: 'all',
+                viewableBy: ['editor', 'owner'],
                 createableBy: 'anonymous',
                 updateableBy: ['editor', 'owner'],
             },
@@ -211,7 +340,7 @@ module.exports = function (db, sequelize, DataTypes) {
             type: DataTypes.STRING(64),
             auth: {
                 listableBy: ['editor', 'owner'],
-                viewableBy: 'all',
+                viewableBy:  ['editor', 'owner'],
                 createableBy: 'anonymous',
                 updateableBy: ['editor', 'owner'],
             },
