@@ -307,6 +307,12 @@ module.exports = function (db, sequelize, DataTypes) {
 
         passwordHash: {
             type: DataTypes.TEXT,
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                createableBy: ['editor', 'owner'],
+                updateableBy: ['editor', 'owner'],
+            },
             allowNull: true,
             set: function (hashObject) {
                 var hash = hashObject ? JSON.stringify(hashObject) : null;
@@ -316,6 +322,12 @@ module.exports = function (db, sequelize, DataTypes) {
 
         nickName: {
             type: DataTypes.STRING(64),
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                createableBy: ['editor', 'owner'],
+                updateableBy: ['editor', 'owner'],
+            },
             allowNull: true,
             set: function (value) {
                 this.setDataValue('nickName', sanitize.noTags(value));
@@ -455,6 +467,12 @@ module.exports = function (db, sequelize, DataTypes) {
         },
 
         fullName: {
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                createableBy: ['editor', 'owner'],
+                updateableBy: ['editor', 'owner'],
+            },
             type: DataTypes.VIRTUAL,
             allowNull: true,
             get: function () {
@@ -467,6 +485,12 @@ module.exports = function (db, sequelize, DataTypes) {
         },
 
         initials: {
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                createableBy: ['editor', 'owner'],
+                updateableBy: ['editor', 'owner'],
+            },
             type: DataTypes.VIRTUAL,
             allowNull: true,
             get: function () {
@@ -479,12 +503,24 @@ module.exports = function (db, sequelize, DataTypes) {
         },
 
         gender: {
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                createableBy: ['editor', 'owner'],
+                updateableBy: ['editor', 'owner'],
+            },
             type: DataTypes.ENUM('male', 'female'),
             allowNull: true,
             defaultValue: null,
         },
 
         zipCode: {
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                createableBy: ['editor', 'owner'],
+                updateableBy: ['editor', 'owner'],
+            },
             type: DataTypes.STRING(10),
             auth: {
                 listableBy: ['editor', 'owner'],
@@ -505,6 +541,12 @@ module.exports = function (db, sequelize, DataTypes) {
             },
 
             postcode: {
+                auth: {
+                    listableBy: ['editor', 'owner'],
+                    viewableBy: ['editor', 'owner'],
+                    createableBy: ['editor', 'owner'],
+                    updateableBy: ['editor', 'owner'],
+                },
                 type: DataTypes.STRING(10),
                 auth: {
                     listableBy: ['editor', 'owner'],
