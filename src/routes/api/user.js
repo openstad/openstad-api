@@ -30,7 +30,7 @@ const formatOAuthApiUrl = (site, which = 'default') => {
 
 const filterBody = (req, res, next) => {
     const data = {};
-    const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'password', 'extraData', 'listableByRole', 'detailsViewableByRole', 'password'];
+    const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'password', 'extraData', 'listableByRole', 'detailsViewableByRole', 'password', 'siteData'];
     const adminKeys = ['extraData', 'listableByRole', 'detailsViewableByRole', 'password'];
 
     console.log('req.boyd', req.body)
