@@ -318,6 +318,8 @@ router
             "initials": req.user.initials,
             "gender": req.user.gender,
             "extraData": req.user.extraData ? req.user.extraData : {},
+             "siteData": req.user.siteData ? req.user.siteData : {},
+            "subscriptionData": req.user.subscriptionData ? req.user.subscriptionData : {},
             "phoneNumber": req.user.phoneNumber,
             "streetName": req.user.streetName,
             "city": req.user.city,
