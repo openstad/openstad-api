@@ -12,6 +12,7 @@ const assert = require('assert')
 
 const iapTestMode = process.env.IAP_TEST_MODE === 'true';
 const androidPackageName = process.env.ANDROID_PACKAGE_NAME;
+const subscriptionService = require('../../services/subscription');
 
 // https://www.appypie.com/faqs/how-can-i-get-shared-secret-key-for-in-app-purchase
 
@@ -109,7 +110,7 @@ const processPurchase = async (app, user, receipt, androidAppSettings, siteId) =
 
   console.log('environment', environment)
 
-  await updateSubscription({
+  await subscriptionService.update({
     user,
     provider: validationResponse.service,
     subscriptionActive: !isCancelled && !isExpired,
