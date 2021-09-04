@@ -304,8 +304,8 @@ router.route('/')
         let customerId;
 
         try {
-          if (req.user.extraData && req.user.extraData[customerUserKey]) {
-            customerId = req.user.extraData[customerUserKey];
+          if (req.user.siteData && req.user.siteData[customerUserIdKey]) {
+            customerId = req.user.siteData[customerUserIdKey];
           } else {
             let createCustomerResponse = await PaystackClient.createCustomer({
               email: req.user.email,
@@ -321,13 +321,12 @@ router.route('/')
 
             customerId = createCustomerResponse.data.id;
 
-            const extraData = req.user.extraData;
+            const siteData = req.user.siteData;
 
-            extraData[customerUserIdKey] = createCustomerResponse.data.id;
-            extraData[customerUserCodeKey] = createCustomerResponse.data.code;
+            siteData[customerUserIdKey] = createCustomerResponse.data.id;
+            siteData[customerUserCodeKey] = createCustomerResponse.data.code;
 
-
-            await req.user.update({extraData})
+            await req.user.update({siteData})
           }
 
           let total = req.results.total;
@@ -353,6 +352,7 @@ router.route('/')
           console.log('createTransactionResponse', createTransactionResponse);
 
           const orderExtraData = req.results.extraData;
+
           orderExtraData.paymentUrl = createTransactionResponse.data.authorization_url;
           orderExtraData.paystackAccessCode = createTransactionResponse.data.access_code;
           orderExtraData.paystackReference = createTransactionResponse.data.reference;
@@ -365,7 +365,6 @@ router.route('/')
           });
 
           next();
-
         } catch (error) {
           next(error);
         }
@@ -381,23 +380,23 @@ router.route('/')
 
         try {
           let customerId;
-          console.log('req.user.extraData', req.user.extraData);
+          console.log('req.user.siteData', req.user.siteData);
 
-          if (req.user.extraData && req.user.extraData[customerUserKey]) {
-            customerId = req.user.extraData[customerUserKey];
+          if (req.user.siteData && req.user.siteData[customerUserKey]) {
+            customerId = req.user.siteData[customerUserKey];
           } else {
             const customer = await mollieClient.customers.create({
               name: req.user.firstName + ' ' + req.user.lastName,
               email: req.user.email,
             });
 
-            const extraData = req.user.extraData;
+            const siteData = req.user.siteData;
 
-            extraData[customerUserKey] = customer.id;
+            siteData[customerUserKey] = customer.id;
 
-            await req.user.update({extraData})
+            await req.user.update({siteData})
 
-            customerId = req.user.extraData[customerUserKey];
+            customerId = req.user.siteData[customerUserKey];
           }
 
 
@@ -605,7 +604,7 @@ router.route('/:orderId(\\d+)/payment')
                 console.log('user', user);
 
                 const mollieOptions = {
-                  customerId: user.extraData.mollieCustomerId,
+                  customerId: user.siteData.mollieCustomerId,
                   amount: {
                     value: req.order.total.toString(),
                     currency: req.order.extraData.currency
@@ -668,13 +667,13 @@ router.route('/check-subscriptions', async function(req, res) {
     });
 
   await paystackUsers.forEach(async (user) =>{
-    const paystackPlanCode = user.extraData.paystackPlanCode;
+    const paystackPlanCode = user.siteData.paystackPlanCode;
 
     const paystackReference = req.order.extraData && req.order.extraData.paystackReference ? req.order.extraData.paystackReference : 'xxx';
     const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
     const PaystackClient = new PayStack(paystackApiKey);
 
-    const customerId = user.extraData[paystackApiKey + 'CustomerId'];
+    const customerId = user.siteData[paystackApiKey + 'CustomerId'];
 
     try {
       const subscriptionsResponse = await PaystackClient.getSubscriptions({
@@ -704,7 +703,7 @@ router.route('/check-subscriptions', async function(req, res) {
 
   const mollieUsers = await db.User
     .findAll({
-      [Sequelize.Op.and] : sequelize.literal(`extraData->"$.${mollieFilterKey}"='${mollieFilterValue}'`)
+      [Sequelize.Op.and] : sequelize.literal(`siteData->"$.${mollieFilterKey}"='${mollieFilterValue}'`)
     });
 
   mollieUsers.forEach((user) =>{
@@ -722,7 +721,7 @@ router.route('/check-subscriptions', async function(req, res) {
 
   const stripeUsers = await db.User
     .findAll({
-      [Sequelize.Op.and] : sequelize.literal(`extraData->"$.${stripeFilterKey}"='${stripeFilterValue}'`)
+      [Sequelize.Op.and] : sequelize.literal(`siteData->"$.${stripeFilterKey}"='${stripeFilterValue}'`)
     });
 
   res.json({
