@@ -68,14 +68,14 @@ const update = async ({
     userSubscriptionData.subscriptions.push(subscriptionData);
 
     const activeSubscription = userSubscriptionData.subscriptions.find((subscription) => {
-      return subscription.active === 'yes';
+      return subscription.active;
     })
 
     userSubscriptionData.isActiveSubscriber = !!activeSubscription ? 'yes' : 'no';
 
     // check if more then one subscription so we can warn someone
     userSubscriptionData.activeSubscriptionCount = userSubscriptionData.subscriptions.filter((subscription) => {
-      subscription.active
+      return subscription.active
     }).length;
 
     await user.update({subscriptionData: userSubscriptionData});
