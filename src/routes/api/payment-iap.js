@@ -114,7 +114,7 @@ const processPurchase = async (app, user, receipt, androidAppSettings, siteId) =
     user,
     provider: validationResponse.service,
     subscriptionActive: !isCancelled && !isExpired,
-    subscriptionProductId: req.order.extraData.subscriptionProductId,
+   // subscriptionProductId: subscriptionProductId,
     siteId: siteId,
     environment,
     productId,
