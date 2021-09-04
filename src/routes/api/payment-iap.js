@@ -60,10 +60,10 @@ const processPurchase = async (app, user, receipt, androidAppSettings, siteId) =
     // this comes from iTunes Connect (You need this to valiate subscriptions):
     applePassword: '8e6d38101b384207b0d25c5914ce67c7', //process.env.APPLE_SHARED_SECRET,
 
-      googleServiceAccount: {
+     /* googleServiceAccount: {
         clientEmail: androidAppSettings.clientEmail,//process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
         privateKey: androidAppSettings.privateKey //process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
-      },
+      },*/
 
     /* Configurations all platforms */
    // test: iapTestMode, // For Apple and Google Play to force Sandbox validation only
