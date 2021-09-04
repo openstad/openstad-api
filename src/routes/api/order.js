@@ -289,38 +289,6 @@ router.route('/')
       .catch(next)
   })
   .post(async function (req, res, next) {
-
-    const { authToken, appleReceipt } = body;
-
-    if (appleReceipt) {
-      appleReceiptVerify.config({
-        secret: process.env.APPLE_SHARED_SECRET,
-        //  environment: [process.env.APPLE_APP_STORE_ENV],
-        //  excludeOldTransactions: true,
-      });
-      try {
-        // attempt to verify receipt
-        const products = await appleReceiptVerify.validate({
-          excludeOldTransactions: true,
-          receipt: receipt
-        });
-        // check if products exist
-        if (Array.isArray(products)) {
-
-          // get the latest purchased product (subscription tier)
-          let { expirationDate } = products[0];
-          // convert ms to secs
-          let expirationUnix = Math.round(expirationDate / 1000);
-          // persist in database
-          /* coming up next */
-        }
-      } catch(e) {
-        // transaction receipt is invalid
-      }
-
-    } else {
-
-
       const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
       const paymentProvider = paymentConfig.provider ? paymentConfig.provider : 'mollie';
       const paymentApiUrl = config.url + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment';
@@ -467,7 +435,7 @@ router.route('/')
         } catch (error) {
           next(error);
         }
-      }
+
     }
   })
   .post(function (req, res, next) {

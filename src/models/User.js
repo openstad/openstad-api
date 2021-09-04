@@ -466,6 +466,52 @@ module.exports = function (db, sequelize, DataTypes) {
             }
         },
 
+
+        /**
+         *
+         */
+        access: {
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner', 'all'],
+                createableBy: ['editor', 'owner'],
+                updateableBy: ['editor', 'owner'],
+            },
+            type: DataTypes.VIRTUAL,
+            allowNull: true,
+            get: function () {
+                const accountTypes = ['trial', 'paid', 'manual', 'none'];
+               // const trialDate = this.getDataValue('trialDate');
+                const subscriberData = this.getDataValue('subscriberData');
+
+                const activeSubscription = subscriberData.subscriptions.find((subscription) => {
+                    return subscription.active;
+                });
+
+                const access = {};
+
+                if (!!activeSubscription) {
+                    access.subscriptionId = activeSubscription.subscriptionProductId;
+                    access.active = true;
+                }
+
+                // true might be a string, sucks, but thats life for now
+                if (!activeSubscription && subscriberData.manualSubscription == 'true') {
+                    access.active = true;
+                    access.subscriptionId = activeSubscription.manualSubscriptionProductId;
+                }
+
+                /*
+                if (!activeSubscription && trialDate) {
+                    @todo implement trial
+                }
+                 */
+
+                // if subscribers
+                return access;
+            }
+        },
+
         fullName: {
             auth: {
                 listableBy: ['editor', 'owner'],

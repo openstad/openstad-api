@@ -1,20 +1,29 @@
-const { v4: uuidv4 } = require('uuid');
+const {v4: uuidv4} = require('uuid');
 
-const update = async ({user, provider, subscriptionActive, subscriptionProductId, siteId, paystackPlanCode, mollieSubscriptionId,
-      productId, transactionId,
+const update = async ({
+                        user,
+                        provider,
+                        subscriptionActive,
+                        subscriptionProductId,
+                        siteId,
+                        paystackPlanCode,
+                        mollieSubscriptionId,
+                        productId,
+                        transactionId,
                         latestReceipt,
-      validationResponse,
-      startDate,
-      endDate,
-      isCancelled,
-  }) => {
+                        validationResponse,
+                        startDate,
+                        endDate,
+                        isCancelled,
+                      }) =>
+  {
 
   try {
 
     const subscriptionData = {
       subscriptionProductId: subscriptionProductId,
       subscriptionPaymentProvider: provider,
-      active: subscriptionActive ? 'yes' : 'no',
+      active: subscriptionActive,
       siteId: siteId,
       uuid: uuidv4(),
       transactionId,
@@ -43,7 +52,6 @@ const update = async ({user, provider, subscriptionActive, subscriptionProductId
       case "apple":
         subscriptionData.receipt = receipt;
         subscriptionData.productId = productId;
-
         break
 
       case "stripe":
@@ -54,18 +62,23 @@ const update = async ({user, provider, subscriptionActive, subscriptionProductId
       // code block
     }
 
-    const extraData = user.extraData;
+    const userSubscriptionData = user.subscriptionData;
 
-    extraData.subscriptions = extraData.subscriptions && Array.isArray(extraData.subscriptions) ? extraData.subscriptions : [];
-    extraData.subscriptions.push(subscriptionData);
+    userSubscriptionData.subscriptions = userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
+    userSubscriptionData.subscriptions.push(subscriptionData);
 
-    const activeSubscription = extraData.subscriptions.find((subscription) => {
+    const activeSubscription = userSubscriptionData.subscriptions.find((subscription) => {
       return subscription.active === 'yes';
     })
 
-    extraData.isActiveSubscriber = !!activeSubscription ? 'yes' : 'no';
+    userSubscriptionData.isActiveSubscriber = !!activeSubscription ? 'yes' : 'no';
 
-    await user.update({extraData});
+    // check if more then one subscription so we can warn someone
+    userSubscriptionData.activeSubscriptionCount = userSubscriptionData.subscriptions.filter((subscription) => {
+      subscription.active
+    }).length;
+
+    await user.update({subscriptionData: userSubscriptionData});
 
     return user;
   } catch (e) {
