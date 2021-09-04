@@ -27,7 +27,7 @@ router.route('/')
 
     assert(['ios', 'android'].includes(appType));
 
-    const user = await db.User.findOne({where: {userId: userId}});
+    const user = await db.User.findOne({where: {id: userId}});
 
     const androidAppSettings = req.site && req.site.config && req.site.config.appGoogle ? req.site.config.appGoogle : {};
     const iosAppSettings = req.site && req.site.config && req.site.config.appIos ? req.site.config.appIos : {};
@@ -102,8 +102,6 @@ const processPurchase = async (app, user, receipt, androidAppSettings, siteId) =
     endDate,
     isCancelled,
   });
-
-
 
   if (app === 'android') {
     google.options({
