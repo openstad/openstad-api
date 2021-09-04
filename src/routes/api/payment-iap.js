@@ -85,6 +85,7 @@ const processPurchase = async (app, user, receipt, androidAppSettings, siteId) =
     environment = validationResponse.sandbox ? 'sandbox' : 'production';
   }
 
+  console.log('environment', environment)
 
   await updateSubscription({
     user,
@@ -102,26 +103,30 @@ const processPurchase = async (app, user, receipt, androidAppSettings, siteId) =
     isCancelled,
   });
 
-  google.options({
-    auth: new JWT(
-      androidAppSettings.serviceAccountEmail,// GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      null,
-      androidAppSettings.serviceAccountPrivateKey,// GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      ['https://www.googleapis.com/auth/androidpublisher'],
-    )
-  });
 
-  const androidGoogleApi = google.androidpublisher({version: 'v3'});
 
-  // From https://developer.android.com/google/play/billing/billing_library_overview:
-  // You must acknowledge all purchases within three days.
-  // Failure to properly acknowledge purchases results in those purchases being refunded.
-  if (app === 'android' && validationResponse.acknowledgementState === 0) {
-    await androidGoogleApi.purchases.subscriptions.acknowledge({
-      packageName: androidAppSettings.packageName,
-      subscriptionId: productId,
-      token: receipt.purchaseToken,
+  if (app === 'android') {
+    google.options({
+      auth: new JWT(
+        androidAppSettings.serviceAccountEmail,// GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        null,
+        androidAppSettings.serviceAccountPrivateKey,// GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        ['https://www.googleapis.com/auth/androidpublisher'],
+      )
     });
+
+    const androidGoogleApi = google.androidpublisher({version: 'v3'});
+
+    // From https://developer.android.com/google/play/billing/billing_library_overview:
+    // You must acknowledge all purchases within three days.
+    // Failure to properly acknowledge purchases results in those purchases being refunded.
+    if (app === 'android' && validationResponse.acknowledgementState === 0) {
+      await androidGoogleApi.purchases.subscriptions.acknowledge({
+        packageName: androidAppSettings.packageName,
+        subscriptionId: productId,
+        token: receipt.purchaseToken,
+      });
+    }
   }
 }
 
