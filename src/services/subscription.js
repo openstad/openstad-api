@@ -63,9 +63,9 @@ const update = async ({
       // code block
     }
 
-    const userSubscriptionData = user.subscriptionData;
+    const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 
-    userSubscriptionData.subscriptions = userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
+    userSubscriptionData.subscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
     userSubscriptionData.subscriptions.push(subscriptionData);
 
     const activeSubscription = userSubscriptionData.subscriptions.find((subscription) => {
