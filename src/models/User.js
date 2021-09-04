@@ -484,7 +484,7 @@ module.exports = function (db, sequelize, DataTypes) {
                // const trialDate = this.getDataValue('trialDate');
                 const subscriptionData = this.getDataValue('subscriptionData') ? this.getDataValue('subscriptionData') : {};
 
-                const activeSubscription = subscriptionData && subscriptionData.subscriptions.find((subscription) => {
+                const activeSubscription = subscriptionData && subscriptionData.subscriptions && subscriptionData.subscriptions.find((subscription) => {
                     return subscription.active;
                 });
 
@@ -496,7 +496,7 @@ module.exports = function (db, sequelize, DataTypes) {
                 }
 
                 // true might be a string, sucks, but thats life for now
-                if (!activeSubscription && subscriberData.manualSubscription == 'true') {
+                if (!activeSubscription && subscriptionData && subscriptionData.manualSubscription == 'true') {
                     access.active = true;
                     access.subscriptionId = activeSubscription.manualSubscriptionProductId;
                 }
