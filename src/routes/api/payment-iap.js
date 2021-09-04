@@ -10,6 +10,12 @@ const {JWT} = require('google-auth-library');
 const {google} = require('googleapis');
 const assert = require('assert')
 
+const iapTestMode = process.env.IAP_TEST_MODE === 'true';
+const androidPackageName = process.env.ANDROID_PACKAGE_NAME;
+
+// https://www.appypie.com/faqs/how-can-i-get-shared-secret-key-for-in-app-purchase
+
+
 let router = express.Router({mergeParams: true});
 
 router
@@ -48,6 +54,22 @@ router.route('/')
 });
 
 const processPurchase = async (app, user, receipt, androidAppSettings, siteId) => {
+  iap.config({
+    // If you want to exclude old transaction, set this to true. Default is false:
+    appleExcludeOldTransactions: true,
+    // this comes from iTunes Connect (You need this to valiate subscriptions):
+    applePassword: '8e6d38101b384207b0d25c5914ce67c7', //process.env.APPLE_SHARED_SECRET,
+
+      googleServiceAccount: {
+        clientEmail: androidAppSettings.clientEmail,//process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        privateKey: androidAppSettings.privateKey //process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
+      },
+
+    /* Configurations all platforms */
+   // test: iapTestMode, // For Apple and Google Play to force Sandbox validation only
+     verbose: true, // Output debug logs to stdout stream
+  });
+
   await iap.setup();
   const validationResponse = await iap.validate(receipt);
 
