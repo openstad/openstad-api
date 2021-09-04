@@ -482,9 +482,9 @@ module.exports = function (db, sequelize, DataTypes) {
             get: function () {
                 const accountTypes = ['trial', 'paid', 'manual', 'none'];
                // const trialDate = this.getDataValue('trialDate');
-                const subscriberData = this.getDataValue('subscriberData');
+                const subscriptionData = this.getDataValue('subscriptionData') ? this.getDataValue('subscriptionData') : {};
 
-                const activeSubscription = subscriberData.subscriptions.find((subscription) => {
+                const activeSubscription = subscriptionData && subscriptionData.subscriptions.find((subscription) => {
                     return subscription.active;
                 });
 
