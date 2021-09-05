@@ -473,9 +473,9 @@ module.exports = function (db, sequelize, DataTypes) {
         access: {
             auth: {
                 listableBy: ['editor', 'owner'],
-                viewableBy: ['editor', 'owner', 'all'],
+                viewableBy: ['editor', 'owner'],
                 createableBy: ['editor', 'owner'],
-                updateableBy: ['editor', 'owner'],
+                updateableBy: ['editor'],
             },
             type: DataTypes.VIRTUAL,
             allowNull: true,
