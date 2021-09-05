@@ -496,9 +496,9 @@ module.exports = function (db, sequelize, DataTypes) {
                 }
 
                 // true might be a string, sucks, but thats life for now
-                if (!activeSubscription && subscriptionData && subscriptionData.manualSubscription == 'true') {
+                if (!activeSubscription && subscriptionData && (subscriptionData.manualSubscription === 'true' || subscriptionData.manualSubscription === true)) {
                     access.active = true;
-                    access.subscriptionId = activeSubscription.manualSubscriptionProductId;
+                    access.subscriptionId = subscriptionData.manualSubscriptionProductId;
                 }
 
                 /*
