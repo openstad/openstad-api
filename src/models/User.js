@@ -483,6 +483,7 @@ module.exports = function (db, sequelize, DataTypes) {
                 const accountTypes = ['trial', 'paid', 'manual', 'none'];
                // const trialDate = this.getDataValue('trialDate');
                 const subscriptionData = this.getDataValue('subscriptionData') ? this.getDataValue('subscriptionData') : {};
+                const extraData = this.getDataValue('extraData') ? this.getDataValue('extraData') : {};
 
                 const activeSubscription = subscriptionData && subscriptionData.subscriptions && subscriptionData.subscriptions.find((subscription) => {
                     return subscription.active;
@@ -501,6 +502,12 @@ module.exports = function (db, sequelize, DataTypes) {
                     access.subscriptionId = subscriptionData.manualSubscriptionProductId;
                 }
 
+                //old way of setting isSubscriberActive
+
+                if (!access.active && extraData && access.isActiveSubscriber && access.isActiveSubscriber === 'yes') {
+                    access.active = true;
+                }
+                
                 /*
                 if (!activeSubscription && trialDate) {
                     @todo implement trial
