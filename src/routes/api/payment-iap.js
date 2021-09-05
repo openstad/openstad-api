@@ -46,7 +46,7 @@ router.route('/')
       subscription: true,
     };
 
-    await processPurchase(appType, user, receipt, androidAppSettings, req.site.id);
+    await processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id);
 
     res.end();
   } catch (e) {
@@ -54,12 +54,12 @@ router.route('/')
   }
 });
 
-const processPurchase = async (app, user, receipt, androidAppSettings, siteId) => {
+const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSettings, siteId) => {
   iap.config({
     // If you want to exclude old transaction, set this to true. Default is false:
     appleExcludeOldTransactions: true,
     // this comes from iTunes Connect (You need this to valiate subscriptions):
-    applePassword: '8e6d38101b384207b0d25c5914ce67c7', //process.env.APPLE_SHARED_SECRET,
+    applePassword: iosAppSettings.sharedSecret, //'8e6d38101b384207b0d25c5914ce67c7', //process.env.APPLE_SHARED_SECRET,
 
      /* googleServiceAccount: {
         clientEmail: androidAppSettings.clientEmail,//process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
