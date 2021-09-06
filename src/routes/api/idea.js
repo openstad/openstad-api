@@ -74,7 +74,6 @@ router
       req.scope.push('includeTags');
     }
 
-
     if (req.query.includePoll) {
       req.scope.push({ method: ['includePoll', req.user.id] });
     }
@@ -83,6 +82,11 @@ router
       let tags = req.query.tags;
       req.scope.push({ method: ['selectTags', tags] });
       req.scope.push('includeTags');
+    }
+
+    if (req.query.targetAudiences) {
+      let audiences = req.query.targetAudiences;
+      req.scope.push({ method: ['selectTargetAudiences', audiences] });
     }
 
     if (req.query.includeMeeting) {
@@ -95,6 +99,10 @@ router
 
     if (req.query.includeUser) {
       req.scope.push('includeUser');
+    }
+    
+    if (req.query.includeTargetAudiences) {
+      req.scope.push('includeTargetAudiences');
     }
 
     // todo? volgens mij wordt dit niet meer gebruikt
@@ -248,6 +256,31 @@ router.route('/')
       });
   })
   .post(function(req, res, next) {
+    // tags
+    if (!req.body.targetAudiences) return next();
+
+    let ideaInstance = req.results;
+    ideaInstance
+      .setTargetAudiences(req.body.targetAudiences)
+      .then(() => {
+        // refetch. now with tags
+        let scope = [...req.scope, 'includeTargetAudiences'];
+        if (req.canIncludeVoteCount) scope.push('includeVoteCount');
+        return db.Idea
+          .scope(...scope)
+          .findOne({
+            where: { id: ideaInstance.id, siteId: req.params.siteId },
+          })
+      })
+      .then(found => {
+        if (!found) throw new Error('Idea not found');
+        found.site = req.site;
+        req.results = found;
+        return next();
+      })
+      .catch(next);;
+  })
+  .post(function(req, res, next) {
     res.json(req.results);
     mail.sendThankYouMail(req.results, 'ideas', req.site, req.user); // todo: optional met config?
   });
@@ -295,6 +328,7 @@ router.route('/:ideaId(\\d+)')
   .put(auth.useReqUser)
   .put(function(req, res, next) {
     req.tags = req.body.tags;
+    req.targetAudiences = req.body.targetAudiences
     return next();
   })
   .put(function(req, res, next) {
@@ -371,6 +405,34 @@ router.route('/:ideaId(\\d+)')
           .catch(next);
       });
 
+  })
+  .put(function(req, res, next) {
+    if (!req.targetAudiences) return next();
+
+    let ideaInstance = req.results;
+
+    ideaInstance
+      .setTargetAudiences(req.targetAudiences)
+      .then(() => {
+        // refetch. now with tags
+        let scope = [...req.scope, 'includeTargetAudiences'];
+        if (req.canIncludeVoteCount) scope.push('includeVoteCount');
+        return db.Idea
+          .scope(...scope)
+          .findOne({
+            where: { id: ideaInstance.id, siteId: req.params.siteId },
+          })
+      })
+      .then(found => {
+        if (!found) throw new Error('Idea not found');
+
+        if (req.query.includePoll) { // TODO: naar poll hooks
+          if (found.poll) found.poll.countVotes(!req.query.withVotes);
+        }
+        req.results = found;
+        next();
+      })
+      .catch(next);;
   })
   .put(function(req, res, next) {
     res.json(req.results);
