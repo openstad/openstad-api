@@ -504,7 +504,7 @@ module.exports = function (db, sequelize, DataTypes) {
 
                 //old way of setting isSubscriberActive
 
-                if (!access.active && extraData && access.isActiveSubscriber && access.isActiveSubscriber === 'yes') {
+                if (!access.active && extraData && extraData.isActiveSubscriber && extraData.isActiveSubscriber === 'yes') {
                     access.active = true;
                 }
                 
