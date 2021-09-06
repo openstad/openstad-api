@@ -901,6 +901,37 @@ module.exports = function (db, sequelize, DataTypes) {
         }
       },
 
+      includeTargetAudiences: {
+        include: [{
+          model: db.TargetAudience,
+          as: 'targetAudiences',
+          required: false,
+          attributes: ['id', 'name'],
+          order: [
+            ['name', 'ASC']
+          ],
+          through: {attributes: []},
+        }]
+      },
+
+      selectTargetAudiences: function (audiences) {
+        return {
+          include: [{
+            model: db.TargetAudience,
+            as: 'targetAudiences',
+            attributes: ['id', 'name'],
+            order: [
+              ['name', 'ASC']
+            ],
+            required: true,
+            through: {attributes: []},
+            where: {
+              id: audiences
+            }
+          }]
+        }
+      },
+
       // vergelijk getRunning()
       sort: function (sort) {
 
@@ -1072,6 +1103,7 @@ module.exports = function (db, sequelize, DataTypes) {
     this.hasOne(models.Vote, {as: 'userVote', foreignKey: 'ideaId'});
     this.belongsTo(models.Site);
     this.belongsToMany(models.Tag, {through: 'ideaTags', constraints: false});
+    this.belongsToMany(models.TargetAudience, {through: 'ideaTargetAudiences', constraints: false});
   }
 
   Idea.getRunning = function (sort, extraScopes) {
