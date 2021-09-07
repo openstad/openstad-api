@@ -931,6 +931,37 @@ module.exports = function (db, sequelize, DataTypes) {
           }]
         }
       },
+      
+      includeGrants: {
+        include: [{
+          model: db.Grant,
+          as: 'grants',
+          required: false,
+          attributes: ['id', 'name', 'url'],
+          order: [
+            ['name', 'ASC']
+          ],
+          through: {attributes: []},
+        }]
+      },
+
+      selectGrants: function (grants) {
+        return {
+          include: [{
+            model: db.Grant,
+            as: 'grants',
+            attributes: ['id', 'name', 'url'],
+            order: [
+              ['name', 'ASC']
+            ],
+            required: true,
+            through: {attributes: []},
+            where: {
+              id: grants
+            }
+          }]
+        }
+      },
 
       // vergelijk getRunning()
       sort: function (sort) {
@@ -1104,6 +1135,7 @@ module.exports = function (db, sequelize, DataTypes) {
     this.belongsTo(models.Site);
     this.belongsToMany(models.Tag, {through: 'ideaTags', constraints: false});
     this.belongsToMany(models.TargetAudience, {through: 'ideaTargetAudiences', constraints: false});
+    this.belongsToMany(models.Grant, {through: 'ideaGrants', constraints: false});
   }
 
   Idea.getRunning = function (sort, extraScopes) {

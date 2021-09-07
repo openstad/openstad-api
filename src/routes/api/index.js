@@ -72,6 +72,7 @@ router.use('/area', require('./area'));
 router.use('/site/:siteId(\\d+)/organisation', require('./organisation'));
 router.use('/site/:siteId(\\d+)/event', require('./event'));
 router.use('/site/:siteId(\\d+)/target-audience', require('./target-audience'));
+router.use('/site/:siteId(\\d+)/grant', require('./grants'));
 
 router.use('/repo', require('./externalSite'));
 

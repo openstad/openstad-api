@@ -88,6 +88,11 @@ router
       let audiences = req.query.targetAudiences;
       req.scope.push({ method: ['selectTargetAudiences', audiences] });
     }
+    
+    if (req.query.grants) {
+      let grants = req.query.grants;
+      req.scope.push({ method: ['selectGrants', grants] });
+    }
 
     if (req.query.includeMeeting) {
       req.scope.push('includeMeeting');
@@ -103,6 +108,10 @@ router
     
     if (req.query.includeTargetAudiences) {
       req.scope.push('includeTargetAudiences');
+    }
+    
+    if (req.query.includeGrants) {
+      req.scope.push('includeGrants');
     }
 
     // todo? volgens mij wordt dit niet meer gebruikt
@@ -200,16 +209,14 @@ router.route('/')
       .authorizeData(data, 'create', req.user, null, req.site)
       .create(data)
       .then(ideaInstance => {
-
-        db.Idea
+        return db.Idea
           .scope(...req.scope)
           .findByPk(ideaInstance.id)
-          .then(result => {
-            result.site = req.site;
-            req.results = result;
-            return next();
-          });
-
+      })
+      .then(result => {
+        result.site = req.site;
+        req.results = result;
+        return next();
       })
       .catch(function(error) {
         // todo: dit komt uit de oude routes; maak het generieker
@@ -230,7 +237,6 @@ router.route('/')
 
   })
   .post(function(req, res, next) {
-
     // tags
     if (!req.body.tags) return next();
 
@@ -245,27 +251,26 @@ router.route('/')
           .scope(...scope)
           .findOne({
             where: { id: ideaInstance.id, siteId: req.params.siteId },
-          })
-          .then(found => {
-            if (!found) throw new Error('Idea not found');
-            found.site = req.site;
-            req.results = found;
-            return next();
-          })
-          .catch(next);
-      });
+          })    
+      })
+      .then(found => {
+        if (!found) throw new Error('Idea not found');
+        found.site = req.site;
+        req.results = found;
+        return next();
+      })
+      .catch(next);
   })
   .post(function(req, res, next) {
-    // tags
+    // target audiences
     if (!req.body.targetAudiences) return next();
 
     let ideaInstance = req.results;
     ideaInstance
       .setTargetAudiences(req.body.targetAudiences)
       .then(() => {
-        // refetch. now with tags
+        // refetch. now with target audiences
         let scope = [...req.scope, 'includeTargetAudiences'];
-        if (req.canIncludeVoteCount) scope.push('includeVoteCount');
         return db.Idea
           .scope(...scope)
           .findOne({
@@ -278,7 +283,30 @@ router.route('/')
         req.results = found;
         return next();
       })
-      .catch(next);;
+      .catch(next);
+  })
+  .post(function associateGrants(req, res, next) {
+    if (!req.body.grants) return next();
+
+    let ideaInstance = req.results;
+    ideaInstance
+      .setGrants(req.body.grants)
+      .then(() => {
+        // refetch. now with target audiences
+        let scope = [...req.scope, 'includeGrants'];
+        return db.Idea
+          .scope(...scope)
+          .findOne({
+            where: { id: ideaInstance.id, siteId: req.params.siteId },
+          })
+      })
+      .then(found => {
+        if (!found) throw new Error('Idea not found');
+        found.site = req.site;
+        req.results = found;
+        return next();
+      })
+      .catch(next);
   })
   .post(function(req, res, next) {
     res.json(req.results);
@@ -329,6 +357,7 @@ router.route('/:ideaId(\\d+)')
   .put(function(req, res, next) {
     req.tags = req.body.tags;
     req.targetAudiences = req.body.targetAudiences
+    req.grants = req.body.grants
     return next();
   })
   .put(function(req, res, next) {
@@ -426,7 +455,35 @@ router.route('/:ideaId(\\d+)')
       .then(found => {
         if (!found) throw new Error('Idea not found');
 
-        if (req.query.includePoll) { // TODO: naar poll hooks
+        if (req.query.includePoll) {
+          if (found.poll) found.poll.countVotes(!req.query.withVotes);
+        }
+        req.results = found;
+        next();
+      })
+      .catch(next);;
+  })
+  .put(function associateGrants(req, res, next) {
+    if (!req.grants) return next();
+
+    let ideaInstance = req.results;
+
+    ideaInstance
+      .setGrants(req.grants)
+      .then(() => {
+        // refetch. now with tags
+        let scope = [...req.scope, 'includeGrants'];
+        if (req.canIncludeVoteCount) scope.push('includeVoteCount');
+        return db.Idea
+          .scope(...scope)
+          .findOne({
+            where: { id: ideaInstance.id, siteId: req.params.siteId },
+          })
+      })
+      .then(found => {
+        if (!found) throw new Error('Idea not found');
+
+        if (req.query.includePoll) {
           if (found.poll) found.poll.countVotes(!req.query.withVotes);
         }
         req.results = found;
