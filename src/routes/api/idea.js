@@ -114,6 +114,12 @@ router
       req.scope.push('includeGrants');
     }
 
+    if (req.query.search) {
+      req.scope.push({
+        method: ['search', req.query.search]
+      })
+    }
+
     // todo? volgens mij wordt dit niet meer gebruikt
     // if (req.query.highlighted) {
     //  	query = db.Idea.getHighlighted({ siteId: req.params.siteId })
@@ -169,7 +175,7 @@ router.route('/')
       .catch(next);
   })
   .get(auth.useReqUser)
-  .get(searchResults)
+  // .get(searchResults)
   .get(pagination.paginateResults)
   .get(function(req, res, next) {
     res.json(req.results);

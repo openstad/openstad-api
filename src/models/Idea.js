@@ -1116,6 +1116,32 @@ module.exports = function (db, sequelize, DataTypes) {
             ['startDate', 'ASC']
           ]
         }]
+      },
+      search: (search) => {
+        const query = {
+          where: {}
+        }
+        const criteria = Array.isArray(search.criteria) ? search.criteria : [search.criteria];
+        const options = search.options
+
+        if (!criteria || !criteria.length) return query
+
+        let operation = Sequelize.Op.or
+        if (options && options.andOr === 'and') {
+          operation = Sequelize.Op.and
+        }
+
+        // Wrap each criteria with a like operation
+        query.where[operation] = criteria.map(query => {
+          return Object.keys(query).reduce((acc, key) => {
+            acc[key] = {
+              [Sequelize.Op.like]: `%${query[key]}%`
+            }
+            return acc
+          }, {})
+        })
+
+        return query
       }
     }
   }
