@@ -17,7 +17,7 @@ module.exports = async function (req, res, next) {
       subQuery: false,
       // Disabled limit for now because it remove results
       // limit: 60,
-      logging: console.log,
+      // logging: console.log,
       // offset: (req.query.page - 1) * 60,
       order: [
         [{ model: db.EventTimeslot, as: 'slots' }, 'startTime', 'ASC'],
