@@ -120,6 +120,12 @@ router
       })
     }
 
+    if (req.query.showArchive) {
+      req.scope.push('showArchive')
+    } else {
+      req.scope.push('hideArchive')
+    }
+
     // todo? volgens mij wordt dit niet meer gebruikt
     // if (req.query.highlighted) {
     //  	query = db.Idea.getHighlighted({ siteId: req.params.siteId })
@@ -325,8 +331,10 @@ router.route('/:ideaId(\\d+)')
   .all(function(req, res, next) {
     var ideaId = parseInt(req.params.ideaId) || 1;
 
-    let scope = [...req.scope];
+    let scope = [...req.scope, 'showArchive'];
+    scope.splice(scope.indexOf('hideArchive'), 1)
     if (req.canIncludeVoteCount) scope.push('includeVoteCount');
+
 
     db.Idea
       .scope(...scope)
