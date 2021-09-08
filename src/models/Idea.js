@@ -387,6 +387,14 @@ module.exports = function (db, sequelize, DataTypes) {
       }
     },
 
+    archivedAt: {
+      auth:  {
+        updateableBy: 'editor',
+      },
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+
   }, {
 
     hooks: {
@@ -1142,6 +1150,22 @@ module.exports = function (db, sequelize, DataTypes) {
         })
 
         return query
+      },
+
+      hideArchive: {
+        where: {
+          archivedAt: null
+        }
+      },
+
+      showArchive: {
+        logging: console.log,
+        where: {
+          [Sequelize.Op.or]: [
+            { archivedAt: { [Sequelize.Op.is]: null }},
+            { archivedAt: { [Sequelize.Op.not]: null }}
+          ]
+        }
       }
     }
   }

@@ -120,6 +120,12 @@ router
       })
     }
 
+    if (req.query.showArchive) {
+      req.scope.push('showArchive')
+    } else {
+      req.scope.push('hideArchive')
+    }
+
     // todo? volgens mij wordt dit niet meer gebruikt
     // if (req.query.highlighted) {
     //  	query = db.Idea.getHighlighted({ siteId: req.params.siteId })
