@@ -331,8 +331,10 @@ router.route('/:ideaId(\\d+)')
   .all(function(req, res, next) {
     var ideaId = parseInt(req.params.ideaId) || 1;
 
-    let scope = [...req.scope];
+    let scope = [...req.scope, 'showArchive'];
+    scope.splice(scope.indexOf('hideArchive'), 1)
     if (req.canIncludeVoteCount) scope.push('includeVoteCount');
+
 
     db.Idea
       .scope(...scope)
