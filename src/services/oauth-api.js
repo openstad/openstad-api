@@ -44,7 +44,7 @@ OAuthAPI.fetchClient = async function({ siteConfig, which = 'default' }) {
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(err);
+		  console.log(JSON.stringify(err));
 	  });
 
 }
@@ -75,7 +75,7 @@ OAuthAPI.updateClient = async function({ siteConfig, which = 'default', clientDa
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(err);
+		  console.log(JSON.stringify(err));
 	  });
 
 }
@@ -112,7 +112,7 @@ OAuthAPI.fetchUser = async function({ siteConfig, which = 'default', email, user
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(err);
+		  console.log(JSON.stringify(err));
 	  });
 
 }
@@ -133,7 +133,7 @@ OAuthAPI.createUser = async function({ siteConfig, which = 'default', userData =
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(err);
+		  console.log(JSON.stringify(err));
 	  });
 
 }
@@ -173,7 +173,7 @@ OAuthAPI.updateUser = async function({ siteConfig, which = 'default', userData =
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(err);
+		  console.log(JSON.stringify(err));
 	  });
 
 }
@@ -196,7 +196,7 @@ OAuthAPI.deleteUser = async function({ siteConfig, which = 'default', userData =
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(err);
+		  console.log(JSON.stringify(err));
 	  });
 
 }
