@@ -136,14 +136,10 @@ router.route('/')
     OAuthApi
       .fetchUser({ siteConfig, which, email })
       .then(json => {
-        console.log('fetched user', json)
         req.oAuthUser = json;
         next();
       })
-      .catch(err => {
-        console.error('could not fetch user', err)
-        next(err)
-      });
+      .catch(next);
   })
 /**
  * In case a user exists for that e-mail in the oAuth api move on, otherwise create it
@@ -160,14 +156,10 @@ router.route('/')
       OAuthApi
         .createUser({ siteConfig, which, userData })
         .then(json => {
-          console.log('created user', json)
           req.oAuthUser = json;
           next()
         })
-        .catch(err => {
-          console.error('could not create user', err)
-          next(err)
-        });
+        .catch(next);
     }
   })
 // check if user not already exists in API

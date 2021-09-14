@@ -44,7 +44,7 @@ OAuthAPI.fetchClient = async function({ siteConfig, which = 'default' }) {
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(JSON.stringify(err));
+		  console.log(err);
 	  });
 
 }
@@ -75,7 +75,7 @@ OAuthAPI.updateClient = async function({ siteConfig, which = 'default', clientDa
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(JSON.stringify(err));
+		  console.log(err);
 	  });
 
 }
@@ -84,7 +84,7 @@ OAuthAPI.fetchUser = async function({ siteConfig, which = 'default', email, user
 
   let path = '';
   if ( userId ) path = `/api/admin/user/${userId}`;
-  if ( email  ) path = `/api/admin/users?email=${email}`;
+  if ( email  ) path = `/api/admin/users?email=${encodeURIComponent(email)}`;
   if ( token ) path = `/api/userinfo`;
 
   if (!path) throw new Error('no Find By arguments found')
@@ -112,7 +112,7 @@ OAuthAPI.fetchUser = async function({ siteConfig, which = 'default', email, user
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(JSON.stringify(err));
+		  console.log(err);
 	  });
 
 }
@@ -128,13 +128,12 @@ OAuthAPI.createUser = async function({ siteConfig, which = 'default', userData =
     body: JSON.stringify(userData),
   })
 	  .then((response) => {
-      console.log('create user response', response)
 		  if (!response.ok) throw Error(response)
 		  return response.json();
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(JSON.stringify(err));
+		  console.log(err);
 	  });
 
 }
@@ -174,7 +173,7 @@ OAuthAPI.updateUser = async function({ siteConfig, which = 'default', userData =
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(JSON.stringify(err));
+		  console.log(err);
 	  });
 
 }
@@ -197,7 +196,7 @@ OAuthAPI.deleteUser = async function({ siteConfig, which = 'default', userData =
 	  })
 	  .catch((err) => {
 		  console.log('Niet goed');
-		  console.log(JSON.stringify(err));
+		  console.log(err);
 	  });
 
 }
