@@ -128,6 +128,7 @@ OAuthAPI.createUser = async function({ siteConfig, which = 'default', userData =
     body: JSON.stringify(userData),
   })
 	  .then((response) => {
+      console.log('create user response', response)
 		  if (!response.ok) throw Error(response)
 		  return response.json();
 	  })
