@@ -43,6 +43,18 @@ module.exports = function (db, sequelize, DataTypes) {
       defaultValue: null
     },
 
+    externalRefreshToken: {
+      type: DataTypes.STRING(2048),
+      auth: {
+        listableBy: 'admin',
+        viewableBy: 'admin',
+        createableBy: 'admin',
+        updateableBy: 'admin',
+      },
+      allowNull: true,
+      defaultValue: null
+    },
+
     role: {
       type: DataTypes.STRING(32),
       allowNull: false,

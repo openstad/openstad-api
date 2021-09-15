@@ -118,12 +118,21 @@ async function getUserInstance({ siteConfig, which = 'default', userId }) {
 
     let oauthUser = await OAuthApi.fetchUser({ siteConfig, which, token: dbUser.externalAccessToken });
 
+    console.log('oauthUser', oauthUser)
+
+
+    if (!oauthUser) {
+      let oauthUser = await OAuthApi.fetchUser({ siteConfig, which, token: dbUser.externalAccessToken });
+
+      throw new Error('No logged in user found');
+    }
+
     let mergedUser = merge(dbUser, oauthUser);
     mergedUser.role = mergedUser.role || ((mergedUser.email || mergedUser.phoneNumber || mergedUser.hashedPhoneNumber) ? 'member' : 'anonymous');
     
     return mergedUser;
-
   } catch(error) {
+    console.log('errorerror', error)
     return await resetUserToken(dbUser);
   }
 

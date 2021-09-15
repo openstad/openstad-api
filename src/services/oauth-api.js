@@ -80,6 +80,10 @@ OAuthAPI.updateClient = async function({ siteConfig, which = 'default', clientDa
 
 }
 
+OAuthAPI.refreshToken = async function({ siteConfig, which = 'default', email, userId, token, raw = false }) {
+
+}
+
 OAuthAPI.fetchUser = async function({ siteConfig, which = 'default', email, userId, token, raw = false }) {
 
   let path = '';
@@ -96,7 +100,12 @@ OAuthAPI.fetchUser = async function({ siteConfig, which = 'default', email, user
 	  headers: { "Authorization": oauthServerCredentials, "Content-type": "application/json" },
   })
 	  .then((response) => {
-		  if (!response.ok) throw Error(response)
+	    console.log('Response response', response )
+      console.log('Response response stringify', JSON.stringify(response))
+      console.log('Response response status', response.status)
+
+
+      if (!response.ok) throw Error(response)
 		  return response.json();
 	  })
 	  .then((json) => {
