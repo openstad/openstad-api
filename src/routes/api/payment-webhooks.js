@@ -1,11 +1,21 @@
 /**
  * Logic for webhooks handlig the payment
  */
+const Promise = require('bluebird');
+const express = require('express');
+const db = require('../../db');
+const config = require('config');
+const rp = require('request-promise');
+
+const auth = require('../../middleware/sequelize-authorization-middleware');
 const Sequelize = require('sequelize');
 const subscriptionService = require('../../services/subscription');
 
+let router = express.Router({mergeParams: true});
 
-router.route('/mollie/payment', async function (req, res) {
+
+router.route('/mollie/payment')
+  .post(async function (req, res) {
   const paymentId = req.body.id; //tr_d0b0E3EA3v
 
   // 1. get payment
@@ -34,12 +44,12 @@ router.route('/mollie/payment', async function (req, res) {
 });
 
 
-router.route('/paystack', async function (req, res, next) {
+router.route('/paystack')
+  .post(async function (req, res, next) {
   console.log('Paystack webhook start', req.body);
 
   const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
   const hash = crypto.createHmac('sha512', paystackApiKey).update(JSON.stringify(req.body)).digest('hex');
-
 
 
   if (hash === req.headers['x-paystack-signature']) {
@@ -54,7 +64,7 @@ router.route('/paystack', async function (req, res, next) {
 
 
     if (!customerCode) {
-      return throw new Error('No customer code received');
+      throw  Error('No customer code received');
     }
 
     try {
@@ -111,7 +121,7 @@ router.route('/paystack', async function (req, res, next) {
         userSubscriptionData =user.subscriptionData;
 
         if (!userSubscriptionData && !userSubscriptionData.subscriptions) {
-          return throw new Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
+          throw  Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
         }
 
         userSubscriptionData.subscriptions = userSubscriptionData.subscriptions.map((subscription) => {
@@ -119,7 +129,7 @@ router.route('/paystack', async function (req, res, next) {
             subscription.active = false;
           }
 
-          return subscription;
+          throw  subscription;
         });
 
         await user.update({subscriptionData: userSubscriptionData});
@@ -132,7 +142,7 @@ router.route('/paystack', async function (req, res, next) {
         userSubscriptionData =user.subscriptionData;
 
         if (!userSubscriptionData && !userSubscriptionData.subscriptions) {
-          return throw new Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
+          throw  Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
         }
 
         userSubscriptionData.subscriptions = userSubscriptionData.subscriptions.map((subscription) => {
@@ -140,7 +150,7 @@ router.route('/paystack', async function (req, res, next) {
             subscription.active = true;
           }
 
-          return subscription;
+          throw  subscription;
         });
 
         await user.update({subscriptionData: userSubscriptionData});
@@ -172,9 +182,13 @@ router.route('/paystack', async function (req, res, next) {
 });
 
 
-router.route('/stripe', function (req, res, next) {
+
+router.route('/stripe')
+  .post(function (req, res, next) {
   /**
    * @TODO
    */
 
 });
+
+module.exports = router;
