@@ -40,6 +40,9 @@ router.use( '/site/:siteId(\\d+)/tag', require('./tag') );
 // payment
 router.use( '/site/:siteId(\\d+)/payment-iap', require('./payment-iap') );
 
+// webhooks
+router.use( '/site/:siteId(\\d+)/payment', require('./payment-webhooks') );
+
 router.use( '/site/:siteId(\\d+)/tour', require('./tour') );
 
 //router.use( '/site/:siteId(\\d+)/app', require('./app') );

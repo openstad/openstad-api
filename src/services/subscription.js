@@ -36,6 +36,8 @@ const update = async ({
       case "paystack":
         // code block
         subscriptionData.paystackPlanCode = paystackPlanCode;
+        subscriptionData.paystackSubscriptionCode = paystackSubscriptionCode;
+
         break;
       case "mollie":
         subscriptionData.mollieSubscriptionId = mollieSubscriptionId;

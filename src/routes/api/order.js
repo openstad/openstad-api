@@ -553,8 +553,9 @@ router.route('/:orderId(\\d+)/payment')
 
           await req.order.save();
 
+          /*
           const user = await db.User.findOne({where: {id: req.order.userId}});
-
+            creatin is done with webhooks
           await subscriptionService.update({
             user,
             provider: 'paystack',
@@ -563,6 +564,8 @@ router.route('/:orderId(\\d+)/payment')
             siteId: req.site.id,
             paystackPlanCode:  req.order.extraData.paystackPlanCode
           });
+
+           */
         }
 
         mail.sendThankYouMail(req.order, 'order', user);

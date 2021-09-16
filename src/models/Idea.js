@@ -710,8 +710,10 @@ module.exports = function (db, sequelize, DataTypes) {
 
                 //filter out multiple conditions
                 const escapedKey = sequelize.escape(`$.${filter.key}`);
+
                 excludeFilterValue.forEach((value, key)=>{
                   const escapedValue = sequelize.escape(value);
+
                   conditions[Sequelize.Op.and].push({
                     [Sequelize.Op.and] : sequelize.literal(`extraData->${escapedKey}!=${escapedValue}`)
                   });

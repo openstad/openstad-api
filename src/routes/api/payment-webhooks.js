@@ -1,11 +1,11 @@
-
-
 /**
  * Logic for webhooks handlig the payment
  */
+const Sequelize = require('sequelize');
+const subscriptionService = require('../../services/subscription');
 
 
-router.route('/mollie/payment', async function(req, res) {
+router.route('/mollie/payment', async function (req, res) {
   const paymentId = req.body.id; //tr_d0b0E3EA3v
 
   // 1. get payment
@@ -14,7 +14,7 @@ router.route('/mollie/payment', async function(req, res) {
   if (hash === req.headers['x-paystack-signature']) {
     // Retrieve the request's body
     var event = req.body;
-    switch(event.name) {
+    switch (event.name) {
       case "subscription.create":
         // code block
 
@@ -34,25 +34,136 @@ router.route('/mollie/payment', async function(req, res) {
 });
 
 
-router.route('/paystack', function(req, res) {
+router.route('/paystack', async function (req, res, next) {
+  console.log('Paystack webhook start', req.body);
+
   const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
   const hash = crypto.createHmac('sha512', paystackApiKey).update(JSON.stringify(req.body)).digest('hex');
 
+
+
   if (hash === req.headers['x-paystack-signature']) {
     // Retrieve the request's body
-    var event = req.body;
-    switch(event.name) {
+    const event = req.body;
+    const eventData = event.data ? event.data : {};
+    const customerData = eventData && eventData.customer ? eventData.customer : {};
+    const customerCode = customerData.customer_code;
+    const customerUserCodeKey = paystackApiKey + 'CustomerCode';
+
+    let user, subscriptionCode, userSubscriptionData;
+
+
+    if (!customerCode) {
+      return throw new Error('No customer code received');
+    }
+
+    try {
+      const escapedKey = Sequelize.escape(`$.${customerUserCodeKey}`);
+      const escapedValue = Sequelize.escape(customerUserCodeKey);
+
+      user = await db.User.findOne({
+        where: {
+          [Sequelize.Op.and]: Sequelize.literal(`siteData->${escapedKey}=${escapedValue}`)
+        }
+      });
+    } catch (e) {
+      console.warn('Error in fetching a user', e);
+      next(e);
+    }
+
+    try {
+      await db.ActionLog.create({
+        actionId: 0,
+        log: {
+          paystackEvent: JSON.stringify(event),
+          userId: user.id
+        },
+        status: 'info'
+      });
+    } catch (e) {
+      console.warn('Error in creating log a user', e);
+    }
+
+
+    console.log('User found: ', user, 'Start processing event:')
+
+    switch (event.name) {
       case "subscription.create":
         // code block
-
         console.log('Event subscription.create', event);
+        subscriptionCode = eventData.subscription_code;
+
+        await subscriptionService.update({
+          user,
+          provider: 'paystack',
+          subscriptionActive : true,
+          subscriptionProductId: '@todo' ,// req.order.extraData.subscriptionProductId,
+          paystackSubscriptionCode: subscriptionCode,
+          siteId: req.site.id,
+          paystackPlanCode: eventData.paystackPlanCode
+        });
 
         break;
-      case "paymentrequest.success":
+      case "subscription.disable":
+        console.log('Event subscription.disable', event);
 
-        console.log('Event paymentrequest.success', event);
+        subscriptionCode = eventData.subscription_code;
+        userSubscriptionData =user.subscriptionData;
+
+        if (!userSubscriptionData && !userSubscriptionData.subscriptions) {
+          return throw new Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
+        }
+
+        userSubscriptionData.subscriptions = userSubscriptionData.subscriptions.map((subscription) => {
+          if (subscription.paystackSubscriptionCode && subscription.paystackSubscriptionCode ===  subscriptionCode) {
+            subscription.active = false;
+          }
+
+          return subscription;
+        });
+
+        await user.update({subscriptionData: userSubscriptionData});
+        break;
+
+      case "subscription.enable":
+        subscriptionCode = eventData.subscription_code;
+
+        subscriptionCode = eventData.subscription_code;
+        userSubscriptionData =user.subscriptionData;
+
+        if (!userSubscriptionData && !userSubscriptionData.subscriptions) {
+          return throw new Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
+        }
+
+        userSubscriptionData.subscriptions = userSubscriptionData.subscriptions.map((subscription) => {
+          if (subscription.paystackSubscriptionCode && subscription.paystackSubscriptionCode ===  subscriptionCode) {
+            subscription.active = true;
+          }
+
+          return subscription;
+        });
+
+        await user.update({subscriptionData: userSubscriptionData});
 
         break;
+
+      /*
+    case "paymentrequest.success":
+
+      const user = await db.User.findOne({where: {id: req.order.userId}});
+
+      await subscriptionService.update({
+        user,
+        provider: 'paystack',
+        subscriptionActive : true,
+        subscriptionProductId: req.order.extraData.subscriptionProductId,
+        siteId: req.site.id,
+        paystackPlanCode:  req.order.extraData.paystackPlanCode
+      });
+
+      break;
+
+       */
       default:
       // code block
     }
@@ -61,7 +172,7 @@ router.route('/paystack', function(req, res) {
 });
 
 
-router.route('/stripe', function(req, res, next) {
+router.route('/stripe', function (req, res, next) {
   /**
    * @TODO
    */

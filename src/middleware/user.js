@@ -109,7 +109,6 @@ async function getUserInstance( user, siteOauthConfig ) {
 	console.log('dbUser.externalAccessToken', dbUser.externalAccessToken)
 
 	if (!dbUser || !dbUser.externalUserId || !dbUser.externalAccessToken) {
-		console.log('empty user')
 
 		return user.fixed ? dbUser : {};
 	}
@@ -132,7 +131,12 @@ async function getUserInstance( user, siteOauthConfig ) {
 			mode: 'cors',
 		});
 
-		//console.log('response', response)
+		console.log('response', response)
+
+		// access token expired, fetch a new one with the RefreshToken
+		if (!response.ok) {
+			throw new Error('Error fetching user')
+		}
 
 		if (!response.ok) {
 			throw new Error('Error fetching user')
