@@ -70,12 +70,12 @@ router.route('/paystack')
     }
 
     try {
-      const escapedKey = Sequelize.escape(`$.${customerUserCodeKey}`);
-      const escapedValue = Sequelize.escape(customerUserCodeKey);
+      const escapedKey = db.sequelize.escape(`$.${customerUserCodeKey}`);
+      const escapedValue = db.sequelize.escape(customerUserCodeKey);
 
       user = await db.User.findOne({
         where: {
-          [Sequelize.Op.and]: Sequelize.literal(`siteData->${escapedKey}=${escapedValue}`)
+          [Sequelize.Op.and]: db.sequelize.literal(`siteData->${escapedKey}=${escapedValue}`)
         }
       });
     } catch (e) {
