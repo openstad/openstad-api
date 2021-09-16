@@ -6,6 +6,7 @@ const express = require('express');
 const db = require('../../db');
 const config = require('config');
 const rp = require('request-promise');
+const crypto = require('crypto');
 
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const Sequelize = require('sequelize');
