@@ -73,15 +73,20 @@ router.route('/paystack')
       const escapedKey = db.sequelize.escape(`$.${customerUserCodeKey}`);
       const escapedValue = db.sequelize.escape(customerUserCodeKey);
 
+      const query = db.sequelize.literal(`siteData->${escapedKey}=${escapedValue}`);
+      console.log('query', query)
+
       user = await db.User.findOne({
         where: {
-          [Sequelize.Op.and]: db.sequelize.literal(`siteData->${escapedKey}=${escapedValue}`)
+          [Sequelize.Op.and]:query
         }
       });
     } catch (e) {
       console.warn('Error in fetching a user', e);
       next(e);
     }
+
+    console.log('user', user);
 
     try {
       await db.ActionLog.create({
