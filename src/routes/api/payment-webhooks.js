@@ -45,12 +45,13 @@ router.route('/mollie/payment')
 
 
 router.route('/paystack')
-  .post(async function (req, res, next) {
+  .all(async function (req, res, next) {
   console.log('Paystack webhook start', req.body);
 
   const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
   const hash = crypto.createHmac('sha512', paystackApiKey).update(JSON.stringify(req.body)).digest('hex');
 
+  console.log('hash', hash)
 
   if (hash === req.headers['x-paystack-signature']) {
     // Retrieve the request's body
