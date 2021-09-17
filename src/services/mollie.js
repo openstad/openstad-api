@@ -4,15 +4,17 @@ const config = require('config');
 
 exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail, redirectUser) => {
   const mollieClient = createMollieClient({apiKey: mollieApiKey});
+  const paymentConfig = site.config && site.config.payment ? site.config.payment : {};
   const payment = await mollieClient.payments.get(paymentId);
   const baseUrl = config.url;
+  const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
 
   if (payment.isPaid() && order.paymentStatus !== 'PAID') {
     order.set('paymentStatus', 'PAID');
     await order.save();
 
     if (order.extraData && order.extraData.isSubscription && order.userId) {
-      const customerUserKey = mollieApiKey + 'CustomerId';
+      const customerUserKey =  paymentModus +'_mollieCustomerId';
       const mollieCustomerId = user.siteData[customerUserKey];
 
       console.log('order', order);

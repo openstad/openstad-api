@@ -293,14 +293,15 @@ router.route('/')
       const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
       const paymentProvider = paymentConfig.provider ? paymentConfig.provider : 'mollie';
       const paymentApiUrl = config.url + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment';
+      const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
 
       if (paymentProvider === 'paystack') {
         const paystackApiKey = paymentConfig.paystackApiKey ? paymentConfig.paystackApiKey : '';
 
         const PaystackClient = new PayStack(paystackApiKey);
 
-        const customerUserIdKey = paystackApiKey + 'CustomerId';
-        const customerUserCodeKey = paystackApiKey + 'CustomerCode';
+        const customerUserIdKey = paymentModus + '_paystackCustomerId';
+        const customerUserCodeKey = paymentModus + '_paystackCustomerCode';
 
         let customerCode;
 
@@ -376,7 +377,7 @@ router.route('/')
 
         // google pay, apple pay, paystack,
         const mollieClient = createMollieClient({apiKey: mollieApiKey});
-        const customerUserKey = mollieApiKey + 'CustomerId';
+        const customerUserKey =  paymentModus + '_mollieCustomerId';
         const baseUrl = config.url;
 
 
@@ -606,7 +607,7 @@ router.route('/check-subscriptions', async function(req, res) {
     const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
     const PaystackClient = new PayStack(paystackApiKey);
 
-    const customerId = user.siteData[paystackApiKey + 'CustomerId'];
+    const customerId = user.siteData['paystackCustomerId'];
 
     try {
       const subscriptionsResponse = await PaystackClient.getSubscriptions({

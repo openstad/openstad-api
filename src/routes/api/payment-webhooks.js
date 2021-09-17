@@ -60,9 +60,10 @@ router.route('/paystack')
     console.log('Paystack webhook start', req.body);
 
 
-
+    const payment = await mollieClient.payments.get(paymentId);
     const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
     const hash = crypto.createHmac('sha512', paystackApiKey).update(JSON.stringify(req.body)).digest('hex');
+    const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
 
     if (hash === req.headers['x-paystack-signature']) {
       // Retrieve the request's body
@@ -70,11 +71,10 @@ router.route('/paystack')
       const eventData = event.data ? event.data : {};
       const customerData = eventData && eventData.customer ? eventData.customer : {};
       const customerCode = customerData.customer_code;
-      const customerUserCodeKey = paystackApiKey + 'CustomerCode';
+      const customerUserCodeKey = paymentModus +'_paystackCustomerCode';
       const subscriptionCode = eventData.subscription_code;
 
       let user, userSubscriptionData;
-
 
       if (!customerCode) {
         throw  Error('No customer code received');
