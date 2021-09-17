@@ -41,9 +41,7 @@ const update = async ({
         break;
       case "mollie":
         subscriptionData.mollieSubscriptionId = mollieSubscriptionId;
-        console.log('Event Payment Request Success', event);
         break;
-
       case "google":
         // code block
         //subscriptionData.paystackPlanCode = req.order.extraData.paystackPlanCode;
