@@ -2,7 +2,7 @@ const {createMollieClient} = require('@mollie/api-client');
 const subscriptionService = require('./subscription');
 const config = require('config');
 
-exports.processPayment = async (paymentId, mollieApiKey, site, order, user, redirectUser) => {
+exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail, redirectUser) => {
   const mollieClient = createMollieClient({apiKey: mollieApiKey});
   const payment = await mollieClient.payments.get(paymentId);
   const baseUrl = config.url;
