@@ -321,12 +321,16 @@ router.route('/')
 
             customerCode = createCustomerResponse.data.code;
 
-            const siteData = req.user.siteData;
+            const siteData = req.user.siteData ? req.user.siteData : {};
 
             siteData[customerUserIdKey] = createCustomerResponse.data.id;
             siteData[customerUserCodeKey] = createCustomerResponse.data.code;
 
-            await req.user.update({siteData})
+            console.log('siteDatasiteData', siteData);
+
+            await req.user.update({
+              siteData: siteData
+            })
           }
 
           let total = req.results.total;
