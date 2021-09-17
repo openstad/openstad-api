@@ -15,6 +15,7 @@ const generateToken = require('../../util/generate-token');
 const PayStack = require('paystack-node')
 const crypto = require('crypto');
 const subscriptionService = require('../../services/subscription');
+const mollieService = require('../../services/mollie')
 
 
 const fetchOrderMw = function (req, res, next) {
@@ -317,8 +318,6 @@ router.route('/')
             createCustomerResponse = typeof createCustomerResponse === 'string' ? JSON.parse(createCustomerResponse) : createCustomerResponse;
             createCustomerResponse = createCustomerResponse.body;
 
-            console.log('createCustomerResponse', createCustomerResponse);
-
             customerCode = createCustomerResponse.data.code;
 
             const siteData = req.user.siteData ? req.user.siteData : {};
@@ -378,6 +377,7 @@ router.route('/')
         // google pay, apple pay, paystack,
         const mollieClient = createMollieClient({apiKey: mollieApiKey});
         const customerUserKey = mollieApiKey + 'CustomerId';
+        const baseUrl = config.url;
 
 
         try {
@@ -409,7 +409,7 @@ router.route('/')
             },
             description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
             redirectUrl: paymentApiUrl,
-            webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment'
+            webhookUrl: baseUrl + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment/mollie'
             //	webhookUrl:  paymentApiUrl,
           }
 
@@ -553,20 +553,6 @@ router.route('/:orderId(\\d+)/payment')
           req.order.set('paymentStatus', 'PAID');
 
           await req.order.save();
-
-          /*
-          const user = await db.User.findOne({where: {id: req.order.userId}});
-            creatin is done with webhooks
-          await subscriptionService.update({
-            user,
-            provider: 'paystack',
-            subscriptionActive : true,
-            subscriptionProductId: req.order.extraData.subscriptionProductId,
-            siteId: req.site.id,
-            paystackPlanCode:  req.order.extraData.paystackPlanCode
-          });
-
-           */
         }
 
         mail.sendThankYouMail(req.order, 'order', user);
@@ -577,84 +563,26 @@ router.route('/:orderId(\\d+)/payment')
       }
 
     } else {
+
       if (!req.order.extraData && !req.order.extraData.paymentIds && !req.order.extraData.paymentIds[0]) {
         return next(createError(500, 'No Payment IDs found for this order'));
       }
 
       const mollieApiKey = req.site.config && req.site.config.payment && req.site.config.payment.mollieApiKey ? req.site.config.payment.mollieApiKey : '';
-
-      const mollieClient = createMollieClient({apiKey: mollieApiKey});
-
       const paymentId = req.order.extraData.paymentIds ? req.order.extraData.paymentIds[0] : false;
+      const order = req.order;
+      const user = await db.User.findOne({where: {id: req.order.userId}});
 
-      console.log('Payment processing paymentId', paymentId, ' orderId: ', req.params.orderId);
-
+      try {
+        const result = await mollieService.processPayment(paymentId, mollieApiKey, req.site, order, user, mail, done);
+      } catch (e) {
+        console.log('Error processing payment: ', e)
+        next(e);
+      }
       /**
        * In future might be useful to seperate transactions and orders
        */
-      mollieClient.payments.get(paymentId)
-        .then(async payment => {
 
-          if (payment.isPaid() && req.order.paymentStatus !== 'PAID') {
-            req.order.set('paymentStatus', 'PAID');
-
-            await req.order.save();
-
-            const user = await db.User.findOne({where: {id: req.order.userId}});
-
-            if (req.order.extraData && req.order.extraData.isSubscription && req.order.userId) {
-              try {
-                console.log('req.order', req.order);
-                console.log('user', user);
-
-                const mollieOptions = {
-                  customerId: user.siteData.mollieCustomerId,
-                  amount: {
-                    value: req.order.total.toString(),
-                    currency: req.order.extraData.currency
-                  },
-                  description: req.order.description ? req.order.description : 'Subscription order at ' + req.site.title,
-                  //  redirectUrl: paymentApiUrl,
-                  interval: req.order.extraData.subscriptionInterval,
-                  webhookUrl: 'https://' + req.site.domain + '/api/site/' + req.params.siteId + '/order/' + req.order.id + '/payment'
-                };
-
-                const subscription = await mollieClient.customers_subscriptions.create(mollieOptions);
-
-                await subscriptionService.update({
-                  user,
-                  provider: 'mollie',
-                  subscriptionActive : true,
-                  subscriptionProductId: req.order.extraData.subscriptionProductId,
-                  siteId: req.site.id,
-                  mollieSubscriptionId: subscription.id
-                });
-
-              } catch (e) {
-                next(e)
-              }
-            }
-
-
-            mail.sendThankYouMail(req.order, 'order', user);
-            done(req.order.id, req.order.hash, true);
-
-          } else if (payment.isCanceled()) {
-            req.order.set('paymentStatus', 'CANCELLED');
-
-          } else if (payment.isExpired()) {
-            req.order.set('paymentStatus', 'EXPIRED');
-
-          } else {
-            done(req.order.id, req.order.hash);
-          }
-        })
-        .catch(error => {
-          console.log('Error', error);
-          next(e);
-          // don't through an error for now
-         // done(req.order.id, req.order.hash);
-        });
     }
   })
 
