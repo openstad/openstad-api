@@ -71,7 +71,7 @@ router.route('/paystack')
 
     try {
       const escapedKey = db.sequelize.escape(`$.${customerUserCodeKey}`);
-      const escapedValue = db.sequelize.escape(customerUserCodeKey);
+      const escapedValue = db.sequelize.escape(customerCode);
 
       const query = db.sequelize.literal(`siteData->${escapedKey}=${escapedValue}`);
       console.log('query', query)
