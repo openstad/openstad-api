@@ -7,6 +7,7 @@ const update = async ({
                         subscriptionProductId,
                         siteId,
                         paystackPlanCode,
+                        paystackSubscriptionCode,
                         mollieSubscriptionId,
                         productId,
                         receipt,

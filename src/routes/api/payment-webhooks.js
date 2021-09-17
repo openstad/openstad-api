@@ -61,8 +61,9 @@ router.route('/paystack')
     const customerData = eventData && eventData.customer ? eventData.customer : {};
     const customerCode = customerData.customer_code;
     const customerUserCodeKey = paystackApiKey + 'CustomerCode';
+    const subscriptionCode = eventData.subscription_code;
 
-    let user, subscriptionCode, userSubscriptionData;
+    let user, userSubscriptionData;
 
 
     if (!customerCode) {
@@ -116,7 +117,7 @@ router.route('/paystack')
       case "subscription.create":
         // code block
         console.log('Event subscription.create', event);
-        subscriptionCode = eventData.subscription_code;
+        console.log('EventsubscriptionCodee', subscriptionCode);
 
         await subscriptionService.update({
           user,
@@ -132,8 +133,9 @@ router.route('/paystack')
       case "subscription.disable":
         console.log('Event subscription.disable', event);
 
-        subscriptionCode = eventData.subscription_code;
         userSubscriptionData =user.subscriptionData;
+
+        console.log('EventsubscriptionCodee', subscriptionCode);
 
         if (!userSubscriptionData && !userSubscriptionData.subscriptions) {
           throw  Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
@@ -151,9 +153,7 @@ router.route('/paystack')
         break;
 
       case "subscription.enable":
-        subscriptionCode = eventData.subscription_code;
 
-        subscriptionCode = eventData.subscription_code;
         userSubscriptionData =user.subscriptionData;
 
         if (!userSubscriptionData && !userSubscriptionData.subscriptions) {

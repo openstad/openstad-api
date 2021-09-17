@@ -350,7 +350,6 @@ router.route('/')
           let createTransactionResponse = await PaystackClient.initializeTransaction(paystackOptions);
 
           createTransactionResponse = typeof createTransactionResponse === 'string' ? JSON.parse(createTransactionResponse) : createTransactionResponse;
-          console.log('createTransactionResponse', createTransactionResponse);
 
           createTransactionResponse = createTransactionResponse.body;
           console.log('createTransactionResponse', createTransactionResponse);
@@ -380,11 +379,9 @@ router.route('/')
         const mollieClient = createMollieClient({apiKey: mollieApiKey});
         const customerUserKey = mollieApiKey + 'CustomerId';
 
-        console.log('paymentProvider', paymentProvider)
 
         try {
           let customerId;
-          console.log('req.user.siteData', req.user.siteData);
 
           if (req.user.siteData && req.user.siteData[customerUserKey]) {
             customerId = req.user.siteData[customerUserKey];
