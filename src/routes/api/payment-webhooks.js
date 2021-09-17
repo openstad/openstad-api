@@ -17,32 +17,40 @@ let router = express.Router({mergeParams: true});
 
 router.route('/mollie/payment')
   .post(async function (req, res) {
-    const paymentId = req.body.id; //tr_d0b0E3EA3v
+    try {
 
-    //
+      await db.ActionLog.create({
+        actionId: 0,
+        log: {
+          mollieEvent: true,
+          body: req.body,
+         // userId: user.id ? user.id : false
+        },
+        status: 'info'
+      });
 
-    // 1. get payment
-    const payment = await mollieClient.payments.get('tr_Eq8xzWUPA4');
+      const paymentId = req.body.id; //tr_d0b0E3EA3v
+    const mollieApiKey = req.site.config && req.site.config.payment && req.site.config.payment.mollieApiKey ? req.site.config.payment.mollieApiKey : '';
 
-    if (hash === req.headers['x-paystack-signature']) {
-      // Retrieve the request's body
-      var event = req.body;
-      switch (event.name) {
-        case "subscription.create":
-          // code block
+    const escapedKey = db.sequelize.escape(`$.paymentId`);
+    const escapedValue = db.sequelize.escape(paymentId);
+    const query = db.sequelize.literal(`extraData->${escapedKey}=${escapedValue}`);
 
-          console.log('Event subscription.create', event);
+    const order = await db.Order.findOne({
+      [Sequelize.Op.and]: query,
+      siteId: req.site.id
+    });
 
-          break;
-        case "paymentrequest.success":
+    console.log('Webhook order found', order);
 
-          console.log('Event paymentrequest.success', event);
+    const user = await db.User.findOne({where: {id: order.userId}});
 
-          break;
-        default:
-        // code block
-      }
+      const result = await mollieService.processPayment(paymentId, mollieApiKey, req.site, order, user, mail, done);
+    } catch (e) {
+      console.log('Error processing payment: ', e)
+      next(e);
     }
+
     res.send(200);
   });
 
@@ -51,9 +59,10 @@ router.route('/paystack')
   .all(async function (req, res, next) {
     console.log('Paystack webhook start', req.body);
 
+
+
     const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
     const hash = crypto.createHmac('sha512', paystackApiKey).update(JSON.stringify(req.body)).digest('hex');
-
 
     if (hash === req.headers['x-paystack-signature']) {
       // Retrieve the request's body
@@ -80,7 +89,8 @@ router.route('/paystack')
 
         user = await db.User.findOne({
           where: {
-            [Sequelize.Op.and]: query
+            [Sequelize.Op.and]: query,
+            siteId: req.site.id
           }
         });
       } catch (e) {

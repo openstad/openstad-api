@@ -422,6 +422,7 @@ router.route('/')
           const orderExtraData = req.results.extraData ? req.results.extraData : {};
           orderExtraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
           orderExtraData.paymentIds.push(payment.id);
+          orderExtraData.paymentId = payment.id;
           orderExtraData.paymentUrl = payment.getCheckoutUrl();
           orderExtraData.paymentProvider = paymentProvider;
 
