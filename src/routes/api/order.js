@@ -301,11 +301,11 @@ router.route('/')
         const customerUserIdKey = paystackApiKey + 'CustomerId';
         const customerUserCodeKey = paystackApiKey + 'CustomerCode';
 
-        let customerId;
+        let customerCode;
 
         try {
-          if (req.user.siteData && req.user.siteData[customerUserIdKey]) {
-            customerId = req.user.siteData[customerUserIdKey];
+          if (req.user.siteData && req.user.siteData[customerUserCodeKey]) {
+            customerCode = req.user.siteData[customerUserCodeKey];
           } else {
             let createCustomerResponse = await PaystackClient.createCustomer({
               email: req.user.email,
@@ -319,7 +319,7 @@ router.route('/')
 
             console.log('createCustomerResponse', createCustomerResponse);
 
-            customerId = createCustomerResponse.data.id;
+            customerCode = createCustomerResponse.data.code;
 
             const siteData = req.user.siteData;
 
