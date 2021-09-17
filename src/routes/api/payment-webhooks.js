@@ -86,14 +86,14 @@ router.route('/paystack')
       next(e);
     }
 
-    console.log('user', user);
+    //console.log('user', user);
 
     try {
       await db.ActionLog.create({
         actionId: 0,
         log: {
-          paystackEvent: JSON.stringify(event),
-          userId: user.id
+          paystackEvent: event,
+          userId: user.id ? user.id : false
         },
         status: 'info'
       });
@@ -101,10 +101,18 @@ router.route('/paystack')
       console.warn('Error in creating log a user', e);
     }
 
+    if (! user ) {
+      // return 200 for now otherwise keeps firing
+      // it can be a bug, but can also be they create a subscription / user that doesnt exist in our database
+      return res.send(200);
+    }
 
-    console.log('User found: ', user, 'Start processing event:')
 
-    switch (event.name) {
+    console.log('User found with id: ', user.id)
+
+    console.log('Start processing event:', event.event)
+
+    switch (event.event) {
       case "subscription.create":
         // code block
         console.log('Event subscription.create', event);
