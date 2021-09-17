@@ -324,7 +324,7 @@ router.route('/')
             const siteData = req.user.siteData ? req.user.siteData : {};
 
             siteData[customerUserIdKey] = createCustomerResponse.data.id;
-            siteData[customerUserCodeKey] = createCustomerResponse.data.code;
+            siteData[customerUserCodeKey] = createCustomerResponse.data.customer_code;
 
             console.log('siteDatasiteData', siteData);
 
