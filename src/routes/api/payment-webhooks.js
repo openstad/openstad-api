@@ -113,84 +113,90 @@ router.route('/paystack')
 
     console.log('Start processing event:', event.event)
 
-    switch (event.event) {
-      case "subscription.create":
-        // code block
-        console.log('Event subscription.create', event);
-        console.log('EventsubscriptionCodee', subscriptionCode);
+    try {
+      switch (event.event) {
+        case "subscription.create":
+          // code block
+          console.log('Event subscription.create', event);
+          console.log('EventsubscriptionCodee', subscriptionCode);
+
+          await subscriptionService.update({
+            user,
+            provider: 'paystack',
+            subscriptionActive: true,
+            subscriptionProductId: '@todo',// req.order.extraData.subscriptionProductId,
+            paystackSubscriptionCode: subscriptionCode,
+            siteId: req.site.id,
+            paystackPlanCode: eventData.paystackPlanCode
+          });
+
+          break;
+        case "subscription.disable":
+          console.log('Event subscription.disable', event);
+
+          userSubscriptionData = user.subscriptionData;
+
+          console.log('EventsubscriptionCodee', subscriptionCode);
+
+          if (!userSubscriptionData && !userSubscriptionData.subscriptions) {
+            throw  Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
+          }
+
+          userSubscriptionData.subscriptions = userSubscriptionData.subscriptions.map((subscription) => {
+            if (subscription.paystackSubscriptionCode && subscription.paystackSubscriptionCode === subscriptionCode) {
+              subscription.active = false;
+            }
+
+            return subscription;
+          });
+
+          await user.update({subscriptionData: userSubscriptionData});
+
+          break;
+
+        case "subscription.enable":
+
+          userSubscriptionData = user.subscriptionData;
+
+          if (!userSubscriptionData && !userSubscriptionData.subscriptions) {
+            throw  Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
+          }
+
+          userSubscriptionData.subscriptions = userSubscriptionData.subscriptions.map((subscription) => {
+            if (subscription.paystackSubscriptionCode && subscription.paystackSubscriptionCode === subscriptionCode) {
+              subscription.active = true;
+            }
+
+            return subscription;
+          });
+
+          await user.update({subscriptionData: userSubscriptionData});
+
+          break;
+
+        /*
+      case "paymentrequest.success":
+
+        const user = await db.User.findOne({where: {id: req.order.userId}});
 
         await subscriptionService.update({
           user,
           provider: 'paystack',
           subscriptionActive : true,
-          subscriptionProductId: '@todo' ,// req.order.extraData.subscriptionProductId,
-          paystackSubscriptionCode: subscriptionCode,
+          subscriptionProductId: req.order.extraData.subscriptionProductId,
           siteId: req.site.id,
-          paystackPlanCode: eventData.paystackPlanCode
+          paystackPlanCode:  req.order.extraData.paystackPlanCode
         });
 
         break;
-      case "subscription.disable":
-        console.log('Event subscription.disable', event);
 
-        userSubscriptionData =user.subscriptionData;
-
-        console.log('EventsubscriptionCodee', subscriptionCode);
-
-        if (!userSubscriptionData && !userSubscriptionData.subscriptions) {
-          throw  Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
-        }
-
-        userSubscriptionData.subscriptions = userSubscriptionData.subscriptions.map((subscription) => {
-          if (subscription.paystackSubscriptionCode && subscription.paystackSubscriptionCode ===  subscriptionCode) {
-            subscription.active = false;
-          }
-
-          throw  subscription;
-        });
-
-        await user.update({subscriptionData: userSubscriptionData});
-        break;
-
-      case "subscription.enable":
-
-        userSubscriptionData =user.subscriptionData;
-
-        if (!userSubscriptionData && !userSubscriptionData.subscriptions) {
-          throw  Error('No subscription data for user with id', user.id, ' for event: ', JSON.stringify(event));
-        }
-
-        userSubscriptionData.subscriptions = userSubscriptionData.subscriptions.map((subscription) => {
-          if (subscription.paystackSubscriptionCode && subscription.paystackSubscriptionCode ===  subscriptionCode) {
-            subscription.active = true;
-          }
-
-          throw  subscription;
-        });
-
-        await user.update({subscriptionData: userSubscriptionData});
-
-        break;
-
-      /*
-    case "paymentrequest.success":
-
-      const user = await db.User.findOne({where: {id: req.order.userId}});
-
-      await subscriptionService.update({
-        user,
-        provider: 'paystack',
-        subscriptionActive : true,
-        subscriptionProductId: req.order.extraData.subscriptionProductId,
-        siteId: req.site.id,
-        paystackPlanCode:  req.order.extraData.paystackPlanCode
-      });
-
-      break;
-
-       */
-      default:
-      // code block
+         */
+        default:
+        // code block
+      }
+    } catch (e) {
+      console.log('Erorororor: ', e);
+      next(e);
     }
   }
   res.send(200);

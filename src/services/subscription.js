@@ -38,11 +38,10 @@ const update = async ({
         // code block
         subscriptionData.paystackPlanCode = paystackPlanCode;
         subscriptionData.paystackSubscriptionCode = paystackSubscriptionCode;
-
         break;
       case "mollie":
         subscriptionData.mollieSubscriptionId = mollieSubscriptionId;
-        console.log('Event paymentrequest.success', event);
+        console.log('Event Payment Request Success', event);
         break;
 
       case "google":
