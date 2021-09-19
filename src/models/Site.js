@@ -77,7 +77,7 @@ module.exports = function (db, sequelize, DataTypes) {
           let current = await db.Site.findOne({ where: { id: instance.id } });
 
           // on update of projectHasEnded also update isActive of all the parts
-          if (current && typeof current.config.projectHasEnded != 'undefined' && current.config.projectHasEnded !== instance.config.projectHasEnded) {
+          if (current && typeof instance.config.projectHasEnded != 'undefined' && current.config.projectHasEnded !== instance.config.projectHasEnded) {
             let config = merge.recursive(true, instance.config);
             if (instance.config.projectHasEnded) {
               config.votes.isActive = false;
@@ -97,7 +97,6 @@ module.exports = function (db, sequelize, DataTypes) {
             }
             instance.set('config', config);
           }
-
           
         } catch (err) {
           console.log(err);
