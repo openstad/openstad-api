@@ -1159,7 +1159,6 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
       showArchive: {
-        logging: console.log,
         where: {
           [Sequelize.Op.or]: [
             { archivedAt: { [Sequelize.Op.is]: null }},

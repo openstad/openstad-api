@@ -19,6 +19,13 @@ const userhasModeratorRights = (user) => {
 router
   .all('*', function(req, res, next) {
     req.scope = ['api', { method: ['onlyVisible', req.user.id, req.user.role] }];
+    
+    // ideas can be archived (setting archivedAt)
+    if (req.query.showArchive === '1') {
+      req.scope.push('showArchive')
+    } else {
+      req.scope.push('hideArchive')
+    }
 
     // in case the votes are archived don't use these queries
     // this means they can be cleaned up from the main table for performance reason
@@ -118,12 +125,6 @@ router
       req.scope.push({
         method: ['search', req.query.search]
       })
-    }
-
-    if (req.query.showArchive) {
-      req.scope.push('showArchive')
-    } else {
-      req.scope.push('hideArchive')
     }
 
     // todo? volgens mij wordt dit niet meer gebruikt
@@ -331,8 +332,9 @@ router.route('/:ideaId(\\d+)')
   .all(function(req, res, next) {
     var ideaId = parseInt(req.params.ideaId) || 1;
 
-    let scope = [...req.scope, 'showArchive'];
-    scope.splice(scope.indexOf('hideArchive'), 1)
+    req.scope.splice(req.scope.indexOf('hideArchive'), 1)
+    req.scope.push('showArchive')
+    let scope = [...req.scope];
     if (req.canIncludeVoteCount) scope.push('includeVoteCount');
 
 
