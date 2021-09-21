@@ -89,7 +89,8 @@ router
             client_id: authClientId,
             client_secret: authClientSecret,
             code: code,
-            grant_type: 'authorization_code'
+            grant_type: 'authorization_code',
+            scope: 'offline_access'
         }
 
         fetch(
@@ -113,12 +114,19 @@ router
             )
             .then(
                 json => {
+                    console.log('JSON Login Response', json);
 
                     let accessToken = json.access_token;
+                    let refreshToken = json.refresh_token;
+
+                    console.log('JSON Login refreshToken', refreshToken);
+
                     if (!accessToken) return next(createError(403, 'Inloggen niet gelukt: geen accessToken'));
 
                     // todo: alleen in de sessie is wel heel simpel
                     req.userAccessToken = accessToken;
+                    req.userRefreshToken = refreshToken;
+
                     return next();
                 }
             )
@@ -151,6 +159,7 @@ router
         let data = {
             externalUserId: req.userData.user_id,
             externalAccessToken: req.userAccessToken,
+            externalRefreshToken: req.userRefreshToken,
             email: req.userData.email || null,
             firstName: req.userData.firstName,
             siteId: req.site.id,

@@ -80,7 +80,65 @@ OAuthAPI.updateClient = async function({ siteConfig, which = 'default', clientDa
 
 }
 
-OAuthAPI.refreshToken = async function({ siteConfig, which = 'default', email, userId, token, raw = false }) {
+OAuthAPI.refreshAccessToken = async function({ siteConfig, which = 'default', refreshToken, token}) {
+
+  const siteOauthConfig = (siteConfig && siteConfig.oauth && siteConfig.oauth[which]) || {};
+  const authClientId = siteOauthConfig['auth-client-id'] || config.authorization['auth-client-id'];
+  const authClientSecret = siteOauthConfig['auth-client-secret'] || config.authorization['auth-client-secret'];
+  const authServerExchangeCodePath = siteOauthConfig['auth-server-exchange-code-path'] || config.authorization['auth-server-exchange-code-path'];
+  const oauthServerUrl = formatOAuthApiUrl(authServerExchangeCodePath, siteConfig, which);
+
+  let postData = {
+    client_id: authClientId,
+    client_secret: authClientSecret,
+    refresh_token: refreshToken,
+    grant_type: 'authorization_code',
+    token: token
+  }
+
+    // const response = await
+
+  const response = await fetch(oauthServerUrl + authServerExchangeCodePath, {
+    headers: { "Authorization": `Bearer ${token}`, "Content-type": "application/json" },
+    method: 'POST',
+    body: JSON.stringify(postData)
+  })
+
+  console.log('regreshshs response', response)
+
+  if (!response.ok) throw Error(response);
+
+  const result =  response.json();
+
+  /*return fetch(oauthServerUrl + authServerExchangeCodePath, {
+      headers: { "Authorization": `Bearer ${token}`, "Content-type": "application/json" },
+      method: 'POST',
+      body: JSON.stringify(postData)
+    })
+      .then((response) => {
+        console.log('regreshshs response', response)
+
+        if (!response.ok) throw Error(response)
+        return response.json();
+      })
+      .then((json) => {
+        console.log('regreshshs jsonsons', json)
+        let user;
+        if (json && json.data && json.data.length > 0) {
+          user = json.data[0];
+        } else if (json.id) {
+          user = json;
+        } else if (json.user_id) {
+          user = json;
+        }
+
+
+        return user && !raw ? OAuthUser.parseDataForSite(siteConfig, user) : user;
+      })
+      .catch((err) => {
+        console.log('Niet goed refreshshshsh');
+        console.log(err);
+      })*/
 
 }
 
@@ -100,11 +158,6 @@ OAuthAPI.fetchUser = async function({ siteConfig, which = 'default', email, user
 	  headers: { "Authorization": oauthServerCredentials, "Content-type": "application/json" },
   })
 	  .then((response) => {
-	    console.log('Response response', response )
-      console.log('Response response stringify', JSON.stringify(response))
-      console.log('Response response status', response.status)
-
-
       if (!response.ok) throw Error(response)
 		  return response.json();
 	  })

@@ -29,6 +29,9 @@ module.exports = async function getUser( req, res, next ) {
     }
 
     const userEntity = await getUserInstance({ siteConfig, which, userId });
+
+
+
     req.user = userEntity
     // Pass user entity to template view.
     res.locals.user = userEntity;
@@ -120,10 +123,14 @@ async function getUserInstance({ siteConfig, which = 'default', userId }) {
 
     console.log('oauthUser', oauthUser)
 
+    // is user is empty, assume access token is expired, other reasons could be server down, or 500 error
+    // in case an access token expired, try to get a new one with the refresh token
 
     if (!oauthUser) {
-      let oauthUser = await OAuthApi.fetchUser({ siteConfig, which, token: dbUser.externalAccessToken });
+      oauthUser = await OAuthApi.refreshAccessToken({ siteConfig, which, refreshToken: dbUser.externalRefreshToken, token:  dbUser.token });
+    }
 
+    if (!oauthUser) {
       throw new Error('No logged in user found');
     }
 
@@ -132,7 +139,7 @@ async function getUserInstance({ siteConfig, which = 'default', userId }) {
     
     return mergedUser;
   } catch(error) {
-    console.log('errorerror', error)
+    console.log('errorerror authenticating user', error)
     return await resetUserToken(dbUser);
   }
 
