@@ -26,7 +26,6 @@ module.exports = {
     emailData.text = nunjucks.renderString(emailData.text, emailData);
     data.html = nunjucks.render(emailData.template, emailData);
 
-    console.log('send notification mail', data.to, data.EMAIL)
     mail.sendNotificationMail(data);
   }
 }

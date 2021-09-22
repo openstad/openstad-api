@@ -27,13 +27,11 @@ function isJson(str) {
  */
 const publish = async (notificationRuleSet, siteId, ruleSetData) => {
 
-  console.log('Publish event called: ', ruleSetData.resource, ruleSetData.eventType, {...ruleSetData.instance});
+  console.log('Publish event called: ', ruleSetData.resource, ruleSetData.eventType);
 
   const ruleSets = await notificationRuleSet
     .scope('includeTemplate', 'includeRecipients')
     .findAll({where: { siteId, active: 1}})
-
-  console.log(ruleSets);
 
   ruleSets.forEach((ruleset) => {
     const rulesetString = ruleset.body;
@@ -44,7 +42,7 @@ const publish = async (notificationRuleSet, siteId, ruleSetData) => {
     }
 
     if (jsonLogic.apply(JSON.parse(rulesetString), ruleSetData) === false) {
-      console.error('ruleset doesnt match', ruleset.id, rulesetString);
+      console.log('ruleset doesnt match', ruleset.id, rulesetString);
       return false;
     }
     console.log('Matched ruleset', ruleSetData.resource, ruleSetData.eventType)
@@ -52,7 +50,6 @@ const publish = async (notificationRuleSet, siteId, ruleSetData) => {
 
     const recipients = notification_recipients.map(recipient => {
       const user = {}
-      console.log(recipient);
       if (recipient.emailType === 'field') {
         // get email field from resource instance, can be dot separated (e.g. submittedData.email)
         user.email = recipient.value.split('.').reduce((o,i)=>o[i], ruleSetData.instance)
@@ -64,7 +61,9 @@ const publish = async (notificationRuleSet, siteId, ruleSetData) => {
       return user;
     });
 
-    console.log('found recipients', recipients.length);
+    if (recipients.length === 0) {
+      console.error('No recipients found for ruleset id: ', ruleset.id);
+    }
 
     const emailData = {
       subject: notification_template.subject,
@@ -77,7 +76,7 @@ const publish = async (notificationRuleSet, siteId, ruleSetData) => {
     recipients
       .filter(recipient => recipient.email)
       .forEach(recipient => {
-        console.log('Notifify recipient', recipient.email);
+        console.log('Notify recipient', recipient.email);
         notificationService.notify(emailData, recipient, siteId)
       });
 

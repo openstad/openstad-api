@@ -57,7 +57,11 @@ module.exports = function (db, sequelize, DataTypes) {
         eventType: 'CREATE',
         instance
       }
-      eventService.publish(db.NotificationRuleSet, parseInt(instance.siteId), ruleSetData);
+      try {
+        eventService.publish(db.NotificationRuleSet, parseInt(instance.siteId), ruleSetData);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
   });
