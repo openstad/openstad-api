@@ -244,7 +244,7 @@ router.route('/*')
 				return next();
 			})
 	})
-
+/*
   // validaties voor voteType=likes
 	.post(function(req, res, next) {
 		if (req.site.config.votes.voteType != 'likes') return next();
@@ -284,7 +284,7 @@ router.route('/*')
 			return next();
 		}
 	})
-
+*/
   // validaties voor voteType=count
 	.post(function(req, res, next) {
 		if (req.site.config.votes.voteType != 'count') return next();
