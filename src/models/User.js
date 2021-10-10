@@ -831,14 +831,63 @@ module.exports = function (db, sequelize, DataTypes) {
         updateableBy: ['editor', 'owner'],
         deleteableBy: ['editor', 'owner'],
 
-        /*canView: function(user, self) {
-            if (self && self.viewableByRole && self.viewableByRole != 'all' ) {
-                return userHasRole(user, [ self.viewableByRole, 'owner' ], self.userId)
-            } else {
-                return true
-            }
-        },*/
+
+        canCreate: function(user, self) {
+
+            // copy the base functionality
+            self = self || this;
+
+            if (!user) user = self.auth && self.auth.user;
+            if (!user || !user.role) user = { role: 'all' };
+
+            let valid = userHasRole(user, self.auth && self.auth.updateableBy, self.id);
+
+            // extra: geen acties op users met meer rechten dan je zelf hebt
+            valid = valid && (!self.role || userHasRole(user, self.role));
+
+            return valid;
+
+        },
+
+        canUpdate: function(user, self) {
+
+            // copy the base functionality
+            self = self || this;
+
+            if (!user) user = self.auth && self.auth.user;
+            if (!user || !user.role) user = { role: 'all' };
+
+            let valid = userHasRole(user, self.auth && self.auth.updateableBy, self.id);
+
+            // extra: isOwner through user on different site
+            valid = valid || ( self.externalUserId && self.externalUserId == user.externalUserId );
+
+            // extra: geen acties op users met meer rechten dan je zelf hebt
+            valid = valid && userHasRole(user, self.role);
+
+            return valid;
+
+        },
+
+        canDelete: function(user, self) {
+
+            // copy the base functionality
+            self = self || this;
+
+            if (!user) user = self.auth && self.auth.user;
+            if (!user || !user.role) user = { role: 'all' };
+
+            let valid = userHasRole(user, self.auth && self.auth.updateableBy, self.id);
+
+            // extra: geen acties op users met meer rechten dan je zelf hebt
+            valid = valid && userHasRole(user, self.role);
+
+            return valid;
+
+        },
     }
+
+
 
     return User;
 };

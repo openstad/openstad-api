@@ -33,8 +33,6 @@ const filterBody = (req, res, next) => {
     const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'password', 'extraData', 'listableByRole', 'detailsViewableByRole', 'password', 'siteData'];
     const adminKeys = ['extraData', 'listableByRole', 'detailsViewableByRole', 'password'];
 
-    console.log('req.boyd', req.body)
-
     keys.forEach((key) => {
         if (req.body[key]) {
             data[key] = req.body[key];
@@ -43,6 +41,15 @@ const filterBody = (req, res, next) => {
 
     req.body = data;
 
+    next();
+}
+
+const mergeData = (req, res, next) => {
+    const data = req.body;
+    const bodySiteData = req.body && req.body.siteData ? req.body.siteData : {};
+    const userSiteData = req.body && req.body.userSiteData ? req.body.siteData : {};
+    data.siteData  = Object.assign(userSiteData, bodySiteData);
+    req.body = data;
     next();
 }
 
@@ -134,6 +141,7 @@ router.route('/')
         return next();
     })
     .post(filterBody)
+    .post(mergeData)
     .post(function (req, res, next) {
         console.log('Step 2 create a user')
         console.log('reqboy', req.body)
@@ -327,6 +335,9 @@ router.route('/:userId(\\d+)')
                 throw createError(401, 'User already exists, Try to login', response);
             })
             .then((json) => {
+                return next();
+                /*
+                dont sync updates for now
                 return db.User
                     .scope(['includeSite'])
                     .findAll({
@@ -346,11 +357,21 @@ router.route('/:userId(\\d+)')
                         if (users) {
                             users.forEach((user) => {
                                 // only update users with active site (they can be deleteds)
+
+                                const keysToSync = ['firstName', 'lastName', 'extraData'];
+                                const dataToSync = {};
+
+                                keysToSync.forEach((key) => {
+                                    if (data[key]) {
+                                        dataToSync[key] = data[key];
+                                    }
+                                });
+
                                 if (user.site) {
                                     actions.push(function () {
                                         return new Promise((resolve, reject) => {
                                             user
-                                                .authorizeData(data, 'update', req.user)
+                                                .authorizeData(dataToSync, 'update', req.user)
                                                 .update(data)
                                                 .then((result) => {
                                                     resolve();
@@ -379,6 +400,8 @@ router.route('/:userId(\\d+)')
                         console.log(err);
                         throw(err)
                     });
+
+                 */
             })
             .then((result) => {
                 return db.User

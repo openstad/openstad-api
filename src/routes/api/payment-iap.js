@@ -62,8 +62,8 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
     applePassword: iosAppSettings.sharedSecret, //'8e6d38101b384207b0d25c5914ce67c7', //process.env.APPLE_SHARED_SECRET,
 
      /* googleServiceAccount: {
-        clientEmail: androidAppSettings.clientEmail,//process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        privateKey: androidAppSettings.privateKey //process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
+        clientEmail: androidAppSettings.androidClientEmail,//process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        privateKey: androidAppSettings.androidPrivateKey //process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
       },*/
 
     /* Configurations all platforms */

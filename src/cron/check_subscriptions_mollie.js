@@ -13,6 +13,7 @@ module.exports = {
   cronTime: '1 * * * * *',
   runOnInit: true,
   onTick: async function() {
+    return;
       // first get all sites;
     const sites = await db.Site.findAll();
 
