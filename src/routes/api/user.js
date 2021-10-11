@@ -335,8 +335,6 @@ router.route('/:userId(\\d+)')
                 throw createError(401, 'User already exists, Try to login', response);
             })
             .then((json) => {
-                return next();
-
                 return db.User
                     .scope(['includeSite'])
                     .findAll({
