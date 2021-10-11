@@ -288,6 +288,7 @@ router.route('/:userId(\\d+)')
     // -----------
     .put(auth.useReqUser)
     .put(filterBody)
+    .put(mergeData)
     .put(function (req, res, next) {
 
         const user = req.results;
@@ -332,12 +333,14 @@ router.route('/:userId(\\d+)')
                     return response.json()
                 }
 
+                console.log('response', response)
+
                 throw createError(401, 'User already exists, Try to login', response);
             })
-            .then((json) => {
-                return next();
-                /*
-                dont sync updates for now
+           /* .then((json) => {
+               // return next();
+
+                //dont sync updates for now
                 return db.User
                     .scope(['includeSite'])
                     .findAll({
@@ -353,6 +356,7 @@ router.route('/:userId(\\d+)')
                     })
                     .then(function (users) {
                         const actions = [];
+
 
                         if (users) {
                             users.forEach((user) => {
@@ -395,15 +399,16 @@ router.route('/:userId(\\d+)')
                                 throw(err)
                             });
 
+
                     })
                     .catch(err => {
                         console.log(err);
                         throw(err)
                     });
 
-                 */
-            })
-            .then((result) => {
+
+            })*/
+            .then(() => {
                 return db.User
                     .scope(['includeSite'])
                     .findOne({
@@ -412,6 +417,7 @@ router.route('/:userId(\\d+)')
                     })
             })
             .then(found => {
+                console.log('->>>> Found', found)
                 if (!found) throw new Error('User not found');
                 res.json(found);
             })
