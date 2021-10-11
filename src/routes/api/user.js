@@ -336,8 +336,7 @@ router.route('/:userId(\\d+)')
             })
             .then((json) => {
                 return next();
-                /*
-                dont sync updates for now
+
                 return db.User
                     .scope(['includeSite'])
                     .findAll({
@@ -346,9 +345,7 @@ router.route('/:userId(\\d+)')
                             // old users have no siteId, this will break the update
                             // skip them
                             // probably should clean up these users
-                            siteId: {
-                                [Op.not]: 0
-                            }
+                            siteId:  req.site.id
                         }
                     })
                     .then(function (users) {
@@ -358,6 +355,7 @@ router.route('/:userId(\\d+)')
                             users.forEach((user) => {
                                 // only update users with active site (they can be deleteds)
 
+                                /*
                                 const keysToSync = ['firstName', 'lastName', 'extraData'];
                                 const dataToSync = {};
 
@@ -367,11 +365,13 @@ router.route('/:userId(\\d+)')
                                     }
                                 });
 
+                                 */
+
                                 if (user.site) {
                                     actions.push(function () {
                                         return new Promise((resolve, reject) => {
                                             user
-                                                .authorizeData(dataToSync, 'update', req.user)
+                                                .authorizeData(data, 'update', req.user)
                                                 .update(data)
                                                 .then((result) => {
                                                     resolve();
@@ -401,7 +401,7 @@ router.route('/:userId(\\d+)')
                         throw(err)
                     });
 
-                 */
+
             })
             .then((result) => {
                 return db.User
