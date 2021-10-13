@@ -21,9 +21,33 @@ module.exports = (db, sequelize, DataTypes) => {
       unique: false,
     },
     body: {
-      type: DataTypes.STRING,
+      type: DataTypes.JSON,
       allowNull: false,
       unique: false,
+      defaultValue: '{}',
+      get: function() {
+        const value = this.getDataValue('body');
+        try {
+          if (typeof value === 'string') {
+            return JSON.parse(value);
+          }
+        } catch (err) {
+          console.error('Invalid JSON NotificationRuleSet.body')
+          console.error(err)
+        }
+        return value;
+      },
+      set: function(value) {
+        try {
+          if (typeof value === 'string') {
+            value = JSON.parse(value);
+          }
+        } catch (err) {
+          console.error('Invalid JSON NotificationRuleSet.body')
+          console.error(err)
+        }
+        this.setDataValue('body', JSON.stringify(value));
+      }
     },
   }, {});
 

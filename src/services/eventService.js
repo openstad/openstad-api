@@ -1,21 +1,6 @@
 const jsonLogic = require('json-logic-js');
 const notificationService = require('./notificationService')
 
-// Todo: move to helper or util file
-/**
- * Checks if string is valid json
- * @param {string} str
- * @returns {boolean}
- */
-function isJson(str) {
-  try {
-    JSON.parse(str);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
 /**
  * Publish an event
  * This method checks if there is any ruleset available for the published event
@@ -34,15 +19,8 @@ const publish = async (notificationRuleSet, siteId, ruleSetData) => {
     .findAll({where: { siteId, active: 1}})
 
   ruleSets.forEach((ruleset) => {
-    const rulesetString = ruleset.body;
-
-    if(!isJson(rulesetString)) {
-      console.error('ruleset body is not a valid json', ruleset.id, rulesetString);
-      return false;
-    }
-
-    if (jsonLogic.apply(JSON.parse(rulesetString), ruleSetData) === false) {
-      console.log('ruleset doesnt match', ruleset.id, rulesetString);
+    if (jsonLogic.apply(ruleset.body, ruleSetData) === false) {
+      console.log('ruleset doesnt match', ruleset.id, ruleset.body);
       return false;
     }
     console.log('Matched ruleset', ruleSetData.resource, ruleSetData.eventType)
@@ -79,7 +57,6 @@ const publish = async (notificationRuleSet, siteId, ruleSetData) => {
         console.log('Notify recipient', recipient.email);
         notificationService.notify(emailData, recipient, siteId)
       });
-
   });
 }
 
