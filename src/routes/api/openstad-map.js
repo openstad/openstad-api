@@ -99,7 +99,6 @@ function createMarker(idea) {
 		},
 		href: `/plan/${idea.id}`,
 		status: idea.status,
-		endDate: idea.endDate,
 	}
 
 }

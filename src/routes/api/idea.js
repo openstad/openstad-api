@@ -85,10 +85,6 @@ router
       req.scope.push('includeTags');
     }
 
-    if (req.query.includeMeeting) {
-      req.scope.push('includeMeeting');
-    }
-
     if (req.query.includePosterImage) {
       req.scope.push('includePosterImage');
     }
