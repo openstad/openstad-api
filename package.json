@@ -22,7 +22,7 @@
     "connect-session-sequelize": "^6.1.1",
     "cookie-parser": "^1.4.5",
     "cron": "^1.8.2",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
     "express": "^4.17.1",
     "express-brute": "^1.0.1",
     "express-promise-router": "^3.0.3",
