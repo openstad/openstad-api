@@ -50,7 +50,7 @@
     "sequelize": "^5.22.3",
     "umzug": "^2.3.0",
     "useragent": "^2.3.0",
-    "ws": "^7.4.6"
+    "ws": "^7.5.5"
   },
   "devDependencies": {
     "jest": "^25.5.4",
