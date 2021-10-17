@@ -39,7 +39,7 @@
     "morgan": "^1.10.0",
     "mysql2": "^1.7.0",
     "mysqldump": "^3.2.0",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.5",
     "nodemailer": "^6.6.1",
     "nodemon": "^1.17.5",
     "nunjucks": "^3.2.2",
