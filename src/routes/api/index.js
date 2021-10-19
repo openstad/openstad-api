@@ -26,6 +26,9 @@ router.use( '/site/:siteId(\\d+)(/idea/:ideaId(\\d+))?/argument', require('./arg
 router.use( '/site/:siteId(\\d+)/idea', require('./idea') );
 //router.use( '/site/:siteId(\\d+)/idea', require('./idea.old') );
 
+// exercises
+router.use( '/site/:siteId(\\d+)/idea', require('./exercise') );
+
 // articles
 router.use( '/site/:siteId(\\d+)/article', require('./article') );
 
