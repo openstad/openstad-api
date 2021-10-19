@@ -3,6 +3,12 @@ const {formatPolygonToGeoJson} = require('../util/geo-json-formatter');
 
 module.exports = function( db, sequelize, DataTypes ) {
   var Exercise = sequelize.define('exercise', {
+    siteId: {
+      type: DataTypes.INTEGER,
+      auth:  {
+        updateableBy: 'editor',
+      },
+    },
     title: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -52,9 +58,8 @@ module.exports = function( db, sequelize, DataTypes ) {
   });
 
   Exercise.associate = function( models ) {
-    this.hasMany(models.Site);
+    this.belongsTo(models.Site);
   }
-
 
   Exercise.auth = Exercise.prototype.auth = {
     listableBy: 'all',
