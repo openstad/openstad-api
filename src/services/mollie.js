@@ -41,7 +41,8 @@ exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail
         subscriptionActive: true,
         subscriptionProductId: order.extraData.subscriptionProductId,
         siteId: site.id,
-        mollieSubscriptionId: subscription.id
+        mollieSubscriptionId: subscription.id,
+        planId: order.extraData.planId
       });
     }
 

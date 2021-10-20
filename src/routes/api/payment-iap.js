@@ -29,7 +29,8 @@ router
 router.route('/')
   .all(async function (req, res, next) {
   try {
-    const {userId, purchase, appType} = req.body;
+    const {userId, purchase, appType, planId} = req.body;
+
     console.log('IN APP payment with request received', req.body);
 
     assert(['ios', 'android'].includes(appType));
@@ -46,7 +47,7 @@ router.route('/')
       subscription: true,
     };
 
-    await processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id);
+    await processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id, planId);
 
     res.end();
   } catch (e) {
@@ -54,7 +55,7 @@ router.route('/')
   }
 });
 
-const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSettings, siteId) => {
+const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSettings, siteId, planId) => {
   iap.config({
     // If you want to exclude old transaction, set this to true. Default is false:
     appleExcludeOldTransactions: true,
@@ -124,6 +125,7 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
     startDate,
     endDate,
     isCancelled,
+    planId
   });
 
   if (app === 'android') {

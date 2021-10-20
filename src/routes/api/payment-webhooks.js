@@ -59,8 +59,6 @@ router.route('/paystack')
   .all(async function (req, res, next) {
     console.log('Paystack webhook start', req.body);
 
-
-    const payment = await mollieClient.payments.get(paymentId);
     const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
     const hash = crypto.createHmac('sha512', paystackApiKey).update(JSON.stringify(req.body)).digest('hex');
     const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
@@ -120,6 +118,11 @@ router.route('/paystack')
       }
 
 
+      if (subscriptionCode) {
+
+      }
+
+
       console.log('User found with id: ', user.id)
 
       console.log('Start processing event:', event.event)
@@ -131,14 +134,36 @@ router.route('/paystack')
             console.log('Event subscription.create', event);
             console.log('EventsubscriptionCodee', subscriptionCode);
 
+            // fetch product
+
+            let product = product
+
+            try {
+              const escapedKey = db.sequelize.escape(`$.${paystackPlanCode}`);
+              const escapedValue = db.sequelize.escape(paystackPlanCode);
+
+              const query = db.sequelize.literal(`extraData->${escapedKey}=${escapedValue}`);
+
+              product = await db.Product.findOne({
+                where: {
+                  [Sequelize.Op.and]: query,
+                  siteId: req.site.id
+                }
+              });
+            } catch (e) {
+              console.warn('Error in fetching a user', e);
+              next(e);
+            }
+
             await subscriptionService.update({
               user,
               provider: 'paystack',
               subscriptionActive: true,
-              subscriptionProductId: '@todo',// req.order.extraData.subscriptionProductId,
+              subscriptionProductId: order.extraData.subscriptionProductId,
               paystackSubscriptionCode: subscriptionCode,
               siteId: req.site.id,
-              paystackPlanCode: eventData.paystackPlanCode
+              paystackPlanCode: eventData.paystackPlanCode,
+              planId: product && product.extraData && product.extraData.planId ?  product.extraData.planId : ''
             });
 
             break;

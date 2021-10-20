@@ -219,7 +219,8 @@ router.route('/')
         subscriptionProductId: req.subscriptionProduct.id,
         currency: firstOrderItem.product.currency,
         orderNote: req.body.orderNote,
-        test: 'add something'
+        test: 'add something',
+        planId: req.subscriptionProduct && req.subscriptionProduct.planId ? req.subscriptionProduct.extraData.planId : '',
       }
     }
 
@@ -552,6 +553,12 @@ router.route('/:orderId(\\d+)/payment')
         verifyResponse = verifyResponse.body;
 
         if (verifyResponse.data.status === 'success') {
+          let extraData = req.order.extraData;
+          extraData = extraData ? extraData : {};
+
+          extraData.paystackReference = paystackReference;
+
+
           req.order.set('paymentStatus', 'PAID');
 
           await req.order.save();
@@ -587,82 +594,6 @@ router.route('/:orderId(\\d+)/payment')
 
     }
   })
-
-
-
-router.route('/check-subscriptions', async function(req, res) {
-
-  const paystackFilterKey = 'subscriptionPaymentProvider';
-  const paystackFilterValue = 'paystack';
-
-  const paystackUsers = await db.User
-    .findAll({
-      [Sequelize.Op.and] : sequelize.literal(`extraData->"$.${paystackFilterKey}"='${paystackFilterValue}'`)
-    });
-
-  await paystackUsers.forEach(async (user) =>{
-    const paystackPlanCode = user.siteData.paystackPlanCode;
-
-    const paystackReference = req.order.extraData && req.order.extraData.paystackReference ? req.order.extraData.paystackReference : 'xxx';
-    const paystackApiKey = req.site.config && req.site.config.payment && req.site.config.payment.paystackApiKey ? req.site.config.payment.paystackApiKey : '';
-    const PaystackClient = new PayStack(paystackApiKey);
-
-    const customerId = user.siteData['paystackCustomerId'];
-
-    try {
-      const subscriptionsResponse = await PaystackClient.getSubscriptions({
-        perPage: 100, //
-        customer: customerId
-      });
-      // see docs:https://paystack.com/docs/api/#subscription-list
-
-      const subscriptions = Array.isArray(subscriptionsResponse.data) ? subscriptionsResponse.data : [];
-
-      subscriptions.forEach((subscription) => {
-        if (subscription.status === 'active') {
-
-        } else {
-
-        }
-      });
-
-    } catch (e) {
-
-    }
-
-  });
-
-  const mollieFilterKey = 'subscriptionPaymentProvider';
-  const mollieFilterValue = 'mollie';
-
-  const mollieUsers = await db.User
-    .findAll({
-      [Sequelize.Op.and] : sequelize.literal(`siteData->"$.${mollieFilterKey}"='${mollieFilterValue}'`)
-    });
-
-  mollieUsers.forEach((user) =>{
-    try {
-
-
-    } catch (e) {
-
-    }
-  });
-
-
-  const stripeFilterKey = 'subscriptionPaymentProvider';
-  const stripeFilterValue = 'stripe';
-
-  const stripeUsers = await db.User
-    .findAll({
-      [Sequelize.Op.and] : sequelize.literal(`siteData->"$.${stripeFilterKey}"='${stripeFilterValue}'`)
-    });
-
-  res.json({
-    paystackUsers: paystackUsers,
-    mollieUsers: mollieUsers,
-  });
-});
 
 
 module.exports = router;

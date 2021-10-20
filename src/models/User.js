@@ -507,6 +507,10 @@ module.exports = function (db, sequelize, DataTypes) {
                 if (!access.active && extraData && extraData.isActiveSubscriber && extraData.isActiveSubscriber === 'yes') {
                     access.active = true;
                 }
+
+                if (activeSubscription.planId) {
+                    access.planId  = activeSubscription.planId;
+                }
                 
                 /*
                 if (!activeSubscription && trialDate) {

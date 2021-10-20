@@ -5,6 +5,7 @@ const update = async ({
                         provider,
                         subscriptionActive,
                         subscriptionProductId,
+                        planId,
                         siteId,
                         paystackPlanCode,
                         paystackSubscriptionCode,
@@ -30,7 +31,8 @@ const update = async ({
       uuid: uuidv4(),
       transactionId,
       startDate,
-      endDate
+      endDate,
+      planId
     };
 
     switch (provider) {
