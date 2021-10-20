@@ -10,7 +10,6 @@ const router = express.Router({mergeParams: true});
 //router.use( bruteForce.globalMiddleware );
 //router.post( '*', bruteForce.postMiddleware );
 
-
 // dbQuery middleware
 router.use(dbQuery);
 router.use(sorting);
@@ -37,6 +36,7 @@ router.use( '/site/:siteId(\\d+)/tag', require('./tag') );
 
 // users
 router.use( '/site/:siteId(\\d+)/user', require('./user') );
+router.use( '/site/:siteId(\\d+)/user/:userId(\\d+)/activity', require('./user-activity') );
 
 // submissions
 router.use( '/site/:siteId(\\d+)/submission', require('./submission') );
@@ -52,6 +52,11 @@ router.use( '/site/:siteId(\\d+)/newslettersignup', require('./newslettersignup'
 
 // choices-guide
 router.use( '/site/:siteId(\\d+)/choicesguide', require('./choicesguide') );
+
+router.use( '/site/:siteId(\\d+)/action', require('./action') );
+
+// To do test and fix log API
+//router.use( '/site/:siteId(\\d+)/log', require('./log') );
 
 // openstad-map
 router.use( '/site/:siteId(\\d+)/openstad-map', require('./openstad-map') );

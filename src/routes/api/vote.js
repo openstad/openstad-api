@@ -1,7 +1,6 @@
 const Promise     = require('bluebird');
 const express     = require('express');
 const createError = require('http-errors')
-const moment      = require('moment');
 const db          = require('../../db');
 const auth        = require('../../middleware/sequelize-authorization-middleware');
 const config      = require('config');
@@ -33,15 +32,7 @@ router.route('*')
 
   // mag er gestemd worden
 	.post(function(req, res, next) {
-		let isActive = req.site.config.votes.isActive;
-		if ( isActive == null && req.site.config.votes.isActiveFrom && req.site.config.votes.isActiveTo ) {
-			isActive = moment().isAfter(req.site.config.votes.isActiveFrom) && moment().isBefore(req.site.config.votes.isActiveTo)
-		}
-
-		if (!isActive) {
-			return next(createError(403, 'Stemmen is gesloten'));
-		}
-
+		if (!req.site.isVoteActive()) return next(createError(403, 'Stemmen is gesloten'));
 		return next();
 	})
 
@@ -180,7 +171,7 @@ router.route('/*')
 			.scope(req.scope)
 			.findAll({ where: { userId: req.user.id } })
 			.then(found => {
-				if (req.site.config.votes.voteType !== 'likes' && req.site.config.votes.withExisting == 'error' && found && found.length ) throw new Error('Je hebt al gestemd');
+				if (req.site.config.votes.voteType !== 'likes' && req.site.config.votes.withExisting == 'error' && found && found.length ) throw createError(403, 'Je hebt al gestemd');
 				req.existingVotes = found.map(entry => entry.toJSON());
 				return next();
 			})
@@ -206,7 +197,11 @@ router.route('/*')
     // merge
     if (req.site.config.votes.withExisting == 'merge') {
       // no double votes
-      if (req.existingVotes.find( newVote => votes.find( oldVote => oldVote.ideaId == newVote.ideaId) )) throw new Error('Je hebt al gestemd');
+      try {
+        if (req.existingVotes.find( newVote => votes.find( oldVote => oldVote.ideaId == newVote.ideaId) )) throw createError(403, 'Je hebt al gestemd');
+      } catch (err) {
+        return next(err);
+      }
       // now merge
       votes = votes
         .concat(
@@ -279,7 +274,7 @@ router.route('/*')
 					.findAll({ where: whereClause })
 					.then(found => {
 						if (found && found.length > 0) {
-							throw new Error('Je hebt al gestemd');
+							throw createError(403, 'Je hebt al gestemd');
 						}
 						return next();
 					})

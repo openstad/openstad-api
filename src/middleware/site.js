@@ -1,6 +1,5 @@
 const db = require('../db');
 const createError = require('http-errors');
-const siteConfig = require('../lib/siteConfig');
 
 const getSiteId = (path) => {
   const match = path.match(/\/site\/(\d+)?\//);
@@ -19,7 +18,7 @@ module.exports = function( req, res, next ) {
   if (req.path.match('^(/api/site(/[^/]*)?)$')) return next();
 
   const siteId = getSiteId(req.path);
-  if (!siteId || typeof siteId !== 'number') return next(new createError('400', 'Site niet gevonden'));
+  if (!siteId || typeof siteId !== 'number') return next(new createError('400', 'Site niet gevonden for path: ' + req.path));
 
   const where = { id: siteId }
 
@@ -28,9 +27,8 @@ module.exports = function( req, res, next ) {
   	.then(function( found ) {
       if (!found) {
         console.log('Site not found for siteId query: ', where);
-        return next(new createError('400', 'Site niet gevonden for siteId: '+ siteId));
+        return next(new createError('404', 'Site niet gevonden for siteId: '+ siteId));
       }
-      siteConfig.setFromSite(found);
   		req.site = found;
   		next();
       return null;

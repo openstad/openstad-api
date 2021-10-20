@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.17.0
+* Add option to anonymize only selected users at /api/site/:SITE_ID/user/:USER_ID/do-anonymizeall
+* Add automatic update of idea status after a given number of days
+* Add 'Project has ended' to site configuration
+* Add endpoints /api/site/:id/(do|will)-anonymize-all-users
+
+## v0.16.0
+* Add endpoint /user/:id/activity
+* Add endpoints /user/:id/(do|will)-anonymize(all?)
+* Areas only create, edit, delete by admin
+* User email no longer editable by owner
+* Fix extraData returning for Article by adding includeSite to the scope
+* Fix users can create/update/delete users with a higher role
+* Statuscode for error 'Already voted' was 500 and is now 403
+
+## v0.15.1 (2020-07-14)
+* Give anonymous user the default correct role
+
+## v0.15.0 (2020-06-08)
+* Add create/update date to choices-guide results
+* Allow moderators to update role of users to member (but not to moderator or admin role)
+
+
 ## v0.14.0 (2020-03-17)
 * Add stats overview route for displaying statistics, currently used in react admin on CMS and Admin panel
 * Add isActive check on choices-guide
