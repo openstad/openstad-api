@@ -1,5 +1,7 @@
 const config = require('config');
 const eventService = require('../services/eventService');
+const Sequelize = require('sequelize');
+const getSequelizeConditionsForFilters = require('./../util/getSequelizeConditionsForFilters');
 
 module.exports = function (db, sequelize, DataTypes) {
   var Submission = sequelize.define('submission', {
@@ -13,15 +15,17 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.INTEGER,
       allowNull: true
     },
+
     formName: {
       type: DataTypes.STRING,
       allowNull: true
     },
-    status: {
-      type: DataTypes.ENUM('approved', 'pending', 'unapproved'),
-      defaultValue: 'pending',
-      allowNull: false
-    },
+    
+		status: {
+			type         : DataTypes.ENUM('approved','pending','unapproved'),
+			defaultValue : 'pending',
+			allowNull    : false
+		},
 
     submittedData: {
       type: DataTypes.TEXT,
@@ -75,9 +79,30 @@ module.exports = function (db, sequelize, DataTypes) {
           attributes: ['role', 'nickName', 'firstName', 'lastName', 'email']
         }]
       },
-    };
-  }
+			forSiteId: function (siteId) {
+					return {
+							where: {
+									siteId: siteId,
+							}
+					};
+			},
+			filter:    function (filtersInclude, filtersExclude) {
+					const filterKeys = [
+							{
+									'key': 'id'
+							},
+							{
+									'key': 'status'
+							},
+							{
+									'key': 'formId'
+							},
+					];
 
+					return getSequelizeConditionsForFilters(filterKeys, filtersInclude, sequelize, filtersExclude);
+			}
+		};
+	}
 
   Submission.auth = Submission.prototype.auth = {
     listableBy: 'admin',
