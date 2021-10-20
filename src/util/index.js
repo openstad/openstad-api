@@ -29,7 +29,6 @@ var util = module.exports = {
 	},
 	
 };
-
 function _invokeDir( dirName, fn, ctx ) {
 	var dir = fs.readdirSync(dirName);
 	for( let fileName of dir ) {

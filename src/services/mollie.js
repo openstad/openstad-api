@@ -42,10 +42,12 @@ exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail
         subscriptionProductId: order.extraData.subscriptionProductId,
         siteId: site.id,
         mollieSubscriptionId: subscription.id,
-        planId: order.extraData.planId
+        planId: order.extraData.planId,
+        mollieClient: mollieClient,
+        mollieFirstPaymentId: paymentId,
+        mollieCustomerId: mollieCustomerId
       });
     }
-
 
     mail.sendThankYouMail(order, 'order', user);
 
