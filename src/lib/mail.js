@@ -68,10 +68,13 @@ function sendNotificationMail( data, site ) {
   data.logo = siteConfig.getLogo();
 
 	let html;
-	if (data.template) {
-		html = nunjucks.renderString(data.template, data)
+
+	if (data.html) {
+	  html = data.html
+  } else if (data.template) {
+	  html = nunjucks.renderString(data.template, data)
 	} else {
-		html = nunjucks.render('notifications_admin.njk', data)
+	  html = nunjucks.render('notifications_admin.njk', data)
 	}
 
 	sendMail(site, {
@@ -103,7 +106,7 @@ function sendThankYouMail(resource, resourceType, site, user) {
   const inzendingPath = (siteConfig.getFeedbackEmailInzendingPath(resourceType) && siteConfig.getFeedbackEmailInzendingPath(resourceType).replace(idRegex, resource.id).replace(/\[\[resourceType\]\]/, resourceType)) || "/";
   const inzendingURL  = url + inzendingPath;
   const logo =  siteConfig.getLogo();
-  
+
   let data    = {
     date: new Date(),
     user: user,
@@ -119,7 +122,7 @@ function sendThankYouMail(resource, resourceType, site, user) {
 
 	let html;
 	let template = siteConfig.getResourceFeedbackEmailTemplate(resourceType);
-	
+
 	if (template) {
     /**
      * This is for legacy reasons
@@ -145,7 +148,7 @@ function sendThankYouMail(resource, resourceType, site, user) {
   });
 
   let attachments = siteConfig.getResourceFeedbackEmailAttachments(resourceType) || siteConfig.getDefaultEmailAttachments();
-  
+
   try {
   sendMail(site, {
     // in some cases the resource, like order or account has a different email from the submitted user, default to resource, otherwise send to owner of resource
