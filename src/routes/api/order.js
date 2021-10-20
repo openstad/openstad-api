@@ -314,7 +314,6 @@ router.route('/')
               email: req.user.email,
               first_name: req.user.firstName,
               last_name: req.user.lastName,
-              //phone: '+2347135548369'
             });
 
             createCustomerResponse = typeof createCustomerResponse === 'string' ? JSON.parse(createCustomerResponse) : createCustomerResponse;

@@ -1,7 +1,7 @@
 const {v4: uuidv4} = require('uuid');
 
 const getDaysArray = (start, end) => {
-  for(var arr=[],dt=new Date(start); dt<=end; dt.setDate(dt.getDate()+1)){
+  for (var arr = [], dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
     arr.push(new Date(dt));
   }
   return arr;
@@ -29,8 +29,7 @@ const update = async ({
                         isCancelled,
                         paystackClient,
                         mollieClient
-                      }) =>
-  {
+                      }) => {
 
   try {
     const subscriptionData = {
@@ -54,7 +53,7 @@ const update = async ({
       case "mollie":
         subscriptionData.mollieSubscriptionId = mollieSubscriptionId;
         subscriptionData.mollieCustomerId = mollieCustomerId;
-        subscriptionData.mollieFirstPaymentId  = mollieFirstPaymentId;
+        subscriptionData.mollieFirstPaymentId = mollieFirstPaymentId;
         break;
       case "google":
         // code block
@@ -112,7 +111,7 @@ const update = async ({
     });
 
     if (subscriptionAlreadyExists) {
-      console.log('Subscription trying to update already exists for user, new subscriptionData ', subscriptionData, ' for user subscription',  userSubscriptionData)
+      console.log('Subscription trying to update already exists for user, new subscriptionData ', subscriptionData, ' for user subscription', userSubscriptionData)
       return;
     }
 
@@ -142,7 +141,7 @@ const update = async ({
     // set all active to false
     userSubscriptions = userSubscriptions.map((subscription) => {
       subscription.active = false;
-      return subscription.active;
+      return subscription;
     });
 
     /**
@@ -174,9 +173,11 @@ const percentageLeftOnPayment = (interval, nextPaymentDate) => {
     '3 months': 92,
     'quarterly': 92,
     'yearly': 365,
+    'annually': 365,
     '1 year': 365,
     '1 years': 365,
   }
+
   const totalDaysInInterval = intervalDays[interval.trim()];
 
   const daysTillNexPaymentDate = getDaysArray(new Date(), new Date(nextPaymentDate));
@@ -186,28 +187,31 @@ const percentageLeftOnPayment = (interval, nextPaymentDate) => {
 }
 
 const cancel = async ({
-       subscription, refundLeftOverDays, paystackClient, mollieClient
-    }) => {
+                        subscription, refundLeftOverDays, paystackClient, mollieClient
+                      }) => {
   try {
     const {mollieCustomerId, mollieSubscriptionId, paystackSubscriptionCode} = subscription;
 
-    switch (userSubscription.subscriptionPaymentProvider) {
+    switch (subscription.subscriptionPaymentProvider) {
       case "paystack":
 
-        const subscriptionResponse = await paystackClient.getSubscription(paystackSubscriptionCode);
-        const subscriptionData = subscriptionResponse.data;
-        const subscriptionPlan = subscriptionData.plan;
-        const paystackNextPaymentDate = subscriptionData.next_payment_date;
+        let subscriptionResponse = await paystackClient.getSubscription(paystackSubscriptionCode);
+        subscriptionResponse = typeof subscriptionResponse === 'string' ? JSON.parse(subscriptionResponse) : subscriptionResponse;
+        subscriptionResponse = subscriptionResponse.body;
+
+        const subscriptionData = subscriptionResponse.data ? subscriptionResponse.data : {};
+        const subscriptionPlan = subscriptionData.plan ? subscriptionData.plan : {};
         const paystackInterval = subscriptionPlan.interval;
         const paystackAmount = subscriptionPlan.amount;
-        const paystackEmailToken = subscriptionPlan.email_token;
-        const paystackCustomerCode =  subscriptionData.customer && subscriptionData.customer.customer_code ?  subscriptionData.customer.customer_code : false;
+
+        const paystackNextPaymentDate = subscriptionData.next_payment_date;
+        const paystackEmailToken = subscriptionData.email_token;
+        const paystackCustomerCode = subscriptionData.customer && subscriptionData.customer.customer_code ? subscriptionData.customer.customer_code : false;
 
         console.log('Paystack Fetched subscriptionData', subscriptionData)
         console.log('Paystack paystackInterval', paystackInterval)
         console.log('Paystack paystackNextPaymentDate', paystackNextPaymentDate)
         console.log('Paystack paystackAmount', paystackAmount)
-
 
         await paystackClient.disableSubscription(paystackSubscriptionCode, paystackEmailToken);
 
@@ -220,17 +224,25 @@ const cancel = async ({
           console.log('Paystack refundLeftOverDays', refundLeftOverDays)
 
           const percentage = percentageLeftOnPayment(paystackInterval, paystackNextPaymentDate);
+
           console.log('Paystack percentage', percentage);
 
-          const paystackTransactionResponse = await paystackClient.listTransaction(50, 1, paystackCustomerCode, 'success');
+          let paystackTransactionResponse = await paystackClient.listTransaction(50, 1, paystackCustomerCode, 'success');
+          paystackTransactionResponse = typeof paystackTransactionResponse === 'string' ? JSON.parse(paystackTransactionResponse) : paystackTransactionResponse;
+          paystackTransactionResponse = paystackTransactionResponse.body;
+
           const paystackTransactions = paystackTransactionResponse.data ? paystackTransactionResponse.data : [];
 
           //fetch latest, with amount high enough
           const amountLeft = percentage * paystackAmount;
 
+          console.log('Paystack amountLeft', amountLeft);
+
           const paystackTransactionToRefund = paystackTransactions.find((transaction) => {
             return transaction.amount >= amountLeft;
           });
+
+          console.log('Paystack amountLeft', amountLeft);
 
           if (!paystackTransactionToRefund) {
             throw new Error('Didnt find transaction to refund for paystack subscription: ', subscription);
@@ -239,13 +251,16 @@ const cancel = async ({
 
           const paystackTransactionId = paystackTransactionToRefund.id;
 
+          console.log('Paystack paystackTransactionToRefund', paystackTransactionToRefund);
 
           await paystackClient.createRefund(paystackTransactionId, amountLeft);
         }
 
         break;
       case "mollie":
-        const mollieSubscription = await mollieClient.customers_subscriptions.get(mollieSubscriptionId, { customerId: mollieCustomerId });
+        const mollieSubscription = await mollieClient.customers_subscriptions.get(mollieSubscriptionId, {customerId: mollieCustomerId});
+
+        console.log('Mollliee mollieSubscription', mollieSubscription);
 
         const deleteResponse = await mollieClient.customerSubscriptions.delete(mollieSubscriptionId, {
           customerId: mollieCustomerId,
@@ -256,12 +271,12 @@ const cancel = async ({
           return;
         }
 
-        if (refundLeftOverDays && mollieSubscription.interval &&  mollieSubscription.nextPaymentDate) {
+        if (refundLeftOverDays && mollieSubscription.interval && mollieSubscription.nextPaymentDate) {
           const percentage = percentageLeftOnPayment(mollieSubscription.interval, mollieSubscription.nextPaymentDate);
           const amountLeft = percentage * parseFloat(mollieSubscription.amount.value);
 
-          console.log('MMollliee percentage', percentage);
-          console.log('MMollliee amountLeft', amountLeft);
+          console.log('Mollliee percentage', percentage);
+          console.log('Mollliee amountLeft', amountLeft);
 
           // safeguard bad calculation
           if (amountLeft > amount) {
@@ -273,13 +288,18 @@ const cancel = async ({
             throw Error('Cannot find mollieFirstPaymentId to refund the subscription amount: ', subscription)
             return;
           }
-          const paymentRefund = await mollieClient.paymentRefunds.create({
+
+          const refundOptions = {
             paymentId: subscription.mollieFirstPaymentId,
             amount: {
               amount: amountLeft,
               currency: mollieSubscription.amount.currency
             }
-          });
+          }
+
+          console.log('Mollliee refundOptions', refundOptions);
+
+          const paymentRefund = await mollieClient.paymentRefunds.create(refundOptions);
         }
 
         break;
