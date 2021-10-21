@@ -762,12 +762,6 @@ module.exports = function (db, sequelize, DataTypes) {
         this.hasMany(models.Vote);
         this.hasMany(models.Argument);
         this.belongsTo(models.Site);
-
-        this.belongsToMany(models.Chat, {
-            through: "chat_user",
-            as: "chats",
-            foreignKey: "chat_id",
-        });
     }
 
     User.prototype.authenticate = function (password) {

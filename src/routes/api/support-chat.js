@@ -1,5 +1,5 @@
 const db = require('../../db');
-const auth = require('../../middleware/sequelize-authorization-middleware');s
+const auth = require('../../middleware/sequelize-authorization-middleware');
 const router = require('express-promise-router')({ mergeParams: true });
 var createError = require('http-errors');
 

@@ -1,12 +1,6 @@
 module.exports = function( db, sequelize, DataTypes ) {
   var SupportChat = sequelize.define('supportChats', {
 
-    id: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true
-    },
-
     userId: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -23,7 +17,7 @@ module.exports = function( db, sequelize, DataTypes ) {
     this.belongsTo(models.User);
   }
 
-  SupportChat.auth = Chats.prototype.auth = {
+  SupportChat.auth = SupportChat.prototype.auth = {
     listableBy:  ['editor','owner', 'admin'],
     viewableBy:  ['editor','owner', 'admin'],
     createableBy: ['editor','owner', 'admin'],
@@ -34,5 +28,5 @@ module.exports = function( db, sequelize, DataTypes ) {
     }
   }
 
-  return Chats;
+  return SupportChat;
 }
