@@ -2,6 +2,7 @@ const db = require('../../db');
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const router = require('express-promise-router')({ mergeParams: true });
 var createError = require('http-errors');
+const Pusher = require("pusher");
 
 // scopes: for all get requests
 router
@@ -13,26 +14,30 @@ router
 
 
 const enrichMessagesWithUser = async (messages) => {
+  const usersForChat = {};
   const enrichedMessages = [];
 
   for (let message of messages) {
-    let user = usersForChat[message.userId];
+    const userId =  message.user &&  message.user._id ?  message.user._id : false;
+    let user = usersForChat[userId];
 
     if (!user) {
       user = await db.User.findOne({
         where: {
-          userId: user.id
+          id: userId
         }
-      })
+      });
 
-      usersForChat[message.userId] = user;
+      usersForChat[userId] = user;
     }
 
-    message.user = {
-      profileImage: user.extraData &&  user.extraData.profileImage ? user.extraData.profileImage : '',
-      fullName: user.fullName,
-      id: user.id,
-    };
+    if (user) {
+      message.user = {
+        avatar: user.extraData && user.extraData.profileImage ? user.extraData.profileImage : '',
+        fullName: user.fullName,
+        id: user.id,
+      };
+    }
 
     enrichedMessages.push(message);
   }
@@ -50,7 +55,7 @@ const enrichMessagesWithUser = async (messages) => {
  *  So in that case we make
  */
 router.route('/:requestingUserId')
-  .all(async () => {
+  .all(async function(req, res, next) {
     try {
       const requestingUserId = req.params.requestingUserId;
 
@@ -64,14 +69,24 @@ router.route('/:requestingUserId')
       }
 
       req.supportChat = supportChat;
+      req.results = supportChat;
+      console.log('req.supportChatreq.req.user', req.user.role)
+
       next();
     } catch (e) {
       next(e);
     }
   })
-  .get(auth.can('SupportChat', 'View'))
+  .get(auth.useReqUser)
+  //.get(auth.can('SupportChat', 'View'))
   .get(async function(req, res, next) {
       const usersForChat = {};
+
+    var chat = req.results;
+
+    console.log('chatchat', chat)
+
+    if (!(chat && chat.can && chat.can('view'))) return next(new Error('You cannot view this Idea'));
 
       let messages = [];
 
@@ -87,8 +102,8 @@ router.route('/:requestingUserId')
         next(e);
       }
   })
-  .get(function () {
-    res.json(req.supportChat);
+  .get(function (req, res, next) {
+    res.json(req.results);
   })
   // Persist an chat
   .put(auth.can('SupportChat', 'update'))
@@ -97,15 +112,21 @@ router.route('/:requestingUserId')
       const supportChat = req.supportChat;
       let messages = req.supportChat.messages && Array.isArray(req.supportChat.messages) ? req.supportChat.messages : [];
 
+      const bodyMessage = req.body.message;
+
+      console.log(' req.body',  req.body, bodyMessage)
+      
       const message = {
-        id: req.body.messageId,
-        message: req.body.message,
-        sendTime: req.body.sendTime,
-        userId: req.user.id,
+        _id: bodyMessage._id,
+        text: bodyMessage.text,
+        createdAt: bodyMessage.createdAt,
+        user: {
+          _id: bodyMessage.user._id
+        },
         serverSendTime: new Date().toString()
       }
 
-      let messageAlreadyExists = messages.length > 0 && messages.find(message => message.id === newMessage.id) ? true : false;
+      let messageAlreadyExists = messages.length > 0 && messages.find(existingMessage => existingMessage._id && existingMessage._id === message._id) ? true : false;
 
       if (messageAlreadyExists) {
         throw new Error('Message already added');
@@ -115,13 +136,13 @@ router.route('/:requestingUserId')
       messages.push(message);
 
       messages = messages.sort(function (a, b) {
-        var dateA = new Date(a.sendTime).getTime();
-        var dateB = new Date(b.sendTime).getTime();
+        var dateA = new Date(a.createdAt).getTime();
+        var dateB = new Date(b.createdAt).getTime();
 
-        if (dateA > dateB) {
+        if (dateA < dateB) {
           return 1;
         }
-        if (dateA < dateB) {
+        if (dateA > dateB) {
           return -1;
         }
 
@@ -130,6 +151,7 @@ router.route('/:requestingUserId')
 
 
       supportChat.set('messages', messages);
+      
       await supportChat.save();
 
       // update last message
@@ -141,10 +163,7 @@ router.route('/:requestingUserId')
         useTLS: true
       });
 
-      const response = await pusher.trigger('editor-update', 'editor-refresh-resources', {
-        resources: req.query.resourcesChanged,
-        editorSession: req.query.editorSession
-      });
+      const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'new-message', message);
 
       res.json(message);
     } catch (e) {
