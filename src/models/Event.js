@@ -63,7 +63,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
     },
     {
-      charset: 'utf8',
+      charset: 'utf8'
     }
   );
 
@@ -76,6 +76,9 @@ module.exports = function (db, sequelize, DataTypes) {
     this.belongsTo(models.Organisation, {});
     this.belongsToMany(models.Tag, {
       through: 'eventTag',
+    });
+    this.belongsToMany(models.User, {
+      through: 'eventUserFavorites',
     });
     this.hasMany(models.EventTimeslot, { as: 'slots' });
   };

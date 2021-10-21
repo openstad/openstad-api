@@ -150,13 +150,15 @@ OAuthAPI.updateUser = async function({ siteConfig, which = 'default', userData =
   const oauthServerUrl = formatOAuthApiUrl(`/api/admin/user/${userData.id}`, siteConfig, which);
   const oauthServerCredentials = formatOAuthApiCredentials(siteConfig, which);
 
+console.log('merged user data', JSON.stringify({mergedUserData, oauthServerUrl}, null, 2))
+
   return fetch(oauthServerUrl, {
 	  headers: { "Authorization": oauthServerCredentials, "Content-type": "application/json" },
     method: 'POST', // TODO: dit is hoe de oauth server nu werkt; dat zou natuurlijk een put of patch moeten worden.
     body: JSON.stringify(mergedUserData),
   })
 	  .then((response) => {
-		  if (!response.ok) throw Error(response)
+		  if (!response.ok) throw Error(JSON.stringify(response))
 		  return response.json();
 	  })
 	  .then((json) => {
