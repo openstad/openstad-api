@@ -491,6 +491,9 @@ router.route('/:userId(\\d+)')
         res.json(result);
       })
       .catch(err => {
+        console.log('Could not update user in auth api', err.message, JSON.stringify({
+          userData: merge(true, userData, { id: externalUserId })
+        }, null, 2))
         console.log(err);
         return next(err);
       });

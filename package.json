@@ -36,6 +36,7 @@
     "joi": "^17.4.0",
     "json2csv": "^5.0.6",
     "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.21",
     "lodash.difference": "^4.5.0",
     "mariadb": "^2.5.0",
     "marked": "^0.7.0",

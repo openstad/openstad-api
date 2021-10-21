@@ -2,6 +2,7 @@ const co = require('co');
 const moment = require('moment-timezone');
 const log = require('debug')('app:db');
 const faker = require('faker');
+const _ = require('lodash')
 faker.locale = 'nl';
 
 const randomString = (length) => {
@@ -70,11 +71,13 @@ module.exports = co.wrap(function* (db) {
   yield organisations.map((org) => db.Organisation.create(org));
 
   log('Creating events');
-  yield events.map(function (eventData) {
+  const createdEvents = yield events.map(function (eventData) {
     return db.Event.create(eventData, {
       include: [{ model: db.EventTimeslot, as: 'slots' }, db.Tag],
     });
   });
+
+  yield createdEvents.map(event => event.setTags(_.sample(tags).id))
 
   log('test database complete');
 });
@@ -256,8 +259,8 @@ for (let index = 0; index < 500; index++) {
     location: {
       type: 'Point',
       coordinates: [
-        faker.address.latitude(52.4103143, 52.3088568),
-        faker.address.longitude(5.0398172, 4.749113),
+        faker.address.longitude(52.4103143, 52.3088568, 7),
+        faker.address.latitude(5.0398172, 4.749113, 7),
       ],
     },
     district: districs[faker.mersenne.rand(0, districs.length - 1)],
@@ -268,7 +271,6 @@ for (let index = 0; index < 500; index++) {
     information: faker.lorem.sentence(),
     image: faker.image.sports(),
     organisationId: 1,
-    tagIds: [1],
     slots: new Array(faker.mersenne.rand(1, 3)).fill(0).map(() => {
       const start = faker.date.between(now, twoMonthsLater);
       const end = moment(start).add(2, 'hours');
