@@ -29,6 +29,9 @@ router.use( '/site/:siteId(\\d+)/idea', require('./idea') );
 // exercises
 router.use( '/site/:siteId(\\d+)/idea', require('./exercise') );
 
+// support chat
+router.use( '/site/:siteId(\\d+)/support-chat', require('./support-chat') );
+
 // articles
 router.use( '/site/:siteId(\\d+)/article', require('./article') );
 

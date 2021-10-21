@@ -11,13 +11,17 @@ const searchResults = require('../../middleware/search-results-static');
 const isJson = require('../../util/isJson');
 
 const router = express.Router({ mergeParams: true });
+
+
 const userhasModeratorRights = (user) => {
   return user && (user.role === 'admin' || user.role === 'editor' || user.role === 'moderator');
 };
 
 // scopes: for all get requests
+//
 router
   .all('*', function(req, res, next) {
+
     req.scope = ['api', { method: ['onlyVisible', req.user.id, req.user.role] }];
 
     // in case the votes are archived don't use these queries
@@ -32,6 +36,7 @@ router
         req.scope.push({ method: ['includeUserVote', req.user.id] });
       }
     }
+
     // because includeVoteCount is used in other locations but should only be active if isViewable
     if (req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable) {
       req.canIncludeVoteCount = true; // scope.push(undefined) would be easier but creates an error
@@ -41,12 +46,13 @@ router
      * Old sort for backward compatibility
      */
     let sort = (req.query.sort || '').replace(/[^a-z_]+/i, '') || (req.cookies['idea_sort'] && req.cookies['idea_sort'].replace(/[^a-z_]+/i, ''));
+
     if (sort) {
       //res.cookie('idea_sort', sort, { expires: 0 });
-
       if (sort == 'votes_desc' || sort == 'votes_asc') {
         if (req.canIncludeVoteCount) req.scope.push('includeVoteCount'); // het werkt niet als je dat in de sort scope functie doet...
       }
+
       req.scope.push({ method: ['sort', req.query.sort] });
     }
 
@@ -73,7 +79,6 @@ router
     if (req.query.includeTags) {
       req.scope.push('includeTags');
     }
-
 
     if (req.query.includePoll) {
       req.scope.push({ method: ['includePoll', req.user.id] });
@@ -103,7 +108,6 @@ router
     // }
 
     return next();
-
   });
 
 router.route('/')
