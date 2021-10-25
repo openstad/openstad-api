@@ -503,12 +503,14 @@ module.exports = function (db, sequelize, DataTypes) {
                 }
 
                 //old way of setting isSubscriberActive
+                console.log('extraData', extraData)
+
 
                 if (!access.active && extraData && extraData.isActiveSubscriber && extraData.isActiveSubscriber === 'yes') {
                     access.active = true;
                 }
 
-                if (activeSubscription.planId) {
+                if (activeSubscription && activeSubscription.planId) {
                     access.planId  = activeSubscription.planId;
                 }
                 
@@ -517,6 +519,9 @@ module.exports = function (db, sequelize, DataTypes) {
                     @todo implement trial
                 }
                  */
+
+                console.log('access', access)
+
 
                 // if subscribers
                 return access;

@@ -35,7 +35,7 @@ const enrichMessagesWithUser = async (messages) => {
       message.user = {
         avatar: user.extraData && user.extraData.profileImage ? user.extraData.profileImage : '',
         fullName: user.fullName,
-        id: user.id,
+        _id: user.id,
       };
     }
 
@@ -114,8 +114,6 @@ router.route('/:requestingUserId')
 
       const bodyMessage = req.body.message;
 
-      console.log(' req.body',  req.body, bodyMessage)
-      
       const message = {
         _id: bodyMessage._id,
         text: bodyMessage.text,
