@@ -70,7 +70,8 @@ router.route('/:requestingUserId')
 
       req.supportChat = supportChat;
       req.results = supportChat;
-      console.log('req.supportChatreq.req.user', req.user.role)
+
+      console.log('req.supportChatreq.req.user', req.user)
 
       next();
     } catch (e) {
@@ -86,7 +87,7 @@ router.route('/:requestingUserId')
 
     console.log('chatchat', chat)
 
-    if (!(chat && chat.can && chat.can('view'))) return next(new Error('You cannot view this Idea'));
+    if (!(chat && chat.can && chat.can('view'))) return next(new Error('You cannot view this chat'));
 
       let messages = [];
 
