@@ -62,10 +62,10 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
     // this comes from iTunes Connect (You need this to valiate subscriptions):
     applePassword: iosAppSettings.sharedSecret, //'8e6d38101b384207b0d25c5914ce67c7', //process.env.APPLE_SHARED_SECRET,
 
-     /* googleServiceAccount: {
-        clientEmail: androidAppSettings.androidClientEmail,//process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        privateKey: androidAppSettings.androidPrivateKey //process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
-      },*/
+    googleServiceAccount: {
+      clientEmail: androidAppSettings.serviceAccountEmail,//process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      privateKey: androidAppSettings.serviceAccountPrivateKey //process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
+    },
 
     /* Configurations all platforms */
    // test: iapTestMode, // For Apple and Google Play to force Sandbox validation only
@@ -101,7 +101,7 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
   const startDate = app === 'ios' ? new Date(firstPurchaseItem.originalPurchaseDateMs) : new Date(parseInt(firstPurchaseItem.startTimeMillis, 10));
   const endDate = app === 'ios' ? new Date(firstPurchaseItem.expiresDateMs) : new Date(parseInt(firstPurchaseItem.expiryTimeMillis, 10));
 
-  let environment = '';
+  let environment = 'production';
   // validationResponse contains sandbox: true/false for Apple and Amazon
   // Android we don't know if it was a sandbox account
 
@@ -140,18 +140,28 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
 
     const androidGoogleApi = google.androidpublisher({version: 'v3'});
 
+    console.log('Validate with androidGoogleApi validationResponse', validationResponse);
+
     // From https://developer.android.com/google/play/billing/billing_library_overview:
     // You must acknowledge all purchases within three days.
     // Failure to properly acknowledge purchases results in those purchases being refunded.
     if (app === 'android' && validationResponse.acknowledgementState === 0) {
-      await androidGoogleApi.purchases.subscriptions.acknowledge({
-        packageName: androidAppSettings.packageName,
-        subscriptionId: productId,
-        token: receipt.purchaseToken,
-      });
+
+      console.log('Validate with androidGoogleApi')
+      try {
+        await androidGoogleApi.purchases.subscriptions.acknowledge({
+          packageName: androidAppSettings.packageName,
+          subscriptionId: productId,
+          token: receipt.purchaseToken,
+        });
+      } catch (e) {
+        console.warn('Error validating subscription purchase: ', e)
+      }
     }
   }
 }
 
 
 module.exports = router;
+
+
