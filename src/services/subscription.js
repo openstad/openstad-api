@@ -33,6 +33,8 @@ const update = async ({
       endDate
     };
 
+    console.log('subscriptionData provider', provider)
+
     switch (provider) {
       case "paystack":
         // code block
@@ -65,6 +67,9 @@ const update = async ({
 
     const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 
+    console.log('subscriptionData userSubscriptionData', userSubscriptionData)
+
+
     userSubscriptionData.subscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
     userSubscriptionData.subscriptions.push(subscriptionData);
 
@@ -83,6 +88,7 @@ const update = async ({
 
     return user;
   } catch (e) {
+    console.log('subscriptionData e', e)
     throw Error(e);
   }
 }
