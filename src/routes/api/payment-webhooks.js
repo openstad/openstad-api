@@ -148,14 +148,13 @@ router.route('/paystack')
               product = await db.Product.findOne({
                 where: {
                   [Sequelize.Op.and]: query,
-                  siteId: req.site.id
+           // should be accountID       siteId: req.site.id
                 }
               });
             } catch (e) {
               console.warn('Error in fetching a user', e);
               next(e);
             }
-
 
             console.log('product', product)
 
