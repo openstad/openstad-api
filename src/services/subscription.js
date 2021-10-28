@@ -135,7 +135,7 @@ const update = async ({
 
     // if user already has subscriptions but updates to a new one, we cancel this one, and refund the days left in case it's a web sign up.
     // Apple automatically / Google also I think :)
-    /*
+
     if (activeSubscriptions.length > 0) {
       for (const activeSubscription of activeSubscriptions) {
         try {
@@ -148,7 +148,7 @@ const update = async ({
           return;
         }
       }
-    }*/
+    }
 
     console.log('userSubscription ends', userSubscriptions);
 
@@ -210,6 +210,8 @@ const cancel = async ({
 
     switch (subscription.subscriptionPaymentProvider) {
       case "paystack":
+        console.log('Start cancel Paystack Fetched paystackClient ', paystackClients)
+
 
         let subscriptionResponse = await paystackClient.getSubscription(paystackSubscriptionCode);
         subscriptionResponse = typeof subscriptionResponse === 'string' ? JSON.parse(subscriptionResponse) : subscriptionResponse;
@@ -274,6 +276,8 @@ const cancel = async ({
 
         break;
       case "mollie":
+        console.log('Start cancel Mollie Fetched mollieClient ', mollieClient)
+
         const mollieSubscription = await mollieClient.customers_subscriptions.get(mollieSubscriptionId, {customerId: mollieCustomerId});
 
         console.log('Mollliee mollieSubscription', mollieSubscription);
