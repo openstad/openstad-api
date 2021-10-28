@@ -147,6 +147,7 @@ router.route('/paystack')
 
               product = await db.Product.findOne({
                 where: {
+                  [Sequelize.Op.ne]: null,
                   [Sequelize.Op.and]: query,
            // should be accountID       siteId: req.site.id
                 }
