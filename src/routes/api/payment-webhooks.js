@@ -68,10 +68,14 @@ router.route('/paystack')
       // Retrieve the request's body
       const event = req.body;
       const eventData = event.data ? event.data : {};
+      const paystackPlancode = eventData.plan && eventData.plan.plan_code ?   eventData.plan.plan_code : false;
       const customerData = eventData && eventData.customer ? eventData.customer : {};
       const customerCode = customerData.customer_code;
       const customerUserCodeKey = paymentModus +'_paystackCustomerCode';
       const subscriptionCode = eventData.subscription_code;
+
+      console.log('paystackPlancode', paystackPlancode)
+      console.log('eventData', eventData)
 
       let user, userSubscriptionData;
 
@@ -136,8 +140,8 @@ router.route('/paystack')
 
 
             try {
-              const escapedKey = db.sequelize.escape(`$.${paystackPlanCode}`);
-              const escapedValue = db.sequelize.escape(paystackPlanCode);
+              const escapedKey = db.sequelize.escape(`$.paystackPlancode`);
+              const escapedValue = db.sequelize.escape(paystackPlancode);
 
               const query = db.sequelize.literal(`extraData->${escapedKey}=${escapedValue}`);
 
