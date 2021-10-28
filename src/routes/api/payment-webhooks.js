@@ -123,11 +123,6 @@ router.route('/paystack')
 
       }
 
-
-      console.log('User found with id: ', user.id)
-
-      console.log('Start processing event:', event.event)
-
       try {
         switch (event.event) {
           case "subscription.create":
@@ -137,7 +132,8 @@ router.route('/paystack')
 
             // fetch product
 
-            let product = product
+            let product;
+
 
             try {
               const escapedKey = db.sequelize.escape(`$.${paystackPlanCode}`);
@@ -155,6 +151,9 @@ router.route('/paystack')
               console.warn('Error in fetching a user', e);
               next(e);
             }
+
+
+            console.log('product', product)
 
             await subscriptionService.update({
               user,

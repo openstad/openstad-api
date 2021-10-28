@@ -44,6 +44,9 @@ const update = async ({
       planId
     };
 
+    console.log('userSubscriptionData provider', provider);
+
+
     switch (provider) {
       case "paystack":
         // code block
@@ -82,6 +85,9 @@ const update = async ({
 
 
     let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
+
+    console.log('userSubscriptionData userSubscriptions', userSubscriptionData);
+
 
     /**
      * Sometimes update is called double.

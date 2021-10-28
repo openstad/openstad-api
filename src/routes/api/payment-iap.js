@@ -110,6 +110,7 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
   }
 
   console.log('environment', environment)
+  console.log('user', user)
 
   await subscriptionService.update({
     user,
