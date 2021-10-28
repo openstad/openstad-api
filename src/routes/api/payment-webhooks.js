@@ -140,20 +140,21 @@ router.route('/paystack')
 
 
             try {
-              const escapedKey = db.sequelize.escape(`$.paystackPlancode`);
-              const escapedValue = db.sequelize.escape(paystackPlancode);
+              const paystackPlancodeKey = 'paystackPlancode';
 
-              const query = db.sequelize.literal(`extraData->${escapedKey}=${escapedValue}`);
+              const escapedKey = db.sequelize.escape(`$.${paystackPlancodeKey}`);
+              const escapedValue = db.sequelize.escape(paystackPlancode);
+              const query = db.sequelize.literal(`extraData IS NOT NULL AND extraData->${escapedKey}=${escapedValue}`);
+
+              console.log('querym2', query)
 
               product = await db.Product.findOne({
                 where: {
-                  [Sequelize.Op.ne]: null,
-                  [Sequelize.Op.and]: query,
-           // should be accountID       siteId: req.site.id
+                  [Sequelize.Op.and]: query
                 }
               });
             } catch (e) {
-              console.warn('Error in fetching a user', e);
+              console.warn('Error in product a user', e);
               next(e);
             }
 
@@ -163,10 +164,10 @@ router.route('/paystack')
               user,
               provider: 'paystack',
               subscriptionActive: true,
-              subscriptionProductId: order.extraData.subscriptionProductId,
+              subscriptionProductId: product ? product.id : '',
               paystackSubscriptionCode: subscriptionCode,
               siteId: req.site.id,
-              paystackPlanCode: eventData.paystackPlanCode,
+              paystackPlanCode: paystackPlancode,
               planId: product && product.extraData && product.extraData.planId ?  product.extraData.planId : ''
             });
 
