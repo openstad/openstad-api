@@ -84,7 +84,8 @@ const update = async ({
     console.log('userSubscriptionData ends', userSubscriptionData);
 
 
-    let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
+    let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ?
+      userSubscriptionData.subscriptions : [];
 
     console.log('userSubscriptionData userSubscriptions', userSubscriptionData);
 
@@ -125,9 +126,9 @@ const update = async ({
       return;
     }
 
-    const activeSubscriptions = userSubscriptionData.subscriptions.filter((subscription) => {
+    const activeSubscriptions = userSubscriptionData.subscriptions  && Array.isArray(userSubscriptionData.subscriptions) ?  userSubscriptionData.subscriptions.filter((subscription) => {
       return subscription.active;
-    });
+    }) : [];
 
     // this is old, probably not used, see user model .access logic
     userSubscriptionData.isActiveSubscriber = activeSubscriptions.length > 0 ? 'yes' : 'no';
