@@ -143,8 +143,8 @@ router.route('/paystack')
               const paystackPlancodeKey = 'paystackPlancode';
 
               const escapedKey = db.sequelize.escape(`$.${paystackPlancodeKey}`);
-              const escapedValue = db.sequelize.escape(paystackPlancode);
-              const query = db.sequelize.literal(`extraData LIKE %${escapedValue}%`);
+              const escapedValue = db.sequelize.escape('%' + paystackPlancode + '%');
+              const query = db.sequelize.literal(`extraData LIKE ${escapedValue}`);
 
               console.log('querym2', query)
 
