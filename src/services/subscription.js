@@ -78,6 +78,9 @@ const update = async ({
 
     const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 
+    console.log('userSubscriptionData ends', userSubscriptionData);
+
+
     let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
 
     /**
@@ -110,6 +113,7 @@ const update = async ({
       return isFound;
     });
 
+
     if (subscriptionAlreadyExists) {
       console.log('Subscription trying to update already exists for user, new subscriptionData ', subscriptionData, ' for user subscription', userSubscriptionData)
       return;
@@ -124,6 +128,7 @@ const update = async ({
 
     // if user already has subscriptions but updates to a new one, we cancel this one, and refund the days left in case it's a web sign up.
     // Apple automatically / Google also I think :)
+    /*
     if (activeSubscriptions.length > 0) {
       for (const activeSubscription of activeSubscriptions) {
         try {
@@ -136,7 +141,9 @@ const update = async ({
           return;
         }
       }
-    }
+    }*/
+
+    console.log('userSubscription ends', userSubscriptions);
 
     // set all active to false
     userSubscriptions = userSubscriptions.map((subscription) => {
@@ -150,6 +157,8 @@ const update = async ({
      * Can be either a down or upgrade.
      */
     userSubscriptions.push(subscriptionData);
+
+    console.log('userSubscriptions', userSubscriptions)
 
     userSubscriptionData.subscriptions = userSubscriptions;
 
