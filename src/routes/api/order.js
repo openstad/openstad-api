@@ -220,7 +220,7 @@ router.route('/')
         currency: firstOrderItem.product.currency,
         orderNote: req.body.orderNote,
         test: 'add something',
-        planId: req.subscriptionProduct && req.subscriptionProduct.planId ? req.subscriptionProduct.extraData.planId : '',
+        planId: req.subscriptionProduct && req.subscriptionProduct.extraData.planId ? req.subscriptionProduct.extraData.planId : '',
       }
     }
 
