@@ -56,23 +56,30 @@ router.route('/')
 });
 
 const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSettings, siteId, planId) => {
-  iap.config({
+  const iapConfig = {
     // If you want to exclude old transaction, set this to true. Default is false:
     appleExcludeOldTransactions: true,
     // this comes from iTunes Connect (You need this to valiate subscriptions):
-    applePassword: iosAppSettings.sharedSecret, //'8e6d38101b384207b0d25c5914ce67c7', //process.env.APPLE_SHARED_SECRET,
-
-    googleServiceAccount: {
-      clientEmail: androidAppSettings.serviceAccountEmail,//process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      privateKey: androidAppSettings.serviceAccountPrivateKey //process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
-    },
-
     /* Configurations all platforms */
-   // test: iapTestMode, // For Apple and Google Play to force Sandbox validation only
-     verbose: true, // Output debug logs to stdout stream
-  });
+    // test: iapTestMode, // For Apple and Google Play to force Sandbox validation only
+    verbose: true, // Output debug logs to stdout stream
+  }
+
+  if (iosAppSettings.sharedSecret) {
+    iapConfig.applePassword = iosAppSettings.sharedSecret;
+  }
+
+  if (androidAppSettings.serviceAccountEmail && androidAppSettings.serviceAccountPrivateKey ) {
+    iapConfig.googleServiceAccount = {
+      clientEmail: androidAppSettings.serviceAccountEmail,//process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        privateKey: androidAppSettings.serviceAccountPrivateKey //process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
+    }
+  }
+
+  iap.config(iapConfig);
 
   await iap.setup();
+
   const validationResponse = await iap.validate(receipt);
 
   console.log('IAP validationResponse', validationResponse)
