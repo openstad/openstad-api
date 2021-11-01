@@ -875,7 +875,7 @@ module.exports = function (db, sequelize, DataTypes) {
       includeUser: {
         include: [{
           model: db.User,
-          attributes: ['id','role', 'nickName', 'firstName', 'lastName', 'email', 'extraData']
+          attributes: ['id','role', 'displayName', 'firstName', 'lastName', 'email', 'extraData']
         }]
       },
 
@@ -977,7 +977,7 @@ module.exports = function (db, sequelize, DataTypes) {
       withUser: {
         include: [{
           model: db.User,
-          attributes: ['role', 'nickName', 'firstName', 'lastName', 'email']
+          attributes: ['role', 'displayName', 'firstName', 'lastName', 'email']
         }]
       },
       withVoteCount: {

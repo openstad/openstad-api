@@ -437,7 +437,7 @@ module.exports = function (db, sequelize, DataTypes) {
               },
               showFields: {
                 type: 'arrayOfStrings', // eh...
-                default: ['zipCode', 'nickName'],
+                default: ['zipCode', 'displayName'],
               }
             }
           },

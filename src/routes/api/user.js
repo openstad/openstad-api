@@ -15,7 +15,7 @@ const OAuthUser = require('../../services/oauth-user');
 
 const filterBody = (req, res, next) => {
   const data = {};
-  const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole'];
+  const keys = ['firstName', 'lastName', 'nickName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole'];
 
   keys.forEach((key) => {
     if (req.body[key]) {

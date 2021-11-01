@@ -69,13 +69,13 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultScope: {
 				/*include: [{
 					model      : db.User,
-					attributes : ['role', 'nickName', 'firstName', 'lastName', 'email']
+					attributes : ['role', 'displayName', 'firstName', 'lastName', 'email']
 					}]*/
 			},
 			withUser: {
 				include: [{
 					model      : db.User,
-					attributes : ['role', 'nickName', 'firstName', 'lastName', 'email']
+					attributes : ['role', 'displayName', 'firstName', 'lastName', 'email']
 				}]
 			},
 		};
