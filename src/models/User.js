@@ -506,14 +506,16 @@ module.exports = function (db, sequelize, DataTypes) {
                 console.log('extraData', extraData)
 
 
-                if (!access.active && extraData && extraData.isActiveSubscriber && extraData.isActiveSubscriber === 'yes') {
-                    access.active = true;
-                }
 
                 if (activeSubscription && activeSubscription.planId) {
                     access.planId  = activeSubscription.planId;
                 }
-                
+
+                if (!access.active && extraData && extraData.isActiveSubscriber && extraData.isActiveSubscriber === 'yes') {
+                    access.active = true;
+                    access.planId = access.planId ? access.planId : extraData &&  extraData.planId ?  extraData.planId : 1;
+                }
+
                 /*
                 if (!activeSubscription && trialDate) {
                     @todo implement trial
