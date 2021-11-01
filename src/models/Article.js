@@ -464,7 +464,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			includeUser: {
 				include: [{
 					model      : db.User,
-					attributes : ['role', 'nickName', 'firstName', 'lastName', 'email']
+					attributes : ['role', 'displayName', 'firstName', 'lastName', 'email']
 				}]
 			},
 
@@ -518,7 +518,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			withUser: {
 				include: [{
 					model      : db.User,
-					attributes : ['role', 'nickName', 'firstName', 'lastName', 'email']
+					attributes : ['role', 'displayName', 'firstName', 'lastName', 'email']
 				}]
 			},
 			withPosterImage: {

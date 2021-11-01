@@ -200,7 +200,7 @@ De gedefinieerde config wordt nog wel gebruikt voor defaults etc. Die ziet er nu
               "type": "arrayOfStrings",
               "default": [
                 "zipCode",
-                "nickName"
+                "displayName"
               ]
             }
           }

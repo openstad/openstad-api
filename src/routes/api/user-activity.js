@@ -76,8 +76,6 @@ router.route('/')
   })
   // sites
   .get(function(req, res, next) {
-    console.log('++++++++++++++++++++');
-    console.log(req.userIds);
     next()
   })
   .get(function(req, res, next) {
