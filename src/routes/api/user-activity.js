@@ -49,8 +49,20 @@ router.route('/')
       })
       .then(function (user) {
         if (!user.externalUserId) return next();
-        return user
-          .getThisUserOnOtherSites()
+
+        return db.User
+          .scope(['includeSite'])
+          .findAll({
+            where: {
+              externalUserId: user.externalUserId,
+              // old users have no siteId, this will break the update
+              // skip them
+              // probably should clean up these users
+              siteId: {
+                [Op.not]: 0
+              }
+            }
+          })
           .then(users => {
             users.forEach((user) => {
               req.userIds.push(user.id);
@@ -58,13 +70,16 @@ router.route('/')
 
             req.users =  users;
 
-
-
             return next()
           })
       });
   })
   // sites
+  .get(function(req, res, next) {
+    console.log('++++++++++++++++++++');
+    console.log(req.userIds);
+    next()
+  })
   .get(function(req, res, next) {
 
     if (!req.activities.includes('sites')) return next();
