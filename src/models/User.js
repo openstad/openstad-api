@@ -178,6 +178,12 @@ module.exports = function (db, sequelize, DataTypes) {
     nickName: {
       type: DataTypes.STRING(64),
       allowNull: true,
+      auth: {
+        listableBy: ['editor', 'owner'],
+        viewableBy: 'all',
+        createableBy: ['editor', 'owner'],
+        updateableBy: ['editor', 'owner'],
+      },
       set: function (value) {
         this.setDataValue('nickName', sanitize.noTags(value));
       }
@@ -321,9 +327,8 @@ module.exports = function (db, sequelize, DataTypes) {
       get: function () {
         var firstName = this.getDataValue('firstName') || '';
         var lastName = this.getDataValue('lastName') || '';
-        return firstName || lastName ?
-          (firstName + ' ' + lastName) :
-          undefined;
+        var space = firstName && lastName ? ' ' : '';
+        return firstName || lastName ? (firstName + space + lastName) : undefined;
       }
     },
 
@@ -336,6 +341,16 @@ module.exports = function (db, sequelize, DataTypes) {
         var initials = (firstName ? firstName.substr(0, 1) : '') +
             (lastName ? lastName.substr(0, 1) : '');
         return initials.toUpperCase();
+      }
+    },
+
+    displayName: {
+      type: DataTypes.VIRTUAL,
+      allowNull: true,
+      get: function () {
+        var nickName = this.getDataValue('nickName');
+        var fullName = this.fullName;
+        return nickName || fullName || undefined;
       }
     },
 

@@ -294,6 +294,7 @@ router
             "lastName": req.user.lastName,
             "fullName": req.user.fullName,
             "nickName": req.user.nickName,
+            "displayName": req.user.displayName,
             "initials": req.user.initials,
             "gender": req.user.gender,
             "extraData": req.user.extraData ? req.user.extraData : {},
