@@ -1,6 +1,8 @@
 # Changelog
 
 ## UNRELEASED
+
+## v0.18.0
 * Remove userId from votes endpoint when user does not have moderator rights
 * Check if extraData of oauth user is null to prevent error while merging api and oauth extraData.
 * Fix site middleware unit tests
