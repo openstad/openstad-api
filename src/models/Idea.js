@@ -45,19 +45,6 @@ module.exports = function (db, sequelize, DataTypes) {
       defaultValue: config.siteId && typeof config.siteId == 'number' ? config.siteId : 0,
     },
 
-    meetingId: {
-      type: DataTypes.INTEGER,
-      auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
-      },
-      allowNull: true,
-      set: function (meetingId) {
-        meetingId = meetingId ? meetingId : null
-        this.setDataValue('meetingId', meetingId);
-      }
-    },
-
     userId: {
       type: DataTypes.INTEGER,
       auth:  {
@@ -86,49 +73,6 @@ module.exports = function (db, sequelize, DataTypes) {
         } catch (error) {
           return (error.message || 'dateFilter error').toString()
         }
-      }
-    },
-
-    endDate: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      get: function () {
-        var date = this.getDataValue('endDate');
-        if (this.site && this.site.config && this.site.config.votes && this.site.config.votes.isActiveTo) {
-          return this.site.config.votes.isActiveTo;
-        } else if (this.site && this.site.config && this.site.config.ideas && this.site.config.ideas.automaticallyUpdateStatus && this.site.config.ideas.automaticallyUpdateStatus.isActive) {
-          let days = this.site.config.ideas.automaticallyUpdateStatus.afterXDays || 0;
-          return moment(this.createdAt).add(days, 'days');
-        } else {
-          return date;
-        }
-      },
-    },
-
-    endDateHumanized: {
-      type: DataTypes.VIRTUAL,
-      get: function () {
-        var date = this.getDataValue('endDate');
-        try {
-          if (!date)
-            return 'Onbekende datum';
-          return moment(date).format('LLL');
-        } catch (error) {
-          return (error.message || 'dateFilter error').toString()
-        }
-      }
-    },
-
-    duration: {
-      type: DataTypes.VIRTUAL,
-      get: function () {
-        if (this.getDataValue('status') != 'OPEN') {
-          return 0;
-        }
-
-        var now = moment();
-        var endDate = this.getDataValue('endDate');
-        return Math.max(0, moment(endDate).diff(Date.now()));
       }
     },
 
@@ -425,11 +369,6 @@ module.exports = function (db, sequelize, DataTypes) {
     individualHooks: true,
 
     validate: {
-      validDeadline: function () {
-        if (this.endDate - this.startDate < 43200000) {
-          throw Error('An idea must run at least 1 day');
-        }
-      },
       validModBreak: function () {
         return true;
         /*
@@ -794,12 +733,6 @@ module.exports = function (db, sequelize, DataTypes) {
         };
       },
 
-      includeMeeting: {
-        include: [{
-          model: db.Meeting,
-        }]
-      },
-
       includeTags: {
         include: [{
           model: db.Tag,
@@ -937,7 +870,7 @@ module.exports = function (db, sequelize, DataTypes) {
             break;
 
           case 'date_asc':
-            order = [['endDate', 'ASC']];
+            order = [['startDate', 'ASC']];
             break;
           case 'date_desc':
           default:
@@ -949,7 +882,7 @@ module.exports = function (db, sequelize, DataTypes) {
 								WHEN 'DENIED'   THEN 0
 								                ELSE 1
 							END DESC,
-							endDate DESC
+							startDate DESC
 						`);
 
         }
@@ -1062,7 +995,6 @@ module.exports = function (db, sequelize, DataTypes) {
   }
 
   Idea.associate = function (models) {
-    this.belongsTo(models.Meeting);
     this.belongsTo(models.User);
     this.hasMany(models.Vote);
     this.hasMany(models.Argument, {as: 'argumentsAgainst'});
@@ -1096,7 +1028,7 @@ module.exports = function (db, sequelize, DataTypes) {
         order = [['createdAt', 'DESC']];
         break;
       case 'date_asc':
-        order = [['endDate', 'ASC']];
+        order = [['startDate', 'ASC']];
         break;
       case 'date_desc':
       default:
@@ -1108,7 +1040,7 @@ module.exports = function (db, sequelize, DataTypes) {
 								WHEN 'DENIED'   THEN 0
 								                ELSE 1
 							END DESC,
-							endDate DESC
+							startDate DESC
 						`);
     }
 
@@ -1124,10 +1056,6 @@ module.exports = function (db, sequelize, DataTypes) {
       {
         status: ['OPEN', 'CLOSED', 'ACCEPTED', 'BUSY', 'DONE']
       },
-      sequelize.and(
-        {status: {[Sequelize.Op.not]: 'DENIED'}},
-        sequelize.where(db.Meeting.rawAttributes.date, '>=', new Date())
-      ),
       sequelize.and(
         {status: 'DENIED'},
         sequelize.literal(`DATEDIFF(NOW(), idea.updatedAt) <= 7`)
@@ -1147,10 +1075,6 @@ module.exports = function (db, sequelize, DataTypes) {
     return this.scope(...scopes).findAll({
       where,
       order: order,
-      include: [{
-        model: db.Meeting,
-        attributes: []
-      }]
     }).then((ideas) => {
       // add ranking
       let ranked = ideas.slice();
@@ -1302,27 +1226,6 @@ module.exports = function (db, sequelize, DataTypes) {
     return this.update({status: status});
   }
 
-  Idea.prototype.setMeetingId = function (meetingId) {
-    meetingId = ~~meetingId || null;
-
-    return db.Meeting.findByPk(meetingId)
-      .bind(this)
-      .tap(function (meeting) {
-        if (!meetingId) {
-          return;
-        } else if (!meeting) {
-          throw Error('Vergadering niet gevonden');
-        } else if (meeting.finished) {
-          throw Error('Vergadering ligt in het verleden');
-        } else if (meeting.type == 'selection') {
-          throw Error('Agenderen op een peildatum is niet mogelijk');
-        }
-      })
-      .then(function () {
-        return this.update({meetingId});
-      });
-  }
-
   Idea.prototype.updateImages = function (imageKeys, extraData) {
     var self = this;
     if (!imageKeys || !imageKeys.length) {
@@ -1458,19 +1361,7 @@ module.exports = function (db, sequelize, DataTypes) {
             return site;
           })
           .then(site => {
-
-            // Automatically determine `endDate`
-            if (instance.changed('startDate')) {
-              var duration = (instance.config && instance.config.ideas && instance.config.ideas.duration) || 90;
-              if (this.site && this.site.config && this.site.config.ideas && this.site.config.ideas.automaticallyUpdateStatus && this.site.config.ideas.automaticallyUpdateStatus.isActive) {
-                duration = this.site.config.ideas.automaticallyUpdateStatus.afterXDays || 0;
-              }
-              var endDate = moment(instance.startDate).add(duration, 'days').toDate();
-              instance.setDataValue('endDate', endDate);
-            }
-
             return resolve();
-
           }).catch(err => {
             throw err;
           })

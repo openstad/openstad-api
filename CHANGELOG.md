@@ -1,11 +1,13 @@
 # Changelog
 
 ## UNRELEASED
+* Removed enddate and duration from articles and ideas. Removed meetings.
 
 ## v0.18.0
 * Remove userId from votes endpoint when user does not have moderator rights
 * Check if extraData of oauth user is null to prevent error while merging api and oauth extraData.
 * Fix site middleware unit tests
+* Remove endDate and duration from Articles and Ideas. Remove Meetings.
 
 ## v0.17.0
 * Add option to anonymize only selected users at /api/site/:SITE_ID/user/:USER_ID/do-anonymizeall

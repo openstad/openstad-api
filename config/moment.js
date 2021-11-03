@@ -11,5 +11,3 @@ moment.locale(config.get('locale'));
 // Only print <= 5 seconds as 'a few seconds' instead of the entire
 // last minute.
 moment.relativeTimeThreshold('ss', 5);
-// Always print idea duration in days, not months.
-moment.relativeTimeThreshold('d', config.get('ideas.duration')+1);
