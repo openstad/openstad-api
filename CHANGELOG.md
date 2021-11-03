@@ -1,6 +1,7 @@
 # Changelog
 
 ## UNRELEASED
+* Removed enddate and duration from articles and ideas. Removed meetings.
 
 ## v0.18.0
 * Remove userId from votes endpoint when user does not have moderator rights
