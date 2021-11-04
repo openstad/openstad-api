@@ -208,6 +208,10 @@ module.exports = function (db, sequelize, DataTypes) {
             type: 'string',
             default: '/oauth/login?jwt=[[jwt]]',
           },
+          "redirectURI": {
+            type: 'string',
+            default: undefined,
+          },
           "widgetDisplaySettings": {
             "type": "object",
             "subset": {
