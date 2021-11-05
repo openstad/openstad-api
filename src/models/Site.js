@@ -472,6 +472,10 @@ module.exports = function (db, sequelize, DataTypes) {
             type: 'boolean',
             default: true,
           },
+          allowUseOfNicknames: {
+            type: 'boolean',
+            default: false,
+          },
         },
       },
       votes: {

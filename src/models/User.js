@@ -2,6 +2,8 @@ var config = require('config')
 , log = require('debug')('app:user')
 , pick = require('lodash/pick');
 
+const merge = require('merge');
+
 const Password = require('../lib/password');
 const sanitize = require('../util/sanitize');
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
@@ -185,7 +187,12 @@ module.exports = function (db, sequelize, DataTypes) {
         updateableBy: ['editor', 'owner'],
       },
       set: function (value) {
-        this.setDataValue('nickName', sanitize.noTags(value));
+        if (this.site && this.site.config && this.site.config.users && this.site.config.users.allowUseOfNicknames) {
+          this.setDataValue('nickName', sanitize.noTags(value));
+        } else {
+          value = this.getDataValue('nickName');
+          this.setDataValue('nickName', value);
+        }
       }
     },
 
@@ -348,6 +355,8 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.VIRTUAL,
       allowNull: true,
       get: function () {
+        // this should use site.config.allowUseOfNicknames but that implies loading the site for every time a user is shown which would be too slow
+        // therefore createing nicknames is dependendt on site.config.allowUseOfNicknames; once you have created a nickName it will be shown here no matter what
         var nickName = this.getDataValue('nickName');
         var fullName = this.fullName;
         return nickName || fullName || undefined;
@@ -418,6 +427,15 @@ module.exports = function (db, sequelize, DataTypes) {
         unique: true
         }],*/
 
+    hooks: {
+
+      // onderstaand is een workaround: bij een delete wordt wel de validatehook aangeroepen, maar niet de beforeValidate hook. Dat lijkt een bug.
+      beforeValidate: beforeValidateHook,
+      beforeDestroy: beforeValidateHook,
+
+    },
+
+    individualHooks: true,
 
     validate: {
       hasValidUserRole: function () {
@@ -531,6 +549,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
     }
+
   }
 
   User.associate = function (models) {
@@ -764,4 +783,29 @@ module.exports = function (db, sequelize, DataTypes) {
   }
 
   return User;
+
+  function beforeValidateHook(instance, options) {
+
+    return new Promise((resolve, reject) => {
+
+      if (instance.siteId) {
+        db.Site.findByPk(instance.siteId)
+          .then(site => {
+            instance.config = merge.recursive(true, config, site.config);
+            return site;
+          })
+          .then(site => {
+            return resolve();
+          }).catch(err => {
+            throw err;
+          })
+      } else {
+        instance.config = config;
+        return resolve();
+      }
+
+    });
+
+  }
+
 };
