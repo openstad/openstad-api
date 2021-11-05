@@ -146,8 +146,6 @@ router.route('/paystack')
               const escapedValue = db.sequelize.escape('%' + paystackPlancode + '%');
               const query = db.sequelize.literal(`extraData LIKE ${escapedValue}`);
 
-              console.log('querym2', query)
-
               product = await db.Product.findOne({
                 where: {
                   [Sequelize.Op.and]: query

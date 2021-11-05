@@ -47,7 +47,35 @@ router.route('/')
       subscription: true,
     };
 
-    await processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id, planId);
+    const escapedValue = db.sequelize.escape('%' + purchase.productId + '%');
+
+    console.log('Fetch IAP product with ID: ', escapedValue);
+
+    const account = await db.Account.findOne({
+      where: {
+        siteId: req.site.id
+      }
+    });
+
+    console.log('Fetch for account with  ID: ', account.id);
+
+    const product = await db.Product.findOne({
+      where: {
+        [Sequelize.Op.and]: db.sequelize.literal(`extraData LIKE ${escapedValue}`),
+        account: account.id
+      }
+    });
+
+    console.log('Found product  with  ID: ', product.id);
+
+    const productPlanId = product && product.extraData && product.extraData.planId ?  product.extraData.planId : false;
+
+    console.log('Found plan ID for product: ', productPlanId);
+
+    // planId is not
+    const correctPlanId = productPlanId ? productPlanId : planId;
+
+    await processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id, correctPlanId);
 
     res.end();
   } catch (e) {
