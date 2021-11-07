@@ -1,24 +1,47 @@
 const db = require('../../db');
 const auth = require('../../middleware/sequelize-authorization-middleware');
-const router = require('express-promise-router')({ mergeParams: true });
+const router = require('express-promise-router')({mergeParams: true});
 var createError = require('http-errors');
 const Pusher = require("pusher");
 
 // scopes: for all get requests
 router
-  .all('*', function(req, res, next) {
+  .all('*', function (req, res, next) {
     req.scope = ['api'];
     req.scope.push('includeSite');
     return next();
   });
 
+const addOne = async function (req, res, next) {
+  try {
+    const requestingUserId = req.params.requestingUserId;
+
+    let supportChat = await db.SupportChat.findOne({
+      where: {userId: requestingUserId}
+    });
+
+    // is user a
+    if (!supportChat) {
+      supportChat = await db.SupportChat.create({userId: requestingUserId, messages: []})
+    }
+
+    req.supportChat = supportChat;
+    req.results = supportChat;
+
+    //  console.log('req.supportChatreq.req.user', req.user)
+
+    next();
+  } catch (e) {
+    next(e);
+  }
+}
 
 const enrichMessagesWithUser = async (messages) => {
   const usersForChat = {};
   const enrichedMessages = [];
 
   for (let message of messages) {
-    const userId =  message.user &&  message.user._id ?  message.user._id : false;
+    const userId = message.user && message.user._id ? message.user._id : false;
     let user = usersForChat[userId];
 
     if (!user) {
@@ -55,60 +78,38 @@ const enrichMessagesWithUser = async (messages) => {
  *  So in that case we make
  */
 router.route('/:requestingUserId')
-  .all(async function(req, res, next) {
+  .all(addOne)
+  .get(auth.useReqUser)
+  //.get(auth.can('SupportChat', 'View'))
+  .get(async function (req, res, next) {
+    const usersForChat = {};
+
+    var chat = req.results;
+
+    console.log('chatchat', chat)
+
+    if (!(chat.can('view'))) return next(new Error('You cannot view this chat'));
+
+    let messages = [];
+
     try {
-      const requestingUserId = req.params.requestingUserId;
-
-      let supportChat = await db.SupportChat.findOne({
-        where: {userId: requestingUserId}
-      });
-
-      // is user a
-      if (!supportChat) {
-        supportChat = await db.SupportChat.create({userId: requestingUserId,  messages: []})
+      if (req.supportChat.messages && Array.isArray(req.supportChat.messages)) {
+        messages = await enrichMessagesWithUser(req.supportChat.messages)
       }
 
-      req.supportChat = supportChat;
-      req.results = supportChat;
-
-      console.log('req.supportChatreq.req.user', req.user)
+      req.supportChat.messages = messages;
 
       next();
     } catch (e) {
       next(e);
     }
   })
-  .get(auth.useReqUser)
-  //.get(auth.can('SupportChat', 'View'))
-  .get(async function(req, res, next) {
-      const usersForChat = {};
-
-    var chat = req.results;
-
-    console.log('chatchat', chat)
-
-    if (!(chat && chat.can && chat.can('view'))) return next(new Error('You cannot view this chat'));
-
-      let messages = [];
-
-      try {
-        if (req.supportChat.messages && Array.isArray(req.supportChat.messages)) {
-          messages = await enrichMessagesWithUser(req.supportChat.messages)
-        }
-
-        req.supportChat.messages = messages;
-
-        next();
-      } catch (e) {
-        next(e);
-      }
-  })
   .get(function (req, res, next) {
     res.json(req.results);
   })
   // Persist an chat
   .put(auth.can('SupportChat', 'update'))
-  .put(async function(req, res, next) {
+  .put(async function (req, res, next) {
     try {
       const supportChat = req.supportChat;
       let messages = req.supportChat.messages && Array.isArray(req.supportChat.messages) ? req.supportChat.messages : [];
@@ -119,6 +120,7 @@ router.route('/:requestingUserId')
         _id: bodyMessage._id,
         text: bodyMessage.text,
         createdAt: bodyMessage.createdAt,
+        read: false,
         user: {
           _id: bodyMessage.user._id
         },
@@ -150,7 +152,7 @@ router.route('/:requestingUserId')
 
 
       supportChat.set('messages', messages);
-      
+
       await supportChat.save();
 
       // update last message
@@ -169,5 +171,32 @@ router.route('/:requestingUserId')
       next(e);
     }
   });
+
+router.route('/:requestingUserId/read')
+  .all(addOne)
+  .put(auth.can('SupportChat', 'update'))
+  .put(async function (req, res, next) {
+    try {
+      const userId = req.body.setToReadForUserId;
+      let messages = req.supportChat.messages && Array.isArray(req.supportChat.messages) ? req.supportChat.messages : [];
+
+      messages = messages.map((message) => {
+        const readBy = message.readBy && Array.isArray(message.readBy) ? message.readBy : [];
+
+        if (!readBy.includes(userId)) readBy.push(userId);
+
+        return Object.assign(message, {
+          readBy: readBy
+        })
+      });
+
+      await req.supportChat.update({
+        messages
+      });
+
+    } catch (e) {
+      next(e);
+    }
+  })
 
 module.exports = router;

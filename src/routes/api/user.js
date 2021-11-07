@@ -332,7 +332,9 @@ router.route('/:userId(\\d+)')
                     return response.json()
                 }
 
-                throw createError(401, 'User already exists, Try to login', response);
+                console.log('rresponse', response);
+
+                throw createError(401, 'Error creating user', response);
             })
             .then((json) => {
                 return db.User
