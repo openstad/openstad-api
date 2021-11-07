@@ -35,7 +35,15 @@ const filterBody = (req, res, next) => {
 
     keys.forEach((key) => {
         if (req.body[key]) {
-            data[key] = typeof req.body[key] === 'string' ? req.body[key].trim() : req.body[key];
+            let bodyValue = req.body[key];
+            console.log('Body value before trim', key, bodyValue)
+
+            if (typeof bodyValue === 'string' || bodyValue instanceof String) {
+                bodyValue.trim();
+                console.log('Body value in and after trim', key, bodyValue)
+            }
+        
+            data[key] = bodyValue;
         }
     });
 
