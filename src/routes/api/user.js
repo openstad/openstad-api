@@ -39,10 +39,10 @@ const filterBody = (req, res, next) => {
             console.log('Body value before trim', key, bodyValue)
 
             if (typeof bodyValue === 'string' || bodyValue instanceof String) {
-                bodyValue.trim();
+                bodyValue = bodyValue.trim();
                 console.log('Body value in and after trim', key, bodyValue)
             }
-        
+
             data[key] = bodyValue;
         }
     });
@@ -306,8 +306,15 @@ router.route('/:userId(\\d+)')
 
         const data = req.body;
 
+        console.log('data to update ', data)
+
         if (data.setRole) {
             data.role = 'member';
+        }
+
+        if (data.email) {
+            console.log('trim email')
+            data.email = data.email.trim();
         }
 
         /**
