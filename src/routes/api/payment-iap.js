@@ -29,9 +29,11 @@ router
 router.route('/')
   .all(async function (req, res, next) {
   try {
-    const {userId, purchase, appType, planId} = req.body;
+    const {userId, purchase, appType} = req.body;
 
-    console.log('IN APP payment with request received', req.body);
+    let planId = req.body.planId;
+
+    console.log('IN APP payment with request received', req.body, ' for plan ID ', planId);
 
     assert(['ios', 'android'].includes(appType));
 
@@ -47,35 +49,12 @@ router.route('/')
       subscription: true,
     };
 
-    const escapedValue = db.sequelize.escape('%' + purchase.productId + '%');
 
-    console.log('Fetch IAP product with ID: ', escapedValue);
-
-    const account = await db.Account.findOne({
-      where: {
-        siteId: req.site.id
-      }
-    });
-
-    console.log('Fetch for account with  ID: ', account.id);
-
-    const product = await db.Product.findOne({
-      where: {
-        [Sequelize.Op.and]: db.sequelize.literal(`extraData LIKE ${escapedValue}`),
-        account: account.id
-      }
-    });
-
-    console.log('Found product  with  ID: ', product.id);
-
-    const productPlanId = product && product.extraData && product.extraData.planId ?  product.extraData.planId : false;
-
-    console.log('Found plan ID for product: ', productPlanId);
 
     // planId is not
-    const correctPlanId = productPlanId ? productPlanId : planId;
 
-    await processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id, correctPlanId);
+
+    await processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id, planId);
 
     res.end();
   } catch (e) {
@@ -143,6 +122,38 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
   if (app === 'ios') {
     environment = validationResponse.sandbox ? 'sandbox' : 'production';
   }
+
+  try {
+    const escapedValue = db.sequelize.escape('%' + productId + '%');
+
+    console.log('Fetch IAP product with ID: ', escapedValue);
+
+    const account = await db.Account.findOne({
+      where: {
+        siteId: req.site.id
+      }
+    });
+
+    console.log('Fetch for account with  ID: ', account.id);
+
+    const product = await db.Product.findOne({
+      where: {
+        [Sequelize.Op.and]: db.sequelize.literal(`extraData LIKE ${escapedValue}`),
+        account: account.id
+      }
+    });
+
+    console.log('Found product  with  ID: ', product.id);
+
+    const productPlanId = product && product.extraData && product.extraData.planId ? product.extraData.planId : false;
+    console.log('Found plan ID for product: ', productPlanId);
+
+
+    planId = productPlanId ? productPlanId : planId;
+  } catch (e) {
+    console.log('error trying to find correct planid for in app purchase', e)
+  }
+
 
   console.log('environment', environment)
   console.log('user', user)
