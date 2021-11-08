@@ -49,11 +49,6 @@ router.route('/')
       subscription: true,
     };
 
-
-
-    // planId is not
-
-
     await processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id, planId);
 
     res.end();

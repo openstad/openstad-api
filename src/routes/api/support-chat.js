@@ -86,8 +86,6 @@ router.route('/:requestingUserId')
 
     var chat = req.results;
 
-    console.log('chatchat', chat)
-
     if (!(chat.can('view'))) return next(new Error('You cannot view this chat'));
 
     let messages = [];
