@@ -71,6 +71,8 @@ exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail
 
       const subscription = await mollieClient.customers_subscriptions.create(mollieOptions);
 
+      console.log('Found subscription: ', subscription);
+      
       await subscriptionService.update({
         user,
         provider: 'mollie',
