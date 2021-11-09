@@ -12,6 +12,24 @@ const {Op} = require('sequelize');
 const Pusher = require("pusher");
 
 
+const updateResource = (resourceName, resourceToUpdate, resources) => {
+
+  return resources.map((resource) => {
+    if (resourceName === resource.name) {
+      resource.items = resource.items ? resource.items : [];
+
+      //add
+      resource.items = resource.items.map((resourceItem) => {
+        return resourceToUpdate.id === resourceItem.id ? {
+          ...resourceToUpdate,
+          updatedAtTimestamp: new Date().getTime()
+        } : resourceItem;
+      });
+    }
+    return resource;
+  });
+}
+
 const router = express.Router({mergeParams: true});
 
 // scopes: for all get requests
@@ -307,7 +325,7 @@ router.route('/:tourId(\\d+)/publish')
       if (memberships) {
         for (let membership of memberships) {
           try {
-            let productId = membership.productIdweb;
+            let productId = membership.productId;
             let product;
 
             console.log('product create membership', membership)
@@ -319,6 +337,7 @@ router.route('/:tourId(\\d+)/publish')
                 });
 
             console.log('product create productId', productId)
+
 
             if (!productId) {
               console.log('product create productId', productId)
@@ -332,6 +351,16 @@ router.route('/:tourId(\\d+)/publish')
                 subscriptionInterval: membership.interval,
                 subscription: true,
               });
+
+              membership.productId = product.id;
+
+              liveRevision.resources = updateResource('membership', membership, liveRevision.resources);
+
+              await tour.update({
+                live: [liveRevision],
+                revisions:  [liveRevision],
+              })
+
             } else {
               product = await db.Product.findOne({
                 where: {
@@ -349,7 +378,7 @@ router.route('/:tourId(\\d+)/publish')
 
               let extraData = product.extraData ? product.extraData : {};
               extraData = Object.assign(extraData, membership);
-
+              extraData.planId = membership.id;
 
               await product.update({
                 name: membership.title,

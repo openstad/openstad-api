@@ -154,6 +154,10 @@ router.route('/')
         console.log('Step 2 create a user')
         console.log('reqboy', req.body)
 
+        if (req.body.email) {
+            req.body.email = req.body.email.trim().toLowerCase();
+        }
+
         // Look for an Openstad user with this e-mail
         if (!req.body.email) return next(createError(403, 'E-mail is a required field'));
 
@@ -306,15 +310,13 @@ router.route('/:userId(\\d+)')
 
         const data = req.body;
 
-        console.log('data to update ', data)
 
         if (data.setRole) {
             data.role = 'member';
         }
 
         if (data.email) {
-            console.log('trim email')
-            data.email = data.email.trim();
+            data.email = data.email.trim().toLowerCase();
         }
 
         /**
