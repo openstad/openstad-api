@@ -130,7 +130,7 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
 
     const account = await db.Account.findOne({
       where: {
-        siteId: req.site.id
+        siteId: siteId
       }
     });
 
