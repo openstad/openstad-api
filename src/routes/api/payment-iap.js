@@ -3,6 +3,7 @@ const express = require('express');
 const db = require('../../db');
 const config = require('config');
 const rp = require('request-promise');
+const Sequelize = require('sequelize');
 
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const iap = require('in-app-purchase');
@@ -139,6 +140,7 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
     });
 
     console.log('Found product  with  ID: ', product.id);
+    console.log('Found product  with  product.extraData: ', product.extraData);
 
     const productPlanId = product && product.extraData && product.extraData.planId ? product.extraData.planId : false;
     console.log('Found plan ID for product: ', productPlanId);
