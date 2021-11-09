@@ -135,7 +135,7 @@ const processPurchase = async (app, user, receipt, androidAppSettings, iosAppSet
     const product = await db.Product.findOne({
       where: {
         [Sequelize.Op.and]: db.sequelize.literal(`extraData LIKE ${escapedValue}`),
-        account: account.id
+        accountId: account.id
       }
     });
 
