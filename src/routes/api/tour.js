@@ -230,10 +230,14 @@ router.route('/:tourId(\\d+)')
           useTLS: true
         });
 
+        const resourcesChanged = req.query.resourcesChanged;
+
+
         const response = await pusher.trigger('editor-update', 'editor-refresh-resources', {
           resources: req.query.resourcesChanged,
           editorSession: req.query.editorSession
         });
+
 
         req.results = result;
 
@@ -257,43 +261,121 @@ router.route('/:tourId(\\d+)')
   })
 
 router.route('/:tourId(\\d+)/publish')
-  .all(function (req, res, next) {
-    const tourId = parseInt(req.params.tourId);
+  .all(async function (req, res, next) {
+    try {
+      const tourId = parseInt(req.params.tourId);
 
-    db.Tour
-      .scope(...req.scope)
-      .findOne({
-        where: {id: tourId}
-      })
-      .then(found => {
-        if (!found) throw new Error('tour not found');
-        req.results = found;
-        next();
-      })
-      .catch(next);
+      const found = await db.Tour
+        .scope(...req.scope)
+        .findOne({
+          where: {id: tourId}
+        });
+
+      if (!found) {
+        return next(new Error('Tour not found'));
+      }
+
+      req.results = found;
+      next();
+    } catch (e) {
+      next(e)
+    }
   })
   .put(auth.useReqUser)
-  .put(function (req, res, next) {
-    const tour = req.results;
+  .put(async function (req, res, next) {
+    try {
+      const tour = req.results;
 
-    if (!(tour && tour.can && tour.can('update'))) return next(new Error('You cannot update this tour'));
-    //	console.log('333', req.user.role)
+      if (!(tour && tour.can && tour.can('update'))) return next(new Error('You cannot update this tour'));
+      //	console.log('333', req.user.role)
 
-    let version = tour.get('versionNumber');
-    version  = version ? version + 1 : 1;
+      let version = tour.get('versionNumber');
+      version = version ? version + 1 : 1;
 
-    tour
-      //  .authorizeData(data, 'update')
-      .update({
+      await tour.update({
         live: tour.get('revisions'),
         versionNumber: version,
         lastPublishedAt: db.sequelize.literal('NOW()'),
       })
-      .then(async (result) => {
-        req.results = result;
-        next()
-      })
-      .catch(next);
+
+      const liveRevision = tour.live && tour.live[0] ? tour.live[0] : false;
+      const membershipResources = liveRevision.resources && Array.isArray(liveRevision.resources) ? liveRevision.resources.find(resource => resource.name === 'membership') : false;
+      const memberships = membershipResources && Array.isArray(membershipResources.items) ? membershipResources.items : false;
+
+      //next();
+
+      if (memberships) {
+        for (let membership of memberships) {
+          try {
+            let productId = membership.productIdweb;
+            let product;
+
+            console.log('product create membership', membership)
+
+                const account = await db.Account.findOne({
+                  where: {
+                    siteId: req.site.id
+                  }
+                });
+
+            console.log('product create productId', productId)
+
+            if (!productId) {
+              console.log('product create productId', productId)
+
+              product = await db.Product.create({
+                name: membership.title,
+                description: membership.description,
+                price: membership.price,
+                accountId: account.id,
+                currency: membership.currency,
+                subscriptionInterval: membership.interval,
+                subscription: true,
+              });
+            } else {
+              product = await db.Product.findOne({
+                where: {
+                  id: productId
+                }
+              });
+
+              console.log('product update', product);
+
+            }
+
+
+            if (product) {
+
+
+              let extraData = product.extraData ? product.extraData : {};
+              extraData = Object.assign(extraData, membership);
+
+
+              await product.update({
+                name: membership.title,
+                description: membership.description,
+                price: membership.price,
+                accountId: account.id,
+                currency: membership.currency,
+                subscriptionInterval: membership.interval,
+                subscription: true,
+                extraData
+              })
+              next();
+            }
+          } catch (e) {
+            console.log('Create product error: ', e)
+            //next(e);
+            next();
+            return
+          }
+        }
+      }
+
+
+    } catch (e) {
+      next(e);
+    }
   })
   .put(function (req, res, next) {
     res.json(req.results);

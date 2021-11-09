@@ -45,19 +45,6 @@ module.exports = function (db, sequelize, DataTypes) {
         name: {
             type: DataTypes.STRING(255),
             allowNull: false,
-            validate: {
-                // len: {
-                //   args : [titleMinLength,titleMaxLength],
-                //   msg  : `Titel moet tussen ${titleMinLength} en ${titleMaxLength} tekens lang zijn`
-                // }
-                textLength(value) {
-                    let len = value ? sanitize.title(value.trim()).length : 0;
-                    let titleMinLength = (this.config && this.config.products && this.config.products.nameMinLength || 10)
-                    let titleMaxLength = (this.config && this.config.products && this.config.products.nameMaxLength || 50)
-                    if (len < titleMinLength || len > titleMaxLength)
-                        throw new Error(`Productnaam moet tussen ${titleMinLength} en ${titleMaxLength} tekens zijn`);
-                }
-            },
             set: function (text) {
                 if (text) this.setDataValue('name', sanitize.title(text.trim()));
             }
@@ -71,19 +58,6 @@ module.exports = function (db, sequelize, DataTypes) {
         description: {
             type: DataTypes.TEXT,
             allowNull: true,
-            validate: {
-                // len: {
-                //  	args : [( this.config && this.config.products && config.ideas.descriptionMinLength || 140 ) ,descriptionMaxLength],
-                //  	msg  : `Beschrijving moet  tussen ${this.config && this.config.products && config.ideas.descriptionMinLength || 140} en ${descriptionMaxLength} tekens zijn`
-                // },
-                textLength(value) {
-                    let len = value ? sanitize.summary(value.trim()).length : 0;
-                    let descriptionMinLength = (this.config && this.config.products && this.config.products.descriptionMinLength || 20)
-                    let descriptionMaxLength = (this.config && this.config.products && this.config.products.descriptionMaxLength || 5000)
-                    if (len < descriptionMinLength || len > descriptionMaxLength)
-                        throw new Error(`Beschrijving moet tussen ${descriptionMinLength} en ${descriptionMaxLength} tekens zijn`);
-                }
-            },
             set: function (text) {
                 if (text) this.setDataValue('description', sanitize.content(text.trim()));
             }

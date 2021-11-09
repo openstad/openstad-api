@@ -2,6 +2,31 @@ const {createMollieClient} = require('@mollie/api-client');
 const subscriptionService = require('./subscription');
 const config = require('config');
 
+const formatIntervalDate = (interval) => {
+  let startDate, nextDate;
+
+  switch (interval) {
+    case '12 months':
+      nextDate = new Date(new Date().setMonth(new Date().getMonth() + 12));
+      startDate = nextDate.toISOString().slice(0, 10);
+      break;
+    case '1 week':
+      nextDate = new Date(new Date().setDate(new Date().getDate() + 7));
+      startDate = nextDate.toISOString().slice(0, 10);
+      break;
+    case '1 month':
+      nextDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
+      startDate = nextDate.toISOString().slice(0, 10);
+      break;
+    case '14 days':
+      nextDate = new Date(new Date().setDate(new Date().getDate() + 14));
+      startDate = nextDate.toISOString().slice(0, 10);
+      break;
+  }
+
+  return startDate;
+}
+
 exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail, redirectUser) => {
   const mollieClient = createMollieClient({apiKey: mollieApiKey});
   const paymentConfig = site.config && site.config.payment ? site.config.payment : {};
@@ -16,10 +41,20 @@ exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail
     if (order.extraData && order.extraData.isSubscription && order.userId) {
       const customerUserKey =  paymentModus +'_mollieCustomerId';
       const mollieCustomerId = user.siteData[customerUserKey];
+      const interval = order.extraData.subscriptionInterval
 
       console.log('order', order);
       console.log('user.id', user.id);
       console.log('mollieCustomerId', mollieCustomerId);
+      console.log('interval', interval)
+
+      let startDate =  formatIntervalDate(interval);
+      console.log('Found startdate: ', startDate);
+
+      if (!startDate) {
+        throw new Error('Couldnt format new startdate for mollie subscription for interval ', interval, ' and order id ', order.id);
+        return;
+      }
 
       const mollieOptions = {
         customerId: mollieCustomerId,
@@ -30,11 +65,14 @@ exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail
         description: order.description ? order.description : 'Subscription order at ' + site.title,
         //  redirectUrl: paymentApiUrl,
         interval: order.extraData.subscriptionInterval,
-        webhookUrl: baseUrl + '/api/site/' + site.id + '/order/' + order.id + '/payment/mollie'
+        webhookUrl: baseUrl + '/api/site/' + site.id + '/order/' + order.id + '/payment/mollie',
+        startDate: startDate
       };
 
       const subscription = await mollieClient.customers_subscriptions.create(mollieOptions);
 
+      console.log('Found subscription: ', subscription);
+      
       await subscriptionService.update({
         user,
         provider: 'mollie',
