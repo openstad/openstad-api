@@ -10,6 +10,49 @@ const merge = require('merge');
 
 const router = express.Router({mergeParams: true});
 
+const activityKeys = ['ideas', 'articles', 'arguments', 'votes', 'sites'];
+
+const activityConfig = {
+  'ideas' : {
+      descriptionKey: 'summary',
+      type: {
+        slug: 'idea',
+        label: 'Idee'
+      }
+  },
+  'articles': {
+    descriptionKey: 'summary',
+    type: {
+      slug: 'article',
+      label: 'Artikel'
+    }
+  },
+  'arguments': {
+    descriptionKey: 'comment',
+    type: {
+      slug: 'arguement',
+      label: 'Reactie'
+    }
+  },
+  'votes': {
+    descriptionKey: '',
+    type: {
+      slug: 'vote',
+      label: 'Stem'
+    }
+  },
+  /*
+  'sites': {
+    descriptionKey: '',
+    type: {
+      slug: 'site',
+      label: 'Site'
+    }
+  },
+
+   */
+}
+
 router
   .all('*', function (req, res, next) {
     // req.scope = ['includeSite'];
@@ -29,7 +72,7 @@ router.route('/')
         req.activities.push(key)
       }
     });
-    if ( req.activities.length == 0 ) req.activities = ['ideas', 'articles', 'arguments', 'votes', 'sites'];
+    if ( req.activities.length == 0 ) req.activities = activityKeys;
 
     if (req.query.includeOtherSites == 'false' || req.query.includeOtherSites == '0') req.query.includeOtherSites = false;
     req.includeOtherSites = typeof req.query.includeOtherSites != 'undefined' ? !!req.query.includeOtherSites : true;
@@ -173,12 +216,50 @@ router.route('/')
 
   .get(function (req, res, next) {
     // customized version of auth.useReqUser
+
+    let activity = [];
+
     req.activities.forEach(which => {
+
       req.results[which] && req.results[which].forEach( result => {
         result.auth = result.auth || {};
         result.auth.user = req.user;
       });
+
+      if (activityConfig[which]) {
+        const formattedAsActivities = req.results[which] && Array.isArray(req.results[which]) ? req.results[which].map((resource) => {
+          const config = activityConfig[which];
+          const idea = which === 'idea' ? resource : resource.idea;
+
+           console.log('resource which', which, resource.title, resource.idea)
+
+
+          return {
+            description: resource[config.descriptionKey],
+            type: config.type,
+            idea: idea,
+            createdAt: resource.createdAt
+          }
+        }) : [];
+
+        console.log('formattedAsActivities', formattedAsActivities)
+
+        // we merge activities
+        activity = activity.concat(formattedAsActivities)
+      }
     });
+
+
+
+    // sort activities on createdAt
+
+    activity.sort((a, b) => {
+      var dateA = new Date(a.createdAt), dateB = new Date(b.createdAt)
+      return dateB- dateA;
+    })
+
+    req.results.activity = activity;
+
     return next();
   })
   .get(function (req, res, next) {
