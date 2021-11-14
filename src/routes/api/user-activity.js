@@ -14,31 +14,31 @@ const activityKeys = ['ideas', 'articles', 'arguments', 'votes', 'sites'];
 
 const activityConfig = {
   'ideas' : {
-      descriptionKey: 'summary',
+      descriptionKey: 'description',
       type: {
         slug: 'idea',
-        label: 'Idee'
+        label: 'inzending'
       }
   },
   'articles': {
-    descriptionKey: 'summary',
+    descriptionKey: 'description',
     type: {
       slug: 'article',
-      label: 'Artikel'
+      label: 'artikel'
     }
   },
   'arguments': {
-    descriptionKey: 'comment',
+    descriptionKey: 'description',
     type: {
-      slug: 'arguement',
-      label: 'Reactie'
+      slug: 'argument',
+      label: 'reactie'
     }
   },
   'votes': {
     descriptionKey: '',
     type: {
       slug: 'vote',
-      label: 'Stem'
+      label: 'stem'
     }
   },
   /*
@@ -191,6 +191,7 @@ router.route('/')
     if (!req.activities.includes('arguments')) return next();
     let where = { userId: req.userIds };
     return db.Argument
+      .scope(['withIdea'])
       .findAll({ where })
       .then(function(rows) {
         req.results.arguments = rows;
@@ -207,6 +208,7 @@ router.route('/')
     if (!req.activities.includes('votes')) return next();
     let where = { userId: req.userIds };
     return db.Vote
+      .scope(['withIdea'])
       .findAll({ where })
       .then(function(rows) {
         req.results.votes = rows;
@@ -229,20 +231,16 @@ router.route('/')
       if (activityConfig[which]) {
         const formattedAsActivities = req.results[which] && Array.isArray(req.results[which]) ? req.results[which].map((resource) => {
           const config = activityConfig[which];
-          const idea = which === 'idea' ? resource : resource.idea;
-
-           console.log('resource which', which, resource.title, resource.idea)
-
+          const idea = which === 'ideas' ? resource : resource.idea;
 
           return {
-            description: resource[config.descriptionKey],
+             //strip html tags
+            description: resource[config.descriptionKey] ? resource[config.descriptionKey].replace(/<[^>]+>/g, '') : '',
             type: config.type,
             idea: idea,
             createdAt: resource.createdAt
           }
         }) : [];
-
-        console.log('formattedAsActivities', formattedAsActivities)
 
         // we merge activities
         activity = activity.concat(formattedAsActivities)
