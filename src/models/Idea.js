@@ -734,12 +734,13 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
       includeTags: {
-        include: [{
-          model: db.Tag,
+        include: [{model: db.Tag,
           attributes: ['id', 'name'],
           through: {attributes: []},
         }]
       },
+
+
 
       selectTags: function (tags) {
         return {

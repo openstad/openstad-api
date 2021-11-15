@@ -19,7 +19,9 @@ const filterBody = (req, res, next) => {
 
   keys.forEach((key) => {
     if (req.body[key]) {
-      data[key] = req.body[key];
+      let value =  req.body[key];
+      value = typeof value === 'string' ? value.trim() : value;
+      data[key] = value;
     }
   });
 
@@ -151,6 +153,8 @@ router.route('/')
       })
       .then(found => {
         if (found) {
+          console.log('user already exists', found);
+
           throw new Error('User already exists');
         } else {
           next();

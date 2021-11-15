@@ -71,6 +71,14 @@ module.exports = function( db, sequelize, DataTypes ) {
 					}],
 				};
 			},
+			withIdea: function() {
+				return {
+					include: [{
+						model      : db.Idea,
+						attributes : ['id', 'title', 'status', 'viewableByRole']
+					}]
+				}
+			},
 			includeUser: {
 				include: [{
 					model      : db.User,
