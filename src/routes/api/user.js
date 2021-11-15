@@ -251,6 +251,7 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
         let xx = ids.map( siteId => users.find(user => siteId == user.siteId) );
         let userIds = ids.map( siteId => users.find(user => siteId == user.siteId) ).filter(user => !!user).map( user => user.id );
         req.onlyUserIds = (req.onlyUserIds || []).concat(userIds);
+        req.onlyUserIds = req.onlyUserIds.filter((value, index, self) => self.indexOf(value) === index ); // filter duplication
       }
     } catch (err) {
       return next(err);
