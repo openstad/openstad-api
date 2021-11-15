@@ -233,7 +233,25 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
       if (!ids) return next();
       if (!Array.isArray(ids)) ids = [ids];
       ids = ids.map(id => parseInt(id)).filter(id => typeof id == 'number');
-      if (ids.length) req.onlyIds = ids;
+      if (ids.length) req.onlyUserIds = ids;
+    } catch (err) {
+      return next(err);
+    }
+    return next();
+  })
+  .put(async function (req, res, next) {
+    // if body contains site ids then anonimize only the users for those sites
+    try {
+      let ids = req.body && req.body.onlySiteIds;
+      if (!ids) return next();
+      if (!Array.isArray(ids)) ids = [ids];
+      ids = ids.map(id => parseInt(id)).filter(id => typeof id == 'number');
+      if (ids.length) {
+        let users = [ req.targetUser, ...req.linkedUsers ];
+        let xx = ids.map( siteId => users.find(user => siteId == user.siteId) );
+        let userIds = ids.map( siteId => users.find(user => siteId == user.siteId) ).filter(user => !!user).map( user => user.id );
+        req.onlyUserIds = (req.onlyUserIds || []).concat(userIds);
+      }
     } catch (err) {
       return next(err);
     }
@@ -242,7 +260,7 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
   .put(async function (req, res, next) {
     let result;
     if (!(req.targetUser && req.targetUser.can && req.targetUser.can('update', req.user))) return next(new Error('You cannot update this User'));
-    if (req.onlyIds && !req.onlyIds.includes(req.targetUser.id)) {
+    if (req.onlyUserIds && !req.onlyUserIds.includes(req.targetUser.id)) {
       req.results = {
         "ideas": [],
         "articles": [],
@@ -274,7 +292,7 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
     if ( !(req.linkedUsers) ) return next();
     try {
       for (const user of req.linkedUsers) {
-        if (!req.onlyIds ||req.onlyIds.includes(user.id)) {
+        if (!req.onlyUserIds || req.onlyUserIds.includes(user.id)) {
           let result;
           if (!(user && user.can && user.can('update', req.user))) return next(new Error('You cannot update this User'));
           if (req.params.willOrDo == 'do') {
