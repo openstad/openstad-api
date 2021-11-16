@@ -28,7 +28,7 @@ module.exports = async function getUser( req, res, next ) {
       return nextWithEmptyUser(req, res, next);
     }
 
-    const userEntity = await getUserInstance({ siteConfig, which, userId, siteId: ( req.site && req.site.id ) });
+    const userEntity = await getUserInstance({ siteConfig, which, userId, siteId: ( req.site && req.site.id ) }) || {};
     req.user = userEntity
     // Pass user entity to template view.
     res.locals.user = userEntity;
