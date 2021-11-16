@@ -28,7 +28,7 @@ module.exports = async function getUser( req, res, next ) {
       return nextWithEmptyUser(req, res, next);
     }
 
-    const userEntity = await getUserInstance({ siteConfig, which, userId });
+    const userEntity = await getUserInstance({ siteConfig, which, userId, siteId: ( req.site && req.site.id ) });
     req.user = userEntity
     // Pass user entity to template view.
     res.locals.user = userEntity;
@@ -97,13 +97,16 @@ function parseJwt(authorizationHeader) {
  * @param siteConfig
  * @returns {Promise<{}|{externalUserId}|*>}
  */
-async function getUserInstance({ siteConfig, which = 'default', userId }) {
+async function getUserInstance({ siteConfig, which = 'default', userId, siteId }) {
 
   let dbUser;
   
   try {
 
-    dbUser = await db.User.findByPk(userId.id);
+    let where = { id: userId.id };
+    if (siteId) where.siteId = siteId;
+
+    dbUser = await db.User.findOne({ where });
 
     if (!dbUser || !dbUser.externalUserId || !dbUser.externalAccessToken) {
       return userId.fixed ? dbUser : {};
@@ -117,6 +120,7 @@ async function getUserInstance({ siteConfig, which = 'default', userId }) {
   try {
 
     let oauthUser = await OAuthApi.fetchUser({ siteConfig, which, token: dbUser.externalAccessToken });
+    if (!oauthUser) return await resetUserToken(dbUser);
 
     let mergedUser = merge(dbUser, oauthUser);
     mergedUser.role = mergedUser.role || ((mergedUser.email || mergedUser.phoneNumber || mergedUser.hashedPhoneNumber) ? 'member' : 'anonymous');
