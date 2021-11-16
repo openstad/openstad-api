@@ -368,14 +368,10 @@ router.route('/:tourId(\\d+)/publish')
                 }
               });
 
-              console.log('product update', product);
-
             }
 
 
             if (product) {
-
-
               let extraData = product.extraData ? product.extraData : {};
               extraData = Object.assign(extraData, membership);
               extraData.planId = membership.id;
@@ -390,18 +386,16 @@ router.route('/:tourId(\\d+)/publish')
                 subscription: true,
                 extraData
               })
-              next();
             }
           } catch (e) {
             console.log('Create product error: ', e)
             //next(e);
-            next();
-            return
+            //return
           }
         }
       }
 
-
+      next();
     } catch (e) {
       next(e);
     }
