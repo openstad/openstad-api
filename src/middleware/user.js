@@ -104,7 +104,7 @@ async function getUserInstance({ siteConfig, which = 'default', userId, siteId }
   try {
 
     let where = { id: userId.id };
-    if (siteId) where.siteId = siteId;
+    if (siteId && !userId.fixed) where.siteId = siteId;
 
     dbUser = await db.User.findOne({ where });
 
