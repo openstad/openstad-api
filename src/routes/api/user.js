@@ -18,7 +18,7 @@ const filterBody = (req, res, next) => {
   const keys = ['firstName', 'lastName', 'nickName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole'];
 
   keys.forEach((key) => {
-    if (req.body[key]) {
+    if (typeof req.body[key] != 'undefined') {
       let value =  req.body[key];
       value = typeof value === 'string' ? value.trim() : value;
       data[key] = value;
@@ -444,6 +444,7 @@ router.route('/:userId(\\d+)')
                     return new Promise((resolve, reject) => {
 
                       let userSiteConfig = merge(true, user.site.config, {id: user.site.id});
+
                       let clonedUserData = merge(true, mergedUserData);
                       let siteUserData = OAuthUser.parseDataForSite(userSiteConfig, clonedUserData);
 
