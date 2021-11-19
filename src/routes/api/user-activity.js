@@ -194,7 +194,7 @@ router.route('/')
       .scope(['withIdea'])
       .findAll({ where })
       .then(function(rows) {
-        req.results.arguments = rows;
+        req.results.arguments = rows.filter(row => !!row.idea);
         return next();
       })
   })
@@ -211,7 +211,7 @@ router.route('/')
       .scope(['withIdea'])
       .findAll({ where })
       .then(function(rows) {
-        req.results.votes = rows;
+        req.results.votes = rows.filter(row => !!row.idea);;
         return next();
       })
   })
