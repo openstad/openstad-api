@@ -19,7 +19,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			allowNull    : true,
 			validate     : {
 				isEmail: {
-					msg: 'Geen geldig emailadres'
+					msg: 'Invalid email address'
 				},
 				notBlackListed: function( email ) {
 					var match = email && email.match(/^.+@(.+)$/);

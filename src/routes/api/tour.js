@@ -367,9 +367,7 @@ router.route('/:tourId(\\d+)/publish')
                   id: productId
                 }
               });
-
             }
-
 
             if (product) {
               let extraData = product.extraData ? product.extraData : {};

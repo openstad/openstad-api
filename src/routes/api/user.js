@@ -228,7 +228,7 @@ router.route('/')
             })
             .then(found => {
                 if (found) {
-                    throw createError(401, 'User already exists');
+                    throw createError(401, 'User already exists, try to login');
                 } else {
                     next();
                 }
@@ -351,7 +351,7 @@ router.route('/:userId(\\d+)')
 
                 console.log('rresponse', response);
 
-                throw createError(401, 'Error creating user', response);
+                throw createError(401, 'Could not create a user, most likely user exists already', response);
             })
             .then((json) => {
                 return db.User

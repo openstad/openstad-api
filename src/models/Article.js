@@ -103,7 +103,7 @@ module.exports = function (db, sequelize, DataTypes) {
                     let titleMinLength = (this.config && this.config.articles && this.config.articles.titleMinLength || 10)
                     let titleMaxLength = (this.config && this.config.articles && this.config.articles.titleMaxLength || 50)
                     if (len < titleMinLength || len > titleMaxLength)
-                        throw new Error(`Titel moet tussen ${titleMinLength} en ${titleMaxLength} tekens zijn`);
+                        throw new Error(`Title should be between ${titleMinLength} and ${titleMaxLength} characters`);
                 }
             },
             set: function (text) {
@@ -142,7 +142,7 @@ module.exports = function (db, sequelize, DataTypes) {
                     let summaryMinLength = (this.config && this.config.articles && this.config.articles.summaryMinLength || 20)
                     let summaryMaxLength = (this.config && this.config.articles && this.config.articles.summaryMaxLength || 140)
                     if (len < summaryMinLength || len > summaryMaxLength)
-                        throw new Error(`Samenvatting moet tussen ${summaryMinLength} en ${summaryMaxLength} tekens zijn`);
+                        throw new Error(`Summary must be between ${summaryMinLength} and ${summaryMaxLength} characters`);
                 }
             },
             set: function (text) {

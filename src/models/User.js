@@ -267,7 +267,7 @@ module.exports = function (db, sequelize, DataTypes) {
             allowNull: true,
             validate: {
                 isEmail: {
-                    msg: 'Geen geldig emailadres'
+                    msg: 'Invalid email address'
                 },
                 notBlackListed: function (email) {
                     var match = email && email.match(/^.+@(.+)$/);
@@ -292,7 +292,7 @@ module.exports = function (db, sequelize, DataTypes) {
             validate: {
                 len: {
                     args: [6, 64],
-                    msg: 'Wachtwoord moet tussen 6 en 64 tekens zijn'
+                    msg: 'Password should be between 6 and 64 characters'
                 }
             },
             set: function (password) {
@@ -596,7 +596,7 @@ module.exports = function (db, sequelize, DataTypes) {
             validate: {
                 is: {
                     args: [/^\d{4} ?[a-zA-Z]{2}$/],
-                    msg: 'Ongeldige postcode'
+                    msg: 'Invalid postcode'
                 }
             },
             set: function (zipCode) {
@@ -622,7 +622,7 @@ module.exports = function (db, sequelize, DataTypes) {
                 validate: {
                     is: {
                         args: [/^\d{4} ?[a-zA-Z]{2}$/],
-                        msg: 'Ongeldige postcode'
+                        msg: 'Invalid postcode'
                     }
                 },
                 set: function (zipCode) {
