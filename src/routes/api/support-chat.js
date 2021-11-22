@@ -3,6 +3,51 @@ const auth = require('../../middleware/sequelize-authorization-middleware');
 const router = require('express-promise-router')({mergeParams: true});
 var createError = require('http-errors');
 const Pusher = require("pusher");
+const fetch = require('node-fetch');
+
+const OnesignalService = {
+  sendPushToUser : async ({userId, message, oneSignalAppId, oneSignalRestApiKey}) => {
+    var headers = {
+      "Content-Type": "application/json; charset=utf-8",
+      "Authorization": "Basic " +  oneSignalRestApiKey
+    };
+
+    var message = {
+      app_id: oneSignalAppId ? oneSignalAppId : "5eb5a37e-b458-11e3-ac11-000c2940e62c",
+      contents: {"en": message},
+      channel_for_external_user_ids: "push",
+      include_external_user_ids: [userId]
+    };
+
+    const response = await fetch("https://onesignal.com/api/v1/notifications/api/v1/notifications",
+       {
+         headers: headers,
+         method: 'POST',
+         body: message
+       }
+    )
+    const json = await response.json()
+
+    var https = require('https');
+
+    var req = https.request(options, function(res) {
+      res.on('data', function(data) {
+        console.log("Response:");
+        console.log(JSON.parse(data));
+      });
+    });
+
+    req.on('error', function(e) {
+      console.log("ERROR:");
+      console.log(e);
+    });
+
+    req.write(JSON.stringify(data));
+    req.end();
+
+  }
+}
+
 
 // scopes: for all get requests
 router
@@ -148,7 +193,6 @@ router.route('/:requestingUserId')
         return 0;
       });
 
-
       supportChat.set('messages', messages);
 
       await supportChat.save();
@@ -163,6 +207,14 @@ router.route('/:requestingUserId')
       });
 
       const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'new-message', message);
+
+      await OnesignalService.sendPushToUser({
+          userId: req.params.requestingUserId,
+          oneSignalAppId: req.site.config && req.site.config.onesignal &&  req.site.config.onesignal.appId ?  req.site.config.onesignal.appId: "f982611b-0019-47a6-bbf2-649444fae6dd",
+          message,
+          oneSignalRestApiKey : req.site.config && req.site.config.onesignal &&  req.site.config.onesignal.restApiKey ?  req.site.config.onesignal.restApiKey :  'YzU4MWNkNzUtNWEwMy00OTY5LTlkNDktYTA2ZmY2ZmM0Mzcz'
+        },
+      );
 
       res.json(message);
     } catch (e) {
