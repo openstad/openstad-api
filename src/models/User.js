@@ -143,39 +143,39 @@ module.exports = function (db, sequelize, DataTypes) {
       }
     },
 
-    password: {
-      type: DataTypes.VIRTUAL,
-      allowNull: true,
-      defaultValue: null,
-      auth: {
-        listableBy: 'none',
-        viewableBy: 'none',
-        updateableBy: 'owner',
-      },
-      validate: {
-        len: {
-          args: [6, 64],
-          msg: 'Wachtwoord moet tussen 6 en 64 tekens zijn'
-        }
-      },
-      set: function (password) {
-        var method = config.get('security.passwordHashing.currentMethod');
-        this.setDataValue('password', password);
-        this.set('passwordHash', password ?
-                 Password[method].hash(password) :
-                 null
-                );
-      }
-    },
-
-    passwordHash: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      set: function (hashObject) {
-        var hash = hashObject ? JSON.stringify(hashObject) : null;
-        this.setDataValue('passwordHash', hash);
-      }
-    },
+    // password: {
+    //   type: DataTypes.VIRTUAL,
+    //   allowNull: true,
+    //   defaultValue: null,
+    //   auth: {
+    //     listableBy: 'none',
+    //     viewableBy: 'none',
+    //     updateableBy: 'owner',
+    //   },
+    //   validate: {
+    //     len: {
+    //       args: [6, 64],
+    //       msg: 'Wachtwoord moet tussen 6 en 64 tekens zijn'
+    //     }
+    //   },
+    //   set: function (password) {
+    //     var method = config.get('security.passwordHashing.currentMethod');
+    //     this.setDataValue('password', password);
+    //     this.set('passwordHash', password ?
+    //              Password[method].hash(password) :
+    //              null
+    //             );
+    //   }
+    // },
+    //  
+    // passwordHash: {
+    //   type: DataTypes.TEXT,
+    //   allowNull: true,
+    //   set: function (hashObject) {
+    //     var hash = hashObject ? JSON.stringify(hashObject) : null;
+    //     this.setDataValue('passwordHash', hash);
+    //   }
+    // },
 
     nickName: {
       type: DataTypes.STRING(64),
