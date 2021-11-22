@@ -11,8 +11,7 @@ on:
   push:
     branches:
       - master
-      - development
-      - feature/*
+      - develop
       - release/*
       - release-*
       - release
@@ -43,6 +42,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Set environment to dev
+        id: acc_values_file
+        shell: bash
+        if: contains(github.ref, 'develop')
+        run: echo "GITOPS_VALUES_FILE=k8s/openstad/environments/dev.values.yaml" >> $GITHUB_ENV
 
       - name: Set environment to acc
         id: acc_values_file
