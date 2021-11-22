@@ -2,12 +2,8 @@ const AWS = require('aws-sdk');
 const fs = require('fs'); // Needed for example below
 const mysqldump = require('mysqldump');
 const moment = require('moment')
-
-
-var Promise = require('bluebird');
-
-var log     = require('debug')('app:cron');
-var db      = require('../db');
+const log = require('debug')('app:cron');
+const db = require('../db');
 
 // Purpose
 // -------
