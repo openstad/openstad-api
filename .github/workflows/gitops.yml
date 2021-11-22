@@ -44,7 +44,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set environment to dev
-        id: acc_values_file
+        id: dev_values_file
         shell: bash
         if: contains(github.ref, 'develop')
         run: echo "GITOPS_VALUES_FILE=k8s/openstad/environments/dev.values.yaml" >> $GITHUB_ENV
