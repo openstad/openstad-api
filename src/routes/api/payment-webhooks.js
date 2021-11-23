@@ -7,6 +7,7 @@ const db = require('../../db');
 const config = require('config');
 const rp = require('request-promise');
 const crypto = require('crypto');
+const mail = require('../../lib/mail');
 
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const Sequelize = require('sequelize');
@@ -19,33 +20,48 @@ router.route('/mollie/payment')
   .post(async function (req, res) {
     try {
 
+      console.log('Webhook mollie start', req.body);
+
+      const mollieApiKey = req.site.config && req.site.config.payment && req.site.config.payment.mollieApiKey ? req.site.config.payment.mollieApiKey : '';
+      const paymentId = req.body.id; //tr_d0b0E3EA3v
+
+      console.log('Webhook mollie start mollieApiKey', mollieApiKey);
+      console.log('Webhook mollie start paymentId', paymentId);
+
+
+      const escapedKey = db.sequelize.escape(`$.paymentId`);
+      const escapedValue = db.sequelize.escape(paymentId);
+      const query = db.sequelize.literal(`extraData->${escapedKey}=${escapedValue}`);
+
+      console.log('Webhook mollie start query', query);
+
+      const order = await db.Order.findOne({
+        [Sequelize.Op.and]: query,
+        siteId: req.site.id
+      });
+
+      if (order) {
+        console.log('Webhook order found', order.id);
+      } else {
+        console.log('Webhook order not found', order);
+
+      }
+
+      const user = await db.User.findOne({where: {id: order.userId}});
+
+      const result = await mollieService.processPayment(paymentId, mollieApiKey, req.site, order, user, mail, () => {
+        console.log('Order completed')
+      });
+
       await db.ActionLog.create({
         actionId: 0,
         log: {
           mollieEvent: true,
           body: req.body,
-         // userId: user.id ? user.id : false
+          // userId: user.id ? user.id : false
         },
         status: 'info'
       });
-
-      const paymentId = req.body.id; //tr_d0b0E3EA3v
-    const mollieApiKey = req.site.config && req.site.config.payment && req.site.config.payment.mollieApiKey ? req.site.config.payment.mollieApiKey : '';
-
-    const escapedKey = db.sequelize.escape(`$.paymentId`);
-    const escapedValue = db.sequelize.escape(paymentId);
-    const query = db.sequelize.literal(`extraData->${escapedKey}=${escapedValue}`);
-
-    const order = await db.Order.findOne({
-      [Sequelize.Op.and]: query,
-      siteId: req.site.id
-    });
-
-    console.log('Webhook order found', order);
-
-    const user = await db.User.findOne({where: {id: order.userId}});
-
-      const result = await mollieService.processPayment(paymentId, mollieApiKey, req.site, order, user, mail, done);
     } catch (e) {
       console.log('Error processing payment: ', e)
       next(e);
@@ -68,10 +84,10 @@ router.route('/paystack')
       // Retrieve the request's body
       const event = req.body;
       const eventData = event.data ? event.data : {};
-      const paystackPlancode = eventData.plan && eventData.plan.plan_code ?   eventData.plan.plan_code : false;
+      const paystackPlancode = eventData.plan && eventData.plan.plan_code ? eventData.plan.plan_code : false;
       const customerData = eventData && eventData.customer ? eventData.customer : {};
       const customerCode = customerData.customer_code;
-      const customerUserCodeKey = paymentModus +'_paystackCustomerCode';
+      const customerUserCodeKey = paymentModus + '_paystackCustomerCode';
       const subscriptionCode = eventData.subscription_code;
 
       console.log('paystackPlancode', paystackPlancode)
@@ -166,7 +182,7 @@ router.route('/paystack')
               paystackSubscriptionCode: subscriptionCode,
               siteId: req.site.id,
               paystackPlanCode: paystackPlancode,
-              planId: product && product.extraData && product.extraData.planId ?  product.extraData.planId : ''
+              planId: product && product.extraData && product.extraData.planId ? product.extraData.planId : ''
             });
 
             break;

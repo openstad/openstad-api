@@ -410,7 +410,7 @@ router.route('/')
             },
             description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
             redirectUrl: paymentApiUrl,
-            webhookUrl: baseUrl + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment/mollie'
+            webhookUrl: baseUrl + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/mollie/payment'
             //	webhookUrl:  paymentApiUrl,
           }
 
