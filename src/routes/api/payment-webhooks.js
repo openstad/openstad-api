@@ -18,7 +18,7 @@ let router = express.Router({mergeParams: true});
 
 
 router.route('/mollie')
-  .post(async function (req, res) {
+  .post(async function (req, res, next) {
     try {
 
       console.log('Webhook mollie start', req.body);
