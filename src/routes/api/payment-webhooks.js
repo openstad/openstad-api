@@ -30,11 +30,13 @@ router.route('/mollie')
       console.log('Webhook mollie start paymentId', paymentId);
 
 
-      const escapedKey = db.sequelize.escape(`$.paymentId`);
+    //  const escapedKey = db.sequelize.escape(`$.paymentId`);
       const escapedValue = db.sequelize.escape(paymentId);
-      const query = db.sequelize.literal(`extraData->${escapedKey}=${escapedValue}`);
+      const query = db.sequelize.literal(`extraData LIKE ${escapedValue}`);
 
       console.log('Webhook mollie start query', query);
+
+
 
       const order = await db.Order.findOne({
         [Sequelize.Op.and]: query,
