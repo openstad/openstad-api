@@ -37,10 +37,11 @@ router.route('/mollie')
       console.log('Webhook mollie start query', query);
 
 
-
       const order = await db.Order.findOne({
-        [Sequelize.Op.and]: query,
-        siteId: req.site.id
+        where : {
+          [Sequelize.Op.and]: query,
+          siteId: req.site.id
+        }
       });
 
       if (order) {
