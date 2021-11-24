@@ -41,7 +41,7 @@ router.route('/mollie')
       const order = await db.Order.findOne({
         where : {
           [Sequelize.Op.and]: query,
-          siteId: req.site.id
+   //       siteId: req.site.id
         }
       });
 
