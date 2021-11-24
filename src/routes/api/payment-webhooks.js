@@ -16,7 +16,7 @@ const subscriptionService = require('../../services/subscription');
 let router = express.Router({mergeParams: true});
 
 
-router.route('/mollie/payment')
+router.route('/mollie')
   .post(async function (req, res) {
     try {
 
