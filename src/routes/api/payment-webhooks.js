@@ -12,6 +12,7 @@ const mail = require('../../lib/mail');
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const Sequelize = require('sequelize');
 const subscriptionService = require('../../services/subscription');
+const mollieService = require('../../services/mollie')
 
 let router = express.Router({mergeParams: true});
 
