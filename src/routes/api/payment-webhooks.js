@@ -31,7 +31,8 @@ router.route('/mollie')
 
 
     //  const escapedKey = db.sequelize.escape(`$.paymentId`);
-      const escapedValue = db.sequelize.escape(paymentId);
+      const escapedValue = db.sequelize.escape('%' + paymentId + '%');
+
       const query = db.sequelize.literal(`extraData LIKE ${escapedValue}`);
 
       console.log('Webhook mollie start query', query);
