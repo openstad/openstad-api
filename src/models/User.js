@@ -71,7 +71,7 @@ module.exports = function (db, sequelize, DataTypes) {
 					if (!self) return;
 
 					const updateAllRoles = ['admin'];
-					const updateMemberRoles = ['moderator'];
+					const updateMemberRoles = ['editor'];
 					const fallBackRole = 'anonymous';
 					const memberRole = 'member';
 
@@ -225,7 +225,7 @@ module.exports = function (db, sequelize, DataTypes) {
     },
 
     listableByRole: {
-      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      type: DataTypes.ENUM('admin', 'editor', 'moderator', 'member', 'anonymous', 'all'),
       defaultValue: null,
       auth: {
         viewableBy: ['editor', 'owner'],
@@ -235,7 +235,7 @@ module.exports = function (db, sequelize, DataTypes) {
     },
 
     detailsViewableByRole: {
-      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      type: DataTypes.ENUM('admin', 'editor', 'moderator', 'member', 'anonymous', 'all'),
       defaultValue: null,
       auth: {
         viewableBy: ['editor', 'owner'],
@@ -684,8 +684,8 @@ module.exports = function (db, sequelize, DataTypes) {
         externalAccessToken: null,
         role: 'anonymous',
         passwordHash: null,
-        listableByRole: 'moderator',
-        detailsViewableByRole: 'moderator',
+        listableByRole: 'editor',
+        detailsViewableByRole: 'editor',
         viewableByRole: 'admin',
         email: null,
         nickName: null, 

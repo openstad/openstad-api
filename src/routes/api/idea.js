@@ -23,7 +23,7 @@ router
     // in case the votes are archived don't use these queries
     // this means they can be cleaned up from the main table for performance reason
     if (!req.site.config.archivedVotes) {
-      if (req.query.includeVoteCount && req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable) {
+      if (req.query.includeVoteCount && ( (req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable) || userhasModeratorRights(req.user) )) {
         req.scope.push('includeVoteCount');
       }
 
@@ -33,7 +33,7 @@ router
       }
     }
     // because includeVoteCount is used in other locations but should only be active if isViewable
-    if (req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable) {
+    if ( (req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable) || userhasModeratorRights(req.user) ) {
       req.canIncludeVoteCount = true; // scope.push(undefined) would be easier but creates an error
     }
 

@@ -15,9 +15,6 @@ var argVoteThreshold = config.ideas && config.ideas.argumentVoteThreshold;
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 const roles = require('../lib/sequelize-authorization/lib/roles');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
-const hasModeratorRights = (user) => {
-  return userHasRole(user, 'editor', self.userId) || userHasRole(user, 'admin', self.userId) || userHasRole(user, 'moderator', self.userId);
-}
 
 function hideEmailsForNormalUsers(args) {
   return args.map((argument) => {
@@ -120,7 +117,7 @@ module.exports = function (db, sequelize, DataTypes) {
     },
 
     viewableByRole: {
-      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      type: DataTypes.ENUM('admin', 'editor', 'moderator', 'member', 'anonymous', 'all'),
       defaultValue: 'all',
       auth:  {
         updateableBy: ['editor', 'owner'],

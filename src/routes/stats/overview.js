@@ -92,7 +92,7 @@ router.route('/')
     .get((req, res, next) => {
 
        // let isViewable = req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable;
-        const isViewable = (req.user && (req.user.role == 'admin' || req.user.role == 'moderator' || req.user.role == 'editor'))
+        const isViewable = (req.user && (req.user.role == 'admin' || req.user.role == 'editor' || req.user.role == 'moderator'))
 
         if (isViewable) {
             return next();
