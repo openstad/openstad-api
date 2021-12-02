@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+* Add choices guide stats endpoint
+
 ## v0.19.0 (2021-12-02)
 * Removed enddate and duration from articles and ideas. Removed meetings.
 * Updated the use of charset and collation in the database connector
