@@ -2,8 +2,7 @@ var Sequelize = require('sequelize');
 var co = require('co')
 , config = require('config')
 , moment = require('moment-timezone')
-, pick = require('lodash/pick')
-, Promise = require('bluebird');
+, pick = require('lodash/pick');
 
 var sanitize = require('../util/sanitize');
 // var ImageOptim    = require('../ImageOptim');

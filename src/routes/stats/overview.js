@@ -8,9 +8,6 @@ const dbConfig = config.get('database');
 // get the client
 const mysql = require('mysql2/promise');
 
-// get the promise implementation, we will use bluebird
-const bluebird = require('bluebird');
-
 const express = require('express');
 const createError = require('http-errors')
 

@@ -1,4 +1,3 @@
-const Promise = require('bluebird');
 const Sequelize = require('sequelize');
 const express = require('express');
 const createError = require('http-errors');

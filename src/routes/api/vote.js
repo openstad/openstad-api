@@ -1,4 +1,3 @@
-const Promise     = require('bluebird');
 const express     = require('express');
 const createError = require('http-errors')
 const db          = require('../../db');

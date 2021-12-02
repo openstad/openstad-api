@@ -1,6 +1,5 @@
 const config     = require('config');
 const nodemailer = require('nodemailer');
-const Promise    = require('bluebird');
 const merge = require('merge');
 const htmlToText   = require('html-to-text');
 const MailConfig = require('./mail-config');

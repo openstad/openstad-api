@@ -1,4 +1,3 @@
-const Promise 				= require('bluebird');
 const express 				= require('express');
 const config 					= require('config');
 const fetch           = require('node-fetch');
