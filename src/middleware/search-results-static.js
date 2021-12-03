@@ -32,11 +32,11 @@ module.exports = function( req, res, next ) {
             switch (key) {
 
                 case 'text':
-                    searchFields = ['title', 'summary', 'description', 'niels'];
+                    searchFields = ['title', 'summary', 'description', 'firstName', 'lastName', 'email'];
                 case 'title':
                 case 'summary':
                 case 'description':
-                    searchFields = searchFields || [ key ];
+                    searchFields = ['title', 'summary', 'description', 'firstName', 'lastName', 'email'];
                     let searchResult = fuzzysort.go(value, list, {
                         threshold: -300, // todo: volkomen arbitrair; misschien moet je hem kunnen meesturen
                         keys: searchFields,
