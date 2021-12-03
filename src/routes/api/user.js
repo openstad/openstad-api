@@ -7,7 +7,9 @@ const db = require('../../db');
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const pagination = require('../../middleware/pagination');
 const {Op} = require('sequelize');
-const searchResults = require('../../middleware/search-results-user');
+//const searchResults = require('../../middleware/search-results-user');
+const searchResults = require('../../middleware/search-results-static');
+
 const fetch = require('node-fetch');
 const rp = require('request-promise');
 
@@ -82,10 +84,10 @@ router.route('/')
     // list users
     // ----------
     // .get(auth.can('User', 'list')) -> now handled by onlyListable
-    .get(function (req, res, next) {
-        req.scope.push({method: ['onlyListable', req.user.id, req.user.role]});
-        next();
-    })
+  .get(function (req, res, next) {
+      req.scope.push({method: ['onlyListable', req.user.id, req.user.role]});
+      next();
+  })
   .get(pagination.init)
   .get(function (req, res, next) {
       let {dbQuery} = req;
@@ -113,19 +115,21 @@ router.route('/')
        * Add siteId to query conditions
        * @type {{siteId: *}}
        */
-      const queryConditions = Object.assign(dbQuery.where, {siteId: req.params.siteId});
+      const queryConditions = Object.assign(dbQuery.where, {
+          siteId: req.params.siteId,
+          email: {
+              [Sequelize.Op.not]: null, // Like: sellDate IS NOT NULL
+          }
+      });
+
+      const options = {
+          ...dbQuery,
+          where: queryConditions,
+      }
 
       db.User
         .scope(...req.scope)
-        .findAndCountAll({
-            ...dbQuery,
-            where: {
-                ...queryConditions,
-                email: {
-                    [Sequelize.Op.and]: null, // Like: sellDate IS NOT NULL
-                }
-            },
-        })
+        .findAndCountAll(options)
         .then(function (result) {
             req.results = result.rows;
             req.dbQuery.count = result.count;
@@ -139,6 +143,11 @@ router.route('/')
   .get(function (req, res, next) {
       res.json(req.results);
   })
+
+  /*
+
+
+   */
 
     // create user
     // -----------

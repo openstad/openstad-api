@@ -225,6 +225,7 @@ router.route('/:requestingUserId/read')
       const userId = req.body.setToReadForUserId;
       let messages = req.supportChat.messages && Array.isArray(req.supportChat.messages) ? req.supportChat.messages : [];
 
+
       messages = messages.map((message) => {
         const readBy = message.readBy && Array.isArray(message.readBy) ? message.readBy : [];
 
