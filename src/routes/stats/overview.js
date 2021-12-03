@@ -230,7 +230,7 @@ router.route('/')
                 user: dbConfig.user,
                 password: dbConfig.password,
                 database: dbConfig.database,
-                Promise: bluebird
+                Promise
             });
 
             next();
