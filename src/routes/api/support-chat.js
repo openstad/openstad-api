@@ -237,7 +237,7 @@ router.route('/:requestingUserId/read')
       });
 
       const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'read-messages');
-      
+
       await req.supportChat.update({
         messages
       });

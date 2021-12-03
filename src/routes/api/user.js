@@ -86,51 +86,59 @@ router.route('/')
         req.scope.push({method: ['onlyListable', req.user.id, req.user.role]});
         next();
     })
-    .get(pagination.init)
-    .get(function (req, res, next) {
+  .get(pagination.init)
+  .get(function (req, res, next) {
+      let {dbQuery} = req;
 
+      if (!dbQuery.where) {
+          dbQuery.where = {};
+      }
 
-        if (dbQuery.where.q) {
-            dbQuery.search = {
-                haystack: ['email', 'role', 'firstName', 'lastName'],
-                needle: dbQuery.where.q,
-                offset: dbQuery.offset,
-                limit: dbQuery.limit,
-                pageSize: dbQuery.pageSize,
-            };
+      if (dbQuery.where.q) {
+          dbQuery.search = {
+              haystack: ['role', 'firstName', 'lastName'],
+              needle: dbQuery.where.q,
+              offset: dbQuery.offset,
+              limit: dbQuery.limit,
+              pageSize: dbQuery.pageSize,
+          };
 
-            delete dbQuery.where.q;
-            delete dbQuery.offset;
-            delete dbQuery.limit;
-            delete dbQuery.pageSize;
-        }
+          delete dbQuery.where.q;
+          delete dbQuery.offset;
+          delete dbQuery.limit;
+          delete dbQuery.pageSize;
+      }
 
-        dbQuery.where = {
-            siteId: req.params.siteId,
-            ...req.queryConditions,
-            ...dbQuery.where,
-            email: {
-                [Sequelize.Op.and]: null, // Like: sellDate IS NOT NULL
-            }
-        };
+      /**
+       * Add siteId to query conditions
+       * @type {{siteId: *}}
+       */
+      const queryConditions = Object.assign(dbQuery.where, {siteId: req.params.siteId});
 
-
-        db.User
-            .scope(...req.scope)
-            .findAndCountAll(dbQuery)
-            .then(function (result) {
-                req.results = result.rows;
-                req.dbQuery.count = result.count;
-                return next();
-            })
-            .catch(next);
-    })
-    .get(auth.useReqUser)
-    .get(searchResults)
-    .get(pagination.paginateResults)
-    .get(function (req, res, next) {
-        res.json(req.results);
-    })
+      db.User
+        .scope(...req.scope)
+        .findAndCountAll({
+            ...dbQuery,
+            where: {
+                ...queryConditions,
+                email: {
+                    [Sequelize.Op.and]: null, // Like: sellDate IS NOT NULL
+                }
+            },
+        })
+        .then(function (result) {
+            req.results = result.rows;
+            req.dbQuery.count = result.count;
+            return next();
+        })
+        .catch(next);
+  })
+  .get(auth.useReqUser)
+  .get(searchResults)
+  .get(pagination.paginateResults)
+  .get(function (req, res, next) {
+      res.json(req.results);
+  })
 
     // create user
     // -----------
