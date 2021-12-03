@@ -19,13 +19,17 @@ const OnesignalService = {
       include_external_user_ids: [userId]
     };
 
+
+    console.log('onesignal message', message)
+
     const response = await fetch("https://onesignal.com/api/v1/notifications/api/v1/notifications",
        {
          headers: headers,
          method: 'POST',
-         body: message
+         body: JSON.stringify(message)
        }
     )
+
     const json = await response.json()
 
     var https = require('https');
@@ -208,13 +212,17 @@ router.route('/:requestingUserId')
 
       const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'new-message', message);
 
-      await OnesignalService.sendPushToUser({
-          userId: req.params.requestingUserId,
-          oneSignalAppId: req.site.config && req.site.config.onesignal &&  req.site.config.onesignal.appId ?  req.site.config.onesignal.appId: "f982611b-0019-47a6-bbf2-649444fae6dd",
-          message,
-          oneSignalRestApiKey : req.site.config && req.site.config.onesignal &&  req.site.config.onesignal.restApiKey ?  req.site.config.onesignal.restApiKey :  'YzU4MWNkNzUtNWEwMy00OTY5LTlkNDktYTA2ZmY2ZmM0Mzcz'
-        },
-      );
+      try {
+        await OnesignalService.sendPushToUser({
+            userId: req.params.requestingUserId,
+            oneSignalAppId: req.site.config && req.site.config.onesignal && req.site.config.onesignal.appId ? req.site.config.onesignal.appId : "f982611b-0019-47a6-bbf2-649444fae6dd",
+            message,
+            oneSignalRestApiKey: req.site.config && req.site.config.onesignal && req.site.config.onesignal.restApiKey ? req.site.config.onesignal.restApiKey : 'YzU4MWNkNzUtNWEwMy00OTY5LTlkNDktYTA2ZmY2ZmM0Mzcz'
+          },
+        );
+      } catch (e) {
+        console.log('Error seding onesignal push: ', e)
+      }
 
       res.json(message);
     } catch (e) {

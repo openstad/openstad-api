@@ -88,15 +88,11 @@ router.route('/')
     })
     .get(pagination.init)
     .get(function (req, res, next) {
-        let {dbQuery} = req;
 
-        if (!dbQuery.where) {
-            dbQuery.where = {};
-        }
 
         if (dbQuery.where.q) {
             dbQuery.search = {
-                haystack: ['role', 'firstName', 'lastName'],
+                haystack: ['email', 'role', 'firstName', 'lastName'],
                 needle: dbQuery.where.q,
                 offset: dbQuery.offset,
                 limit: dbQuery.limit,
@@ -109,18 +105,19 @@ router.route('/')
             delete dbQuery.pageSize;
         }
 
-        /**
-         * Add siteId to query conditions
-         * @type {{siteId: *}}
-         */
-        const queryConditions = Object.assign(dbQuery.where, {siteId: req.params.siteId});
+        dbQuery.where = {
+            siteId: req.params.siteId,
+            ...req.queryConditions,
+            ...dbQuery.where,
+            email: {
+                [Sequelize.Op.and]: null, // Like: sellDate IS NOT NULL
+            }
+        };
+
 
         db.User
             .scope(...req.scope)
-            .findAndCountAll({
-                ...dbQuery,
-                where: queryConditions,
-            })
+            .findAndCountAll(dbQuery)
             .then(function (result) {
                 req.results = result.rows;
                 req.dbQuery.count = result.count;

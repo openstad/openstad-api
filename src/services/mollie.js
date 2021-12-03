@@ -26,7 +26,6 @@ const formatIntervalDate = (interval) => {
 
   return startDate;
 }
-
 exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail, redirectUser) => {
   const mollieClient = createMollieClient({apiKey: mollieApiKey});
   const paymentConfig = site.config && site.config.payment ? site.config.payment : {};
