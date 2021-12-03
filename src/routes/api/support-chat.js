@@ -7,12 +7,12 @@ const fetch = require('node-fetch');
 
 const OnesignalService = {
   sendPushToUser : async ({userId, message, oneSignalAppId, oneSignalRestApiKey}) => {
-    var headers = {
+    const headers = {
       "Content-Type": "application/json; charset=utf-8",
       "Authorization": "Basic " +  oneSignalRestApiKey
     };
 
-    var message = {
+    const messageData = {
       app_id: oneSignalAppId ? oneSignalAppId : "5eb5a37e-b458-11e3-ac11-000c2940e62c",
       contents: {"en": message},
       channel_for_external_user_ids: "push",
@@ -20,34 +20,22 @@ const OnesignalService = {
     };
 
 
-    console.log('onesignal message', message)
 
-    const response = await fetch("https://onesignal.com/api/v1/notifications/api/v1/notifications",
+    console.log('onesignal message', JSON.stringify(messageData))
+
+    const response = await fetch("https://onesignal.com/api/v1/notifications",
        {
          headers: headers,
          method: 'POST',
-         body: JSON.stringify(message)
+         body: JSON.stringify(messageData)
        }
     )
+    console.log('response', response)
 
-    const json = await response.json()
+    const json = await response.json();
 
-    var https = require('https');
 
-    var req = https.request(options, function(res) {
-      res.on('data', function(data) {
-        console.log("Response:");
-        console.log(JSON.parse(data));
-      });
-    });
-
-    req.on('error', function(e) {
-      console.log("ERROR:");
-      console.log(e);
-    });
-
-    req.write(JSON.stringify(data));
-    req.end();
+    console.log('json', json)
 
   }
 }
@@ -216,7 +204,7 @@ router.route('/:requestingUserId')
         await OnesignalService.sendPushToUser({
             userId: req.params.requestingUserId,
             oneSignalAppId: req.site.config && req.site.config.onesignal && req.site.config.onesignal.appId ? req.site.config.onesignal.appId : "f982611b-0019-47a6-bbf2-649444fae6dd",
-            message,
+            message: message.text,
             oneSignalRestApiKey: req.site.config && req.site.config.onesignal && req.site.config.onesignal.restApiKey ? req.site.config.onesignal.restApiKey : 'YzU4MWNkNzUtNWEwMy00OTY5LTlkNDktYTA2ZmY2ZmM0Mzcz'
           },
         );
