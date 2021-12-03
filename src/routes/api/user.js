@@ -96,6 +96,13 @@ router.route('/')
           dbQuery.where = {};
       }
 
+      const sort = req.query.sort;
+
+      if (sort) {
+          req.scope.push({ method: ['sort', req.query.sort] });
+      }
+
+
       if (dbQuery.where.q) {
           dbQuery.search = {
               haystack: ['role', 'firstName', 'lastName'],
