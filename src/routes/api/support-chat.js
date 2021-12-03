@@ -5,6 +5,16 @@ var createError = require('http-errors');
 const Pusher = require("pusher");
 const fetch = require('node-fetch');
 
+
+// update last message
+const pusher = new Pusher({
+  appId: "1254886",
+  key: "0dbd27bc173d515e4499",
+  secret: "c2395c84ee290c1286d8",
+  cluster: "eu",
+  useTLS: true
+});
+
 const OnesignalService = {
   sendPushToUser : async ({userId, message, oneSignalAppId, oneSignalRestApiKey}) => {
     const headers = {
@@ -18,10 +28,6 @@ const OnesignalService = {
       channel_for_external_user_ids: "push",
       include_external_user_ids: [userId]
     };
-
-
-
-    console.log('onesignal message', JSON.stringify(messageData))
 
     const response = await fetch("https://onesignal.com/api/v1/notifications",
        {
@@ -189,14 +195,7 @@ router.route('/:requestingUserId')
 
       await supportChat.save();
 
-      // update last message
-      const pusher = new Pusher({
-        appId: "1254886",
-        key: "0dbd27bc173d515e4499",
-        secret: "c2395c84ee290c1286d8",
-        cluster: "eu",
-        useTLS: true
-      });
+
 
       const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'new-message', message);
 
@@ -236,11 +235,12 @@ router.route('/:requestingUserId/read')
         })
       });
 
-      const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'read-messages');
 
       await req.supportChat.update({
         messages
       });
+
+      const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'read-messages');
 
     } catch (e) {
       next(e);
