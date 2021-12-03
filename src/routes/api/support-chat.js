@@ -209,7 +209,7 @@ router.route('/:requestingUserId')
           },
         );
       } catch (e) {
-        console.log('Error seding onesignal push: ', e)
+        console.log('Error sending onesignal push: ', e)
       }
 
       res.json(message);
@@ -236,6 +236,8 @@ router.route('/:requestingUserId/read')
         })
       });
 
+      const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'read-messages');
+      
       await req.supportChat.update({
         messages
       });
