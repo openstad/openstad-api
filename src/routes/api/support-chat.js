@@ -240,7 +240,9 @@ router.route('/:requestingUserId/read')
         messages
       });
 
-      const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'read-messages');
+      const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'read-messages', {
+        status: 'ok'
+      });
 
     } catch (e) {
       next(e);
