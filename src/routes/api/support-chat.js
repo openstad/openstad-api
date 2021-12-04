@@ -197,16 +197,19 @@ router.route('/:requestingUserId')
 
       const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'new-message', message);
 
-      try {
-        await OnesignalService.sendPushToUser({
-            userId: req.params.requestingUserId,
-            oneSignalAppId: req.site.config && req.site.config.onesignal && req.site.config.onesignal.appId ? req.site.config.onesignal.appId : "f982611b-0019-47a6-bbf2-649444fae6dd",
-            message: message.text,
-            oneSignalRestApiKey: req.site.config && req.site.config.onesignal && req.site.config.onesignal.restApiKey ? req.site.config.onesignal.restApiKey : 'YzU4MWNkNzUtNWEwMy00OTY5LTlkNDktYTA2ZmY2ZmM0Mzcz'
-          },
-        );
-      } catch (e) {
-        console.log('Error sending onesignal push: ', e)
+      // only send push messages to the requesting user and only send if user Id is not the one
+      if (bodyMessage.user._id != req.params.requestingUserId) {
+        try {
+          await OnesignalService.sendPushToUser({
+              userId: req.params.requestingUserId,
+              oneSignalAppId: req.site.config && req.site.config.onesignal && req.site.config.onesignal.appId ? req.site.config.onesignal.appId : "f982611b-0019-47a6-bbf2-649444fae6dd",
+              message: message.text,
+              oneSignalRestApiKey: req.site.config && req.site.config.onesignal && req.site.config.onesignal.restApiKey ? req.site.config.onesignal.restApiKey : 'YzU4MWNkNzUtNWEwMy00OTY5LTlkNDktYTA2ZmY2ZmM0Mzcz'
+            },
+          );
+        } catch (e) {
+          console.log('Error sending onesignal push: ', e)
+        }
       }
 
       res.json(message);
