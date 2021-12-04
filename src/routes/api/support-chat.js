@@ -16,10 +16,10 @@ const pusher = new Pusher({
 });
 
 const OnesignalService = {
-  sendPushToUser : async ({userId, message, oneSignalAppId, oneSignalRestApiKey}) => {
+  sendPushToUser: async ({userId, message, oneSignalAppId, oneSignalRestApiKey}) => {
     const headers = {
       "Content-Type": "application/json; charset=utf-8",
-      "Authorization": "Basic " +  oneSignalRestApiKey
+      "Authorization": "Basic " + oneSignalRestApiKey
     };
 
     const messageData = {
@@ -30,11 +30,11 @@ const OnesignalService = {
     };
 
     const response = await fetch("https://onesignal.com/api/v1/notifications",
-       {
-         headers: headers,
-         method: 'POST',
-         body: JSON.stringify(messageData)
-       }
+      {
+        headers: headers,
+        method: 'POST',
+        body: JSON.stringify(messageData)
+      }
     )
     console.log('response', response)
 
@@ -196,7 +196,6 @@ router.route('/:requestingUserId')
       await supportChat.save();
 
 
-
       const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'new-message', message);
 
       try {
@@ -216,6 +215,31 @@ router.route('/:requestingUserId')
       next(e);
     }
   });
+
+router.route('/:requestingUserId/unread-count')
+  .all(addOne)
+  .get(auth.useReqUser)
+  //.get(auth.can('SupportChat', 'View'))
+  .get(async function (req, res, next) {
+    const messages = req.supportChat.messages && Array.isArray(req.supportChat.messages) ? req.supportChat.messages : [];
+
+    const requestingUserId = req.params.requestingUserId;
+
+    const messageCount = Array.isArray(messages) > 0 ?
+      messages.filter(message => {
+        return message.user._id != requestingUserId && (!message.readBy || !message.readBy.includes(requestingUserId))
+      }).length : 0;
+
+    try {
+      res.json({
+        count: messageCount
+      });
+    } catch (e) {
+      next(e);
+    }
+
+  })
+
 
 router.route('/:requestingUserId/read')
   .all(addOne)
