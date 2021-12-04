@@ -71,7 +71,6 @@ const addOne = async function (req, res, next) {
     req.supportChat = supportChat;
     req.results = supportChat;
 
-    //  console.log('req.supportChatreq.req.user', req.user)
 
     next();
   } catch (e) {
@@ -223,7 +222,7 @@ router.route('/:requestingUserId/unread-count')
   .get(async function (req, res, next) {
     const messages = req.supportChat.messages && Array.isArray(req.supportChat.messages) ? req.supportChat.messages : [];
 
-    const requestingUserId = req.params.requestingUserId;
+    const requestingUserId = parseInt(req.params.requestingUserId, 10);
 
     const messageCount = Array.isArray(messages) > 0 ?
       messages.filter(message => {
@@ -270,6 +269,7 @@ router.route('/:requestingUserId/read')
       });
 
     } catch (e) {
+      console.log('Error in read;', e)
       next(e);
     }
   })
