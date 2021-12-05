@@ -2,6 +2,7 @@ var Promise = require('bluebird');
 var log     = require('debug')('app:cron');
 var db      = require('../db');
 const {createMollieClient} = require('@mollie/api-client');
+const subscriptionService = require('../services/subscription')
 
 // Purpose
 // -------
@@ -22,19 +23,21 @@ module.exports = {
     for (const site of sites) {
       console.log('Checking site with ID: ', site.id)
 
+      const paymentConfig = site.config && site.config.payment ? site.config.payment : {};
+      const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
+
       const mollieApiKey = site.config && site.config.payment && site.config.payment.mollieApiKey ? site.config.payment.mollieApiKey : '';
       const mollieModus = site.config && site.config.payment && site.config.payment.mollieModus ? site.config.payment.mollieModus : 'live';
 
       if (mollieApiKey) {
-
         const mollieClient = createMollieClient({apiKey: mollieApiKey});
 
         console.log('mollieClient: ', mollieClient)
 
         const users = await db.User.findAll({
           where: {
-            siteData: {
-              [Op.like]: '%mollieCustomerId%',
+            subscriptionData: {
+              [Op.like]: `%"subscriptionPaymentProvider": "mollie"%`,
             }
           }
         });
@@ -42,45 +45,28 @@ module.exports = {
         for (const user of users) {
           console.log('Checking user with ID: ', user.id)
 
-          const mollieCustomerId = user.siteData.mollieCustomerId;
+          const customerUserKey =  paymentModus +'_mollieCustomerId';
+          const mollieCustomerId = user.siteData[customerUserKey];
 
           const mollieSubscriptions = await mollieClient.customers_subscriptions.all({
             customerId: mollieCustomerId,
           });
 
-          console.log('Fetched mollieSubscriptions: ', mollieSubscriptions)
+          for (const mollieSubscription of mollieSubscriptions) {
+            console.log('Fetched mollieSubscriptions: ', mollieSubscription)
 
-          const subscriptionData = user.subscriptionData;
-          subscriptionData.subscriptions = subcriptionData.subscriptions ? subcriptionData.subscriptions : [];
+            await subscriptionService.createOrUpdate({
+              user,
+              provider: 'mollie',
+              subscriptionActive: mollieSubscription.status === 'active',
+              siteId: site.id,
+              mollieSubscriptionId: mollieSubscription.id,
+              mollieClient: mollieClient,
+              mollieCustomerId: mollieCustomerId,
+              update: true
+            });
 
-          subscriptionData.subscriptions.map((subscription) => {
-            const mollieSubscription = mollieSubscriptions.find(mollieSub => mollieSub.id === subscription.id);
-
-            if (subscription.mollieSubscriptionId === subscription.id) {
-              subscription.active = subscription.active === 'active';
-            }
-            return subscription;
-          });
-
-          const activeSubscriptionIds = mollieSubscriptions.filter((mollieSubscription) => {
-            return mollieSubscription.status === 'active';
-          }).map((mollieSubscription) => {
-            return mollieSubscription.id;
-          });
-
-          console.log('Active activeSubscriptionIds: ', activeSubscriptionIds)
-
-          subscriptionData.subscriptions = subcriptionData.subscriptions.map((subscription) => {
-            subscription.active = activeSubscriptionIds.includes(subscription.id);
-            return subscription;
-          });
-
-          console.log('USer subscriptionData: ', subscriptionData)
-
-
-          const result = await user.update({
-            subscriptionData
-          });
+          }
         }
       }
     }

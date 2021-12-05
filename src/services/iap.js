@@ -111,7 +111,7 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
   console.log('environment', environment)
   console.log('user', user)
 
-  await subscriptionService.update({
+  await subscriptionService.createOrUpdate({
     user,
     provider: validationResponse.service,
     subscriptionActive: !isCancelled && !isExpired,

@@ -1,7 +1,8 @@
-var Promise = require('bluebird');
-var log     = require('debug')('app:cron');
-var db      = require('../db');
-const {createMollieClient} = require('@mollie/api-client');
+const Promise = require('bluebird');
+const log     = require('debug')('app:cron');
+const db      = require('../db');
+const IAPservice = require('../services/iap');
+
 
 // Purpose
 // -------
@@ -17,70 +18,48 @@ module.exports = {
     // first get all sites;
     const sites = await db.Site.findAll();
 
-    console.log('Start cron check mollie subscriptions')
+    console.log('Start cron check IAP subscriptions')
 
     for (const site of sites) {
-      console.log('Checking site with ID: ', site.id)
 
-      const mollieApiKey = site.config && site.config.payment && site.config.payment.mollieApiKey ? site.config.payment.mollieApiKey : '';
-      const mollieModus = site.config && site.config.payment && site.config.payment.mollieModus ? site.config.payment.mollieModus : 'live';
+       for (const appType of ['apple', 'google']) {
 
-      if (mollieApiKey) {
 
-        const mollieClient = createMollieClient({apiKey: mollieApiKey});
-
-        console.log('mollieClient: ', mollieClient)
-
+         // add an active check??
         const users = await db.User.findAll({
           where: {
-            siteData: {
-              [Op.like]: '%mollieCustomerId%',
+            subscriptionData: {
+              [Op.like]: `%"subscriptionPaymentProvider": "${appType}"%`,
             }
           }
         });
 
         for (const user of users) {
-          console.log('Checking user with ID: ', user.id)
+          try {
 
-          const mollieCustomerId = user.siteData.mollieCustomerId;
+            const user = await db.User.findOne({where: {id: userId}});
 
-          const mollieSubscriptions = await mollieClient.customers_subscriptions.all({
-            customerId: mollieCustomerId,
-          });
+            const androidAppSettings = site && site.config && site.config.appGoogle ? site.config.appGoogle : {};
 
-          console.log('Fetched mollieSubscriptions: ', mollieSubscriptions)
+            const iosAppSettings = site && site.config && site.config.appIos ? site.config.appIos : {};
 
-          const subscriptionData = user.subscriptionData;
-          subscriptionData.subscriptions = subcriptionData.subscriptions ? subcriptionData.subscriptions : [];
+            const activeSubscriptions = userSubscriptionData.subscriptions  && Array.isArray(userSubscriptionData.subscriptions) ?  userSubscriptionData.subscriptions.filter((subscription) => {
+              return subscription.active;
+            }) : [];
 
-          subscriptionData.subscriptions.map((subscription) => {
-            const mollieSubscription = mollieSubscriptions.find(mollieSub => mollieSub.id === subscription.id);
+            for (const activeSubscription of activeSubscriptions) {
+              const receipt = activeSubscription.receipt;
+              const appTypes = {
+                apple: 'ios',
+                google: 'android',
+              }
 
-            if (subscription.mollieSubscriptionId === subscription.id) {
-              subscription.active = subscription.active === 'active';
+              await IAPservice.processPurchase(appTypes[appType], user, receipt, androidAppSettings, iosAppSettings, site.id);
             }
-            return subscription;
-          });
 
-          const activeSubscriptionIds = mollieSubscriptions.filter((mollieSubscription) => {
-            return mollieSubscription.status === 'active';
-          }).map((mollieSubscription) => {
-            return mollieSubscription.id;
-          });
-
-          console.log('Active activeSubscriptionIds: ', activeSubscriptionIds)
-
-          subscriptionData.subscriptions = subcriptionData.subscriptions.map((subscription) => {
-            subscription.active = activeSubscriptionIds.includes(subscription.id);
-            return subscription;
-          });
-
-          console.log('USer subscriptionData: ', subscriptionData)
-
-
-          const result = await user.update({
-            subscriptionData
-          });
+          } catch (e) {
+            next(e);
+          }
         }
       }
     }
