@@ -1,6 +1,7 @@
 # Changelog
 
-## Unreleased
+## UNRELEASED
+* Make submissions listable & viewable, and allow them to be filtered by formId
 * Add choices guide stats endpoint
 
 ## v0.19.0 (2021-12-02)
@@ -35,7 +36,6 @@
 ## v0.15.0 (2020-06-08)
 * Add create/update date to choices-guide results
 * Allow moderators to update role of users to member (but not to moderator or admin role)
-
 
 ## v0.14.0 (2020-03-17)
 * Add stats overview route for displaying statistics, currently used in react admin on CMS and Admin panel
