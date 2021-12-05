@@ -1,4 +1,3 @@
-const Promise = require('bluebird');
 const express = require('express');
 const db      = require('../../db');
 const auth = require('../../middleware/sequelize-authorization-middleware');

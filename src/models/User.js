@@ -2,6 +2,8 @@ var config = require('config')
 , log = require('debug')('app:user')
 , pick = require('lodash/pick');
 
+const merge = require('merge');
+
 const Password = require('../lib/password');
 const sanitize = require('../util/sanitize');
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
@@ -69,7 +71,7 @@ module.exports = function (db, sequelize, DataTypes) {
 					if (!self) return;
 
 					const updateAllRoles = ['admin'];
-					const updateMemberRoles = ['moderator'];
+					const updateMemberRoles = ['editor'];
 					const fallBackRole = 'anonymous';
 					const memberRole = 'member';
 
@@ -141,45 +143,56 @@ module.exports = function (db, sequelize, DataTypes) {
       }
     },
 
-    password: {
-      type: DataTypes.VIRTUAL,
-      allowNull: true,
-      defaultValue: null,
-      auth: {
-        listableBy: 'none',
-        viewableBy: 'none',
-        updateableBy: 'owner',
-      },
-      validate: {
-        len: {
-          args: [6, 64],
-          msg: 'Wachtwoord moet tussen 6 en 64 tekens zijn'
-        }
-      },
-      set: function (password) {
-        var method = config.get('security.passwordHashing.currentMethod');
-        this.setDataValue('password', password);
-        this.set('passwordHash', password ?
-                 Password[method].hash(password) :
-                 null
-                );
-      }
-    },
-
-    passwordHash: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      set: function (hashObject) {
-        var hash = hashObject ? JSON.stringify(hashObject) : null;
-        this.setDataValue('passwordHash', hash);
-      }
-    },
+    // password: {
+    //   type: DataTypes.VIRTUAL,
+    //   allowNull: true,
+    //   defaultValue: null,
+    //   auth: {
+    //     listableBy: 'none',
+    //     viewableBy: 'none',
+    //     updateableBy: 'owner',
+    //   },
+    //   validate: {
+    //     len: {
+    //       args: [6, 64],
+    //       msg: 'Wachtwoord moet tussen 6 en 64 tekens zijn'
+    //     }
+    //   },
+    //   set: function (password) {
+    //     var method = config.get('security.passwordHashing.currentMethod');
+    //     this.setDataValue('password', password);
+    //     this.set('passwordHash', password ?
+    //              Password[method].hash(password) :
+    //              null
+    //             );
+    //   }
+    // },
+    //  
+    // passwordHash: {
+    //   type: DataTypes.TEXT,
+    //   allowNull: true,
+    //   set: function (hashObject) {
+    //     var hash = hashObject ? JSON.stringify(hashObject) : null;
+    //     this.setDataValue('passwordHash', hash);
+    //   }
+    // },
 
     nickName: {
       type: DataTypes.STRING(64),
       allowNull: true,
+      auth: {
+        listableBy: ['editor', 'owner'],
+        viewableBy: 'all',
+        createableBy: ['editor', 'owner'],
+        updateableBy: ['editor', 'owner'],
+      },
       set: function (value) {
-        this.setDataValue('nickName', sanitize.noTags(value));
+        if (this.site && this.site.config && this.site.config.users && this.site.config.users.allowUseOfNicknames) {
+          this.setDataValue('nickName', sanitize.noTags(value));
+        } else {
+          value = this.getDataValue('nickName');
+          this.setDataValue('nickName', value);
+        }
       }
     },
 
@@ -212,7 +225,7 @@ module.exports = function (db, sequelize, DataTypes) {
     },
 
     listableByRole: {
-      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      type: DataTypes.ENUM('admin', 'editor', 'moderator', 'member', 'anonymous', 'all'),
       defaultValue: null,
       auth: {
         viewableBy: ['editor', 'owner'],
@@ -222,7 +235,7 @@ module.exports = function (db, sequelize, DataTypes) {
     },
 
     detailsViewableByRole: {
-      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      type: DataTypes.ENUM('admin', 'editor', 'moderator', 'member', 'anonymous', 'all'),
       defaultValue: null,
       auth: {
         viewableBy: ['editor', 'owner'],
@@ -321,9 +334,8 @@ module.exports = function (db, sequelize, DataTypes) {
       get: function () {
         var firstName = this.getDataValue('firstName') || '';
         var lastName = this.getDataValue('lastName') || '';
-        return firstName || lastName ?
-          (firstName + ' ' + lastName) :
-          undefined;
+        var space = firstName && lastName ? ' ' : '';
+        return firstName || lastName ? (firstName + space + lastName) : undefined;
       }
     },
 
@@ -336,6 +348,18 @@ module.exports = function (db, sequelize, DataTypes) {
         var initials = (firstName ? firstName.substr(0, 1) : '') +
             (lastName ? lastName.substr(0, 1) : '');
         return initials.toUpperCase();
+      }
+    },
+
+    displayName: {
+      type: DataTypes.VIRTUAL,
+      allowNull: true,
+      get: function () {
+        // this should use site.config.allowUseOfNicknames but that implies loading the site for every time a user is shown which would be too slow
+        // therefore createing nicknames is dependendt on site.config.allowUseOfNicknames; once you have created a nickName it will be shown here no matter what
+        var nickName = this.getDataValue('nickName');
+        var fullName = this.fullName;
+        return nickName || fullName || undefined;
       }
     },
 
@@ -403,6 +427,15 @@ module.exports = function (db, sequelize, DataTypes) {
         unique: true
         }],*/
 
+    hooks: {
+
+      // onderstaand is een workaround: bij een delete wordt wel de validatehook aangeroepen, maar niet de beforeValidate hook. Dat lijkt een bug.
+      beforeValidate: beforeValidateHook,
+      beforeDestroy: beforeValidateHook,
+
+    },
+
+    individualHooks: true,
 
     validate: {
       hasValidUserRole: function () {
@@ -516,6 +549,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
     }
+
   }
 
   User.associate = function (models) {
@@ -524,7 +558,6 @@ module.exports = function (db, sequelize, DataTypes) {
     this.hasMany(models.Vote);
     this.hasMany(models.Argument);
     this.belongsTo(models.Site);
-    this.hasMany(models.User, { as: 'thisUserOnOtherSites', sourceKey: 'externalUserId', foreignKey: 'externalUserId' });
   }
 
   User.prototype.authenticate = function (password) {
@@ -651,8 +684,8 @@ module.exports = function (db, sequelize, DataTypes) {
         externalAccessToken: null,
         role: 'anonymous',
         passwordHash: null,
-        listableByRole: 'moderator',
-        detailsViewableByRole: 'moderator',
+        listableByRole: 'editor',
+        detailsViewableByRole: 'editor',
         viewableByRole: 'admin',
         email: null,
         nickName: null, 
@@ -750,4 +783,29 @@ module.exports = function (db, sequelize, DataTypes) {
   }
 
   return User;
+
+  function beforeValidateHook(instance, options) {
+
+    return new Promise((resolve, reject) => {
+
+      if (instance.siteId) {
+        db.Site.findByPk(instance.siteId)
+          .then(site => {
+            instance.config = merge.recursive(true, config, site.config);
+            return site;
+          })
+          .then(site => {
+            return resolve();
+          }).catch(err => {
+            throw err;
+          })
+      } else {
+        instance.config = config;
+        return resolve();
+      }
+
+    });
+
+  }
+
 };

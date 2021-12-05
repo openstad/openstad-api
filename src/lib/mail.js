@@ -1,6 +1,5 @@
 const config     = require('config');
 const nodemailer = require('nodemailer');
-const Promise    = require('bluebird');
 const merge = require('merge');
 const htmlToText   = require('html-to-text');
 const MailConfig = require('./mail-config');
@@ -18,7 +17,6 @@ var env = nunjucks.configure('email');
 var dateFilter   = require('../lib/nunjucks-date-filter');
 dateFilter.setDefaultFormat('DD-MM-YYYY HH:mm');
 env.addFilter('date', dateFilter);
-//env.addFilter('duration', duration);
 
 // Global variables.
 env.addGlobal('HOSTNAME', config.get('hostname'));

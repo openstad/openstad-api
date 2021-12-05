@@ -208,6 +208,10 @@ module.exports = function (db, sequelize, DataTypes) {
             type: 'string',
             default: '/oauth/login?jwt=[[jwt]]',
           },
+          "redirectURI": {
+            type: 'string',
+            default: undefined,
+          },
           "widgetDisplaySettings": {
             "type": "object",
             "subset": {
@@ -437,7 +441,7 @@ module.exports = function (db, sequelize, DataTypes) {
               },
               showFields: {
                 type: 'arrayOfStrings', // eh...
-                default: ['zipCode', 'nickName'],
+                default: ['zipCode', 'displayName'],
               }
             }
           },
@@ -467,6 +471,10 @@ module.exports = function (db, sequelize, DataTypes) {
           canCreateNewUsers: {
             type: 'boolean',
             default: true,
+          },
+          allowUseOfNicknames: {
+            type: 'boolean',
+            default: false,
           },
         },
       },

@@ -58,7 +58,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 						DATEDIFF(NOW(), v.updatedAt) > ${anonimizeThreshold} AND
 						checked != 0
 				`)
-			.spread(function( result, metaData ) {
+			.then(function([ result, metaData ]) {
 				return metaData;
 			});
 	}
