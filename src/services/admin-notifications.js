@@ -8,7 +8,7 @@ var moment       = require('moment-timezone');
 var env = nunjucks.configure('email');
 
 const adminEventTypes = [
-    'chatSupportMessage',
+    'supportChatMessage',
   //  'workoutFinished',
   //  'workoutProgramFinished',
   //  'newSubscription',
@@ -29,7 +29,7 @@ const send = async (site) => {
         {
             title: 'New chat messages',
             description: '',
-            eventName: 'chatSupportMessage'
+            eventName: 'supportChatMessage'
         },
         {
             title: '',

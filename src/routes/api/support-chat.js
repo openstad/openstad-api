@@ -208,6 +208,18 @@ router.route('/:requestingUserId')
         } catch (e) {
           console.log('Error sending onesignal push: ', e)
         }
+      } else {
+        try {
+          await db.Events.create({
+            status: 'activity',
+            message: '',
+            resourceType: 'supportChat',
+            resourceName: 'supportChatMessage',
+            extraData: message
+          });
+        } catch (e) {
+          console.log('Error creating events in support chat: ', e);
+        }
       }
 
       res.json(message);
