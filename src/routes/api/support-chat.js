@@ -16,10 +16,10 @@ const pusher = new Pusher({
 });
 
 const OnesignalService = {
-  sendPushToUser : async ({userId, message, oneSignalAppId, oneSignalRestApiKey}) => {
+  sendPushToUser: async ({userId, message, oneSignalAppId, oneSignalRestApiKey}) => {
     const headers = {
       "Content-Type": "application/json; charset=utf-8",
-      "Authorization": "Basic " +  oneSignalRestApiKey
+      "Authorization": "Basic " + oneSignalRestApiKey
     };
 
     const messageData = {
@@ -30,11 +30,11 @@ const OnesignalService = {
     };
 
     const response = await fetch("https://onesignal.com/api/v1/notifications",
-       {
-         headers: headers,
-         method: 'POST',
-         body: JSON.stringify(messageData)
-       }
+      {
+        headers: headers,
+        method: 'POST',
+        body: JSON.stringify(messageData)
+      }
     )
     console.log('response', response)
 
@@ -195,16 +195,19 @@ router.route('/:requestingUserId')
 
       const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'new-message', message);
 
-      try {
-        await OnesignalService.sendPushToUser({
-            userId: req.params.requestingUserId,
-            oneSignalAppId: req.site.config && req.site.config.onesignal && req.site.config.onesignal.appId ? req.site.config.onesignal.appId : "f982611b-0019-47a6-bbf2-649444fae6dd",
-            message: message.text,
-            oneSignalRestApiKey: req.site.config && req.site.config.onesignal && req.site.config.onesignal.restApiKey ? req.site.config.onesignal.restApiKey : 'YzU4MWNkNzUtNWEwMy00OTY5LTlkNDktYTA2ZmY2ZmM0Mzcz'
-          },
-        );
-      } catch (e) {
-        console.log('Error sending onesignal push: ', e)
+      // only send push messages to the requesting user and only send if user Id is not the one
+      if (bodyMessage.user._id != req.params.requestingUserId) {
+        try {
+          await OnesignalService.sendPushToUser({
+              userId: req.params.requestingUserId,
+              oneSignalAppId: req.site.config && req.site.config.onesignal && req.site.config.onesignal.appId ? req.site.config.onesignal.appId : "f982611b-0019-47a6-bbf2-649444fae6dd",
+              message: message.text,
+              oneSignalRestApiKey: req.site.config && req.site.config.onesignal && req.site.config.onesignal.restApiKey ? req.site.config.onesignal.restApiKey : 'YzU4MWNkNzUtNWEwMy00OTY5LTlkNDktYTA2ZmY2ZmM0Mzcz'
+            },
+          );
+        } catch (e) {
+          console.log('Error sending onesignal push: ', e)
+        }
       }
 
       res.json(message);
@@ -212,6 +215,31 @@ router.route('/:requestingUserId')
       next(e);
     }
   });
+
+router.route('/:requestingUserId/unread-count')
+  .all(addOne)
+  .get(auth.useReqUser)
+  //.get(auth.can('SupportChat', 'View'))
+  .get(async function (req, res, next) {
+    const messages = req.supportChat.messages && Array.isArray(req.supportChat.messages) ? req.supportChat.messages : [];
+
+    const requestingUserId = parseInt(req.params.requestingUserId, 10);
+
+    const messageCount = Array.isArray(messages) > 0 ?
+      messages.filter(message => {
+        return message.user._id != requestingUserId && (!message.readBy || !message.readBy.includes(requestingUserId))
+      }).length : 0;
+
+    try {
+      res.json({
+        count: messageCount
+      });
+    } catch (e) {
+      next(e);
+    }
+
+  })
+
 
 router.route('/:requestingUserId/read')
   .all(addOne)
@@ -242,6 +270,7 @@ router.route('/:requestingUserId/read')
       });
 
     } catch (e) {
+      console.log('Error in read;', e)
       next(e);
     }
   })
