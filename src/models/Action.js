@@ -462,15 +462,16 @@ module.exports = function (db, sequelize, DataTypes) {
             order: [['createdAt', 'DESC']],
         });
 
-
-        if (lastRun && lastRun.status === 'running') {
+        if (lastRun && lastRun.status === 'running' && ) {
             throw new Error(`Last run with id ${lastRun.id} still has status running, new run not starting`);
             return;
         }
 
         // if it fails before we get to the end, currently the run will be stuck, need to have a self healing
         // mechanism, or report option
-        const currentRun = await db.ActionRun.create({status: 'running'});
+        const currentRun = await db.ActionRun.create({
+            status: 'running',
+        });
 
         //resource, action, lastCheck
         // trigger, resource created
@@ -479,7 +480,6 @@ module.exports = function (db, sequelize, DataTypes) {
             // Get last run date, or now, don't leave blanco otherwise a run can target all previous resources
             // Running actions on lots of rows in the past. In same cases that might desired, but is not default behaviour
             const lastRunDate = lastRun ? lastRun.createdAt : new Date().toISOString().slice(0, 19).replace('T', ' ');
-
 
             const actions = await db.Action.findAll({
                 where: {
@@ -510,7 +510,6 @@ module.exports = function (db, sequelize, DataTypes) {
                     throw new Error(`Action type ${action.type} not found in ActionSequence with id ${self.id}`);
                 }
 
-
                 // array, can be one or more
                 const selectionToActUpon = await action.getSelection(action, lastRunDate);
 
@@ -532,18 +531,22 @@ module.exports = function (db, sequelize, DataTypes) {
                         }
 
 
-                       /* await db.ActionLog.create({
+                        await db.ActionLog.create({
                             actionId: action.id,
                            // settings: settings,
                             status: 'success'
-                        });*/
+                        });
                     } catch (e) {
                         console.log('Errror: ', e)
-                     /*   await db.ActionLog.create({
-                            actionId: action.id,
-                          //  settings: settings,
-                            status: 'error'
-                        });*/
+                        try {
+                            await db.ActionLog.create({
+                                actionId: action.id,
+                                //  settings: settings,
+                                status: 'error'
+                            });
+                        } catch (e) {
+                            console.log('Errror in creating ActionLog ', e)
+                        }
                     }
                 }
             }
