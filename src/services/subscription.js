@@ -83,8 +83,7 @@ const createOrUpdate = async ({
 
     const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 
-    console.log('userSubscriptionData ends', userSubscriptionData);
-
+    console.log('userSubscriptionData ends');
 
     let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ?
         userSubscriptionData.subscriptions : [];
@@ -125,13 +124,14 @@ const createOrUpdate = async ({
     if (subscriptionAlreadyExists && subscriptionAlreadyExists.active === subscriptionData.active) {
       console.log('Subscription trying to update already exists for user with same status new subscriptionData ', subscriptionData, ' for user subscription', userSubscriptionData)
       return
-    } else if (subscriptionAlreadyExists && !activeSubscriptions.active) {
+    } else if (subscriptionAlreadyExists && subscriptionData.active !== subscriptionData.active) {
       console.log('Subscription already exists but not active anymore so set to inactive', userSubscriptionData);
       // set subscriptionAlreadyExists active to false
       userSubscriptions = userSubscriptions.map((subscription) => {
         if (subscriptionAlreadyExists.uuid === subscription.uuid) {
-          subscription.active = false;
+          subscription.active = subscriptionData.active;
         }
+
         return subscription;
       });
     } else if (!subscriptionAlreadyExists) {

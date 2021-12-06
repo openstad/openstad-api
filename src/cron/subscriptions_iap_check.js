@@ -2,6 +2,7 @@ const Promise = require('bluebird');
 const log     = require('debug')('app:cron');
 const db      = require('../db');
 const IAPservice = require('../services/iap');
+const Sequelize = require('sequelize');
 
 
 // Purpose
@@ -14,34 +15,44 @@ module.exports = {
   cronTime: '1 * * * * *',
   runOnInit: true,
   onTick: async function() {
-    return;
     // first get all sites;
-    const sites = await db.Site.findAll();
+    const sites = await db.Site.findAll({
+      where: {
+        id: 11,
+      }
+    });
 
     console.log('Start cron check IAP subscriptions')
 
     for (const site of sites) {
 
-       for (const appType of ['apple', 'google']) {
+      console.log('Start checking site IAP for site.id ', site.id);
+
+      for (const appType of ['apple', 'google']) {
 
 
          // add an active check??
         const users = await db.User.findAll({
           where: {
-            subscriptionData: {
-              [Op.like]: `%"subscriptionPaymentProvider": "${appType}"%`,
-            }
+            [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "${appType}"%'`),
           }
         });
 
-        for (const user of users) {
+        const androidAppSettings = site && site.config && site.config.appGoogle ? site.config.appGoogle : {};
+        const iosAppSettings = site && site.config && site.config.appIos ? site.config.appIos : {};
+
+        console.log('iosAppSettings',iosAppSettings)
+
+        console.log(' checking site IAP users lenght: ', users.length);
+
+         for (const user of users) {
           try {
+            console.log(' checking site IAP for  user id : ', user.id);
 
-            const user = await db.User.findOne({where: {id: userId}});
 
-            const androidAppSettings = site && site.config && site.config.appGoogle ? site.config.appGoogle : {};
 
-            const iosAppSettings = site && site.config && site.config.appIos ? site.config.appIos : {};
+
+            const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 
             const activeSubscriptions = userSubscriptionData.subscriptions  && Array.isArray(userSubscriptionData.subscriptions) ?  userSubscriptionData.subscriptions.filter((subscription) => {
               return subscription.active;
@@ -58,7 +69,7 @@ module.exports = {
             }
 
           } catch (e) {
-            next(e);
+            console.log('Error in IAP check cron: ', e);
           }
         }
       }

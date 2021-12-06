@@ -3,6 +3,8 @@ var log     = require('debug')('app:cron');
 var db      = require('../db');
 const {createMollieClient} = require('@mollie/api-client');
 const subscriptionService = require('../services/subscription')
+const Sequelize = require('sequelize');
+
 
 // Purpose
 // -------
@@ -10,12 +12,12 @@ const subscriptionService = require('../services/subscription')
 //
 // Runs every night at 1:00.
 module.exports = {
-  cronTime: '0 0 1 * * *',
-  cronTime: '1 * * * * *',
+  //cronTime: '0 0 1 * * *',
+  cronTime: '0 * * * * *',
   runOnInit: true,
   onTick: async function() {
-    return;
     // first get all sites;
+    return;
     const sites = await db.Site.findAll();
 
     console.log('Start cron check mollie subscriptions')
@@ -32,44 +34,82 @@ module.exports = {
       if (mollieApiKey) {
         const mollieClient = createMollieClient({apiKey: mollieApiKey});
 
-        console.log('mollieClient: ', mollieClient)
+        console.log('mollieClient: for mollieApiKey',mollieApiKey)
 
         const users = await db.User.findAll({
           where: {
-            subscriptionData: {
-              [Op.like]: `%"subscriptionPaymentProvider": "mollie"%`,
-            }
+            [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "mollie"%'`),
           }
         });
+
+        console.log('Amount of users found: ', users.length)
 
         for (const user of users) {
           console.log('Checking user with ID: ', user.id)
 
-          const customerUserKey =  paymentModus +'_mollieCustomerId';
+          const customerUserKey = paymentModus + '_mollieCustomerId';
           const mollieCustomerId = user.siteData[customerUserKey];
 
-          console.log('Checking user with mollieCustomerId: ',mollieCustomerId)
+          if (mollieCustomerId) {
+            console.log('Checking user with mollieCustomerId: ', mollieCustomerId)
+            let mollieSubscriptions;
 
-          const mollieSubscriptions = await mollieClient.customers_subscriptions.all({
-            customerId: mollieCustomerId,
-          });
+            try {
+              mollieSubscriptions = await mollieClient.customers_subscriptions.all({
+                customerId: mollieCustomerId,
+              });
+            } catch (e) {
+              console.log('Error get mollie clients:e.status', e.status)
+              console.log('Error get mollie clients:e.ApiError', e.ApiError)
 
-          console.log('Gettings users with mollieCustomerId: ',mollieCustomerId)
+              // 410	Gone – You are trying to access an object, which has previously been deleted (only in v2).
+              // Delete users subscriptions,
+              if (e.status === 410) {
+                try {
+                  console.log('Error get mollie clients: ', e);
 
+                  const userSubscriptionuserSubscriptionDataData = user.subscriptionData ? user.subscriptionData : {};
+                  let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
 
-          for (const mollieSubscription of mollieSubscriptions) {
-            console.log('Fetched mollieSubscriptions: ', mollieSubscription)
+                  userSubscriptions = userSubscriptions.map((userSubscription) => {
+                    if (userSubscription.subscriptionPaymentProvider === 'mollie') {
+                      userSubscription.active = false;
+                    }
 
-            await subscriptionService.createOrUpdate({
-              user,
-              provider: 'mollie',
-              subscriptionActive: mollieSubscription.status === 'active',
-              siteId: site.id,
-              mollieSubscriptionId: mollieSubscription.id,
-              mollieClient: mollieClient,
-              mollieCustomerId: mollieCustomerId,
-              update: true
-            });
+                    return userSubscription;
+                  });
+
+                  userSubscriptionData.subscriptions = userSubscriptions;
+                  await user.update({subscriptionData: userSubscriptionData});
+                } catch (e) {
+                  console.log('Error in deleting user in mollie', e);
+                }
+              }
+            }
+
+            console.log('Gettings users with mollieCustomerId: ', mollieCustomerId);
+
+            if (mollieSubscriptions && mollieSubscriptions.length > 0) {
+
+              for (const mollieSubscription of mollieSubscriptions) {
+                console.log('Fetched mollieSubscriptions: ', mollieSubscription.id)
+                console.log('Fetched mollieSubscriptions status ', mollieSubscription.status)
+
+                await subscriptionService.createOrUpdate({
+                  user,
+                  provider: 'mollie',
+                  subscriptionActive: mollieSubscription.status === 'active',
+                  siteId: site.id,
+                  mollieSubscriptionId: mollieSubscription.id,
+                  mollieClient: mollieClient,
+                  mollieCustomerId: mollieCustomerId,
+                  update: true
+                });
+              }
+            }
+
+          } else {
+            console.log('No user with mollieCustomerId found for user id ', mollieCustomerId)
 
           }
         }

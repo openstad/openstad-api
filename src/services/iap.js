@@ -1,15 +1,12 @@
-const Promise = require('bluebird');
-const express = require('express');
-const db = require('../../db');
-const config = require('config');
-const rp = require('request-promise');
 const Sequelize = require('sequelize');
 
-const auth = require('../../middleware/sequelize-authorization-middleware');
 const iap = require('in-app-purchase');
 const {JWT} = require('google-auth-library');
 const {google} = require('googleapis');
 const assert = require('assert')
+
+const db = require('../db');
+
 
 const iapTestMode = process.env.IAP_TEST_MODE === 'true';
 const androidPackageName = process.env.ANDROID_PACKAGE_NAME;
@@ -22,7 +19,7 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
     // this comes from iTunes Connect (You need this to valiate subscriptions):
     /* Configurations all platforms */
     // test: iapTestMode, // For Apple and Google Play to force Sandbox validation only
-    verbose: true, // Output debug logs to stdout stream
+    verbose: false, // Output debug logs to stdout stream
   }
 
   if (iosAppSettings.sharedSecret) {
@@ -36,12 +33,16 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
     }
   }
 
+  console.log('IAP iapConfig', iapConfig)
+
+
   iap.config(iapConfig);
 
   await iap.setup();
 
   const validationResponse = await iap.validate(receipt);
 
+  console.log('IAP validationResponse', validationResponse)
 
   // Sanity check
   assert((app === 'android' && validationResponse.service === 'google')
@@ -109,7 +110,7 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
 
 
   console.log('environment', environment)
-  console.log('user', user)
+  console.log('user id', user.id)
 
   await subscriptionService.createOrUpdate({
     user,
