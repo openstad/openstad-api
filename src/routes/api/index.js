@@ -27,7 +27,10 @@ router.use( '/site/:siteId(\\d+)/idea', require('./idea') );
 //router.use( '/site/:siteId(\\d+)/idea', require('./idea.old') );
 
 // exercises
-router.use( '/site/:siteId(\\d+)/idea', require('./exercise') );
+router.use( '/site/:siteId(\\d+)/exercise', require('./exercise') );
+
+// exercises
+router.use( '/site/:siteId(\\d+)/event', require('./event') );
 
 // support chat
 router.use( '/site/:siteId(\\d+)/support-chat', require('./support-chat') );

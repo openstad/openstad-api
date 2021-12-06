@@ -71,8 +71,6 @@ const addOne = async function (req, res, next) {
     req.supportChat = supportChat;
     req.results = supportChat;
 
-    //  console.log('req.supportChatreq.req.user', req.user)
-
     next();
   } catch (e) {
     next(e);
@@ -194,8 +192,6 @@ router.route('/:requestingUserId')
       supportChat.set('messages', messages);
 
       await supportChat.save();
-
-
 
       const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'new-message', message);
 
