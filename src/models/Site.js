@@ -115,6 +115,12 @@ module.exports = function (db, sequelize, DataTypes) {
         return beforeUpdateOrCreate(instance, options);
       },
 
+      beforeDestroy: function (instance, options) {
+        let self = this;
+        if (!(self && self.config && self.config.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
+        return 
+      },
+
     },
 
   });
