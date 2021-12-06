@@ -200,6 +200,7 @@ router.route('/:siteIdOrDomain') //(\\d+)
 		// when succesfull return site JSON
 		res.json(req.results);
 	})
+
 // delete site
 // ---------
 	.delete(auth.can('Site', 'delete'))

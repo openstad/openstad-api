@@ -36,7 +36,7 @@ module.exports = function (db, sequelize, DataTypes) {
       set: function (value) {
         var currentconfig = this.getDataValue('config');
         value = value || {};
-        value = merge.recursive(currentconfig, value);
+        value = merge.recursive(true, currentconfig, value);
         this.setDataValue('config', this.parseConfig(value));
       },
       auth: {
@@ -116,8 +116,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
       beforeDestroy: function (instance, options) {
-        let self = this;
-        if (!(self && self.config && self.config.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
+        if (!(instance && instance.config && instance.config.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
         return 
       },
 
@@ -704,6 +703,11 @@ module.exports = function (db, sequelize, DataTypes) {
       "ignoreBruteForce": {
         type: 'arrayOfStrings',
         default: []
+      },
+
+      projectHasEnded: {
+        type: 'boolean',
+        default: false,
       },
 
     }
