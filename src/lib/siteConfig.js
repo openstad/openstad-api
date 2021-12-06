@@ -63,8 +63,6 @@ module.exports = {
     return this.getResourceFeedbackEmail(resourceType).subject;
   },
 
-
-
   getMailMethod: function () {
     return this.config.mail.method;
   },

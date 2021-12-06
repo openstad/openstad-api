@@ -48,9 +48,14 @@ module.exports = {
           const customerUserKey =  paymentModus +'_mollieCustomerId';
           const mollieCustomerId = user.siteData[customerUserKey];
 
+          console.log('Checking user with mollieCustomerId: ',mollieCustomerId)
+
           const mollieSubscriptions = await mollieClient.customers_subscriptions.all({
             customerId: mollieCustomerId,
           });
+
+          console.log('Gettings users with mollieCustomerId: ',mollieCustomerId)
+
 
           for (const mollieSubscription of mollieSubscriptions) {
             console.log('Fetched mollieSubscriptions: ', mollieSubscription)
