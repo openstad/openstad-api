@@ -398,20 +398,24 @@ router.route('/*')
 
 		}
 
-		Promise
-			.map(actions, function(action) {
+    let promises = [];
+    actions.map(action => {
 				switch(action.action) {
 					case 'create':
-						return db.Vote.create( action.vote ) // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
+						promises.push(db.Vote.create( action.vote )); // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
 						break;
 					case 'update':
-						return db.Vote.update(action.vote, { where: { id: action.vote.id } });
+						promises.push(db.Vote.update(action.vote, { where: { id: action.vote.id } }));
 						break;
 					case 'delete':
-						return db.Vote.destroy({ where: { id: action.vote.id } });
+						promises.push(db.Vote.destroy({ where: { id: action.vote.id } }));
 						break;
 				}
-			}).then(
+    });
+
+		Promise
+			.all(promises)
+      .then(
 				result => {
 					req.result = result;
 					return next();
