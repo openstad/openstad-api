@@ -17,7 +17,7 @@ router
     });
 
 router.route('/')
- //   .get(auth.can('Event', 'list'))
+    .get(auth.can('Event', 'list'))
     .get(pagination.init)
     .get(function(req, res, next) {
         let { dbQuery } = req;
@@ -29,6 +29,7 @@ router.route('/')
         return db.Event
             .findAndCountAll(dbQuery)
             .then(function(result) {
+                console.log('result', result)
                 req.results = result.rows || [];
                 req.dbQuery.count = result.count;
                 return next();
@@ -38,6 +39,7 @@ router.route('/')
     .get(searchResults)
     .get(pagination.paginateResults)
     .get(function(req, res, next) {
+
         res.json(req.results);
     })
 

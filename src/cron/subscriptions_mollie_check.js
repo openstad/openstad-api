@@ -14,7 +14,7 @@ const Sequelize = require('sequelize');
 module.exports = {
   //cronTime: '0 0 1 * * *',
   cronTime: '*/15 * * * *',
-  runOnInit: true,
+ // runOnInit: true,
   onTick: async function() {
     // first get all sites;
     const sites = await db.Site.findAll();
