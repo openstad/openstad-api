@@ -250,8 +250,8 @@ module.exports = function (db, sequelize, DataTypes) {
     modBreak: {
       type: DataTypes.TEXT,
       auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
+        createableBy: 'moderator',
+        updateableBy: 'moderator',
       },
       allowNull: true,
       set: function (text) {
@@ -263,8 +263,8 @@ module.exports = function (db, sequelize, DataTypes) {
     modBreakUserId: {
       type: DataTypes.INTEGER,
       auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
+        createableBy: 'moderator',
+        updateableBy: 'moderator',
       },
       allowNull: true
     },
@@ -272,8 +272,8 @@ module.exports = function (db, sequelize, DataTypes) {
     modBreakDate: {
       type: DataTypes.DATE,
       auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
+        createableBy: 'moderator',
+        updateableBy: 'moderator',
       },
       allowNull: true
     },
