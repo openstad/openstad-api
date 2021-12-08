@@ -44,7 +44,7 @@ module.exports = function (db, sequelize, DataTypes) {
     userId: {
       type: DataTypes.INTEGER,
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
       },
       allowNull: false,
       defaultValue: 0,
@@ -52,7 +52,7 @@ module.exports = function (db, sequelize, DataTypes) {
 
     startDate: {
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
       },
       type: DataTypes.DATE,
       allowNull: false
@@ -85,7 +85,7 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.STRING(255),
       allowNull: true,
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
         authorizeData: function(data, action, user, self, site) {
           if (!self) return;
           site = site || self.site;
@@ -109,7 +109,7 @@ module.exports = function (db, sequelize, DataTypes) {
     status: {
       type: DataTypes.ENUM('OPEN', 'CLOSED', 'ACCEPTED', 'DENIED', 'BUSY', 'DONE'),
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
       },
       defaultValue: 'OPEN',
       allowNull: false
