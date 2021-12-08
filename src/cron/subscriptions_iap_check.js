@@ -15,12 +15,10 @@ module.exports = {
   cronTime: '1 * * * * *',
   runOnInit: true,
   onTick: async function() {
+    return;
+
     // first get all sites;
-    const sites = await db.Site.findAll({
-      where: {
-        id: 11,
-      }
-    });
+    const sites = await db.Site.findAll();
 
     console.log('Start cron check IAP subscriptions')
 
@@ -45,12 +43,8 @@ module.exports = {
 
         console.log(' checking site IAP users lenght: ', users.length);
 
-         for (const user of users) {
+        for (const user of users) {
           try {
-            console.log(' checking site IAP for  user id : ', user.id);
-
-
-
 
             const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 
@@ -60,6 +54,7 @@ module.exports = {
 
             for (const activeSubscription of activeSubscriptions) {
               const receipt = activeSubscription.receipt;
+
               const appTypes = {
                 apple: 'ios',
                 google: 'android',

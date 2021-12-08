@@ -16,8 +16,8 @@ module.exports = {
   cronTime: '0 * * * * *',
   runOnInit: true,
   onTick: async function() {
-    // first get all sites;
     return;
+    // first get all sites;
     const sites = await db.Site.findAll();
 
     console.log('Start cron check mollie subscriptions')
@@ -29,7 +29,9 @@ module.exports = {
       const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
 
       const mollieApiKey = site.config && site.config.payment && site.config.payment.mollieApiKey ? site.config.payment.mollieApiKey : '';
-      const mollieModus = site.config && site.config.payment && site.config.payment.mollieModus ? site.config.payment.mollieModus : 'live';
+
+
+      console.log('Error get mollie mollieApiKey', mollieApiKey)
 
       if (mollieApiKey) {
         const mollieClient = createMollieClient({apiKey: mollieApiKey});
@@ -60,7 +62,7 @@ module.exports = {
               });
             } catch (e) {
               console.log('Error get mollie clients:e.status', e.status)
-              console.log('Error get mollie clients:e.ApiError', e.ApiError)
+              console.log('Error get mollie clients:e.ApiError', e)
 
               // 410	Gone – You are trying to access an object, which has previously been deleted (only in v2).
               // Delete users subscriptions,

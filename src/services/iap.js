@@ -12,7 +12,7 @@ const iapTestMode = process.env.IAP_TEST_MODE === 'true';
 const androidPackageName = process.env.ANDROID_PACKAGE_NAME;
 const subscriptionService = require('../services/subscription');
 
-exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppSettings, siteId, planId) => {
+exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppSettings, siteId, planId, updateAction) => {
   const iapConfig = {
     // If you want to exclude old transaction, set this to true. Default is false:
     appleExcludeOldTransactions: true,
@@ -87,21 +87,24 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
       }
     });
 
-    console.log('Fetch for account with  ID: ', account.id);
+    const accountId = account && account.id ? account.id : false;
+    console.log('Fetch for account with  ID: ', accountId);
 
-    const product = await db.Product.findOne({
+    const conditionalClause = {
       where: {
         [Sequelize.Op.and]: db.sequelize.literal(`extraData LIKE ${escapedValue}`),
-        accountId: account.id
       }
-    });
+    }
 
-    console.log('Found product  with  ID: ', product.id);
-    console.log('Found product  with  product.extraData: ', product.extraData);
+    if (accountId) {
+      conditionalClause.where.accountId = accountId;
+    }
+
+    const product = await db.Product.findOne(conditionalClause);
+
 
     const productPlanId = product && product.extraData && product.extraData.planId ? product.extraData.planId : false;
     console.log('Found plan ID for product: ', productPlanId);
-
 
     planId = productPlanId ? productPlanId : planId;
   } catch (e) {
@@ -146,8 +149,8 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
     // From https://developer.android.com/google/play/billing/billing_library_overview:
     // You must acknowledge all purchases within three days.
     // Failure to properly acknowledge purchases results in those purchases being refunded.
-    if (app === 'android' && validationResponse.acknowledgementState === 0) {
-
+    // only do this check the first time not with update actions
+    if (!updateAction && app === 'android' && validationResponse.acknowledgementState === 0) {
       console.log('Validate with androidGoogleApi')
       try {
         await androidGoogleApi.purchases.subscriptions.acknowledge({

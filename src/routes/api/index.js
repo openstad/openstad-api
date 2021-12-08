@@ -61,6 +61,9 @@ router.use( '/site/:siteId(\\d+)/account', require('./account') );
 // users
 router.use( '/site/:siteId(\\d+)/user', require('./user') );
 
+// users
+router.use( '/site/:siteId(\\d+)/user/:userId/user-subscription', require('./user-subscription') );
+
 // submissions
 router.use( '/site/:siteId(\\d+)/submission', require('./submission') );
 

@@ -47,6 +47,7 @@ const createOrUpdate = async ({
     };
 
     console.log('userSubscriptionData provider', provider);
+    console.log('userSubscriptionData active', subscriptionData.active);
 
 
     switch (provider) {
@@ -88,7 +89,7 @@ const createOrUpdate = async ({
     let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ?
         userSubscriptionData.subscriptions : [];
 
-    console.log('userSubscriptionData userSubscriptions', userSubscriptionData);
+    //console.log('userSubscriptionData userSubscriptions', userSubscriptionData);
 
     /**
      * Sometimes update is called double.
@@ -121,14 +122,23 @@ const createOrUpdate = async ({
     });
 
 
+    console.log('subscriptionAlreadyExists subscriptionAlreadyExists', subscriptionAlreadyExists);
+    console.log('subscriptionAlreadyExists subscriptionData', subscriptionData);
+
+
     if (subscriptionAlreadyExists && subscriptionAlreadyExists.active === subscriptionData.active) {
       console.log('Subscription trying to update already exists for user with same status new subscriptionData ', subscriptionData, ' for user subscription', userSubscriptionData)
       return
-    } else if (subscriptionAlreadyExists && subscriptionData.active !== subscriptionData.active) {
+    } else if (subscriptionAlreadyExists && subscriptionAlreadyExists.active !== subscriptionData.active) {
       console.log('Subscription already exists but not active anymore so set to inactive', userSubscriptionData);
       // set subscriptionAlreadyExists active to false
+      console.log('SsubscriptionAlreadyExists', subscriptionAlreadyExists.uuid);
+
       userSubscriptions = userSubscriptions.map((subscription) => {
+        console.log('SsubscriptionAlreadyExists', subscription.uuid);
+
         if (subscriptionAlreadyExists.uuid === subscription.uuid) {
+
           subscription.active = subscriptionData.active;
         }
 
@@ -174,6 +184,8 @@ const createOrUpdate = async ({
       userSubscriptions.push(subscriptionData);
 
       // cancel
+    } else {
+      console.log('We do nothing in subscription create or update....')
     }
 
 

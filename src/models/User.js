@@ -8,6 +8,22 @@ const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
 const roles = require('../lib/sequelize-authorization/lib/roles');
 
+const mysqlDateToTime = (myDate) => {
+    console.log('myDate', myDate);
+
+    var dateStr=myDate; //returned from mysql timestamp/datetime field
+    var a=dateStr.split(" ");
+    var d=a[0].split("-");
+    var t=a[1].split(":");
+
+    console.log('myDate d', d);
+    console.log('myDate d', t);
+
+
+    var formattedDate = new Date(d[0],(d[1]-1),d[2],t[0],t[1],t[2]);
+    return formattedDate;
+}
+
 // For detecting throwaway accounts in the email address validation.
 var emailBlackList = require('../../config/mail_blacklist')
 
@@ -486,7 +502,27 @@ module.exports = function (db, sequelize, DataTypes) {
                 const extraData = this.getDataValue('extraData') ? this.getDataValue('extraData') : {};
 
                 const activeSubscription = subscriptionData && subscriptionData.subscriptions && subscriptionData.subscriptions.find((subscription) => {
-                    return subscription.active;
+                    console.log('MsubscriptionData.subscriptionCancelledButStillValidTill', subscription.subscriptionCancelledButStillValidTill)
+
+                    // if not active but the cancellatidon date was before last payment was still vali
+                    if (!subscription.active && subscription.subscriptionCancelledButStillValidTill) {
+                        const nowTime = Date.now();
+                        console.log('Mysql time in datatata', subscription.subscriptionCancelledButStillValidTill)
+
+                     //   const mysqlTime = mysqlDateToTime(subscription.subscriptionCancelledButStillValidTill + ' 23:00:00');
+
+                        const mysqlTime = new Date(subscription.subscriptionCancelledButStillValidTill+ ' 06:00:00').getTime();
+
+                        console.log('Mysql time in active', mysqlTime);
+
+                        const isPassed =  mysqlTime < nowTime;
+                        console.log('isPassed', isPassed);
+
+                        // if not passed
+                        return !isPassed;
+                    } else {
+                        return subscription.active;
+                    }
                 });
 
                 const access = {};
@@ -503,9 +539,6 @@ module.exports = function (db, sequelize, DataTypes) {
                 }
 
                 //old way of setting isSubscriberActive
-                console.log('extraData', extraData)
-
-
 
                 if (activeSubscription && activeSubscription.planId) {
                     access.planId  = activeSubscription.planId;
@@ -515,6 +548,12 @@ module.exports = function (db, sequelize, DataTypes) {
                     access.active = true;
                     access.planId = access.planId ? access.planId : extraData &&  extraData.planId ?  extraData.planId : 1;
                 }
+
+                // mollie cancels subscriptions immedeatily, so we register the subscription as cancelled
+                // and inactive. but we still allow access till
+                console.log('MsubscriptionData.subscriptionCancelledButStillValidTill', subscriptionData.subscriptionCancelledButStillValidTill)
+
+
 
                 /*
                 if (!activeSubscription && trialDate) {
