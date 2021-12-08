@@ -7,7 +7,9 @@ const getDaysArray = (start, end) => {
   return arr;
 }
 
-const update = async ({
+
+
+const createOrUpdate = async ({
                         user,
                         provider,
                         subscriptionActive,
@@ -45,6 +47,7 @@ const update = async ({
     };
 
     console.log('userSubscriptionData provider', provider);
+    console.log('userSubscriptionData active', subscriptionData.active);
 
 
     switch (provider) {
@@ -76,19 +79,17 @@ const update = async ({
         break
 
       default:
-      // code block
+        // code block
     }
 
     const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 
-    console.log('userSubscriptionData ends', userSubscriptionData);
-
+    console.log('userSubscriptionData ends');
 
     let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ?
-      userSubscriptionData.subscriptions : [];
+        userSubscriptionData.subscriptions : [];
 
-    console.log('userSubscriptionData userSubscriptions', userSubscriptionData);
-
+    //console.log('userSubscriptionData userSubscriptions', userSubscriptionData);
 
     /**
      * Sometimes update is called double.
@@ -121,51 +122,72 @@ const update = async ({
     });
 
 
-    if (subscriptionAlreadyExists) {
-      console.log('Subscription trying to update already exists for user, new subscriptionData ', subscriptionData, ' for user subscription', userSubscriptionData)
-      return;
-    }
+    console.log('subscriptionAlreadyExists subscriptionAlreadyExists', subscriptionAlreadyExists);
+    console.log('subscriptionAlreadyExists subscriptionData', subscriptionData);
 
-    const activeSubscriptions = userSubscriptionData.subscriptions  && Array.isArray(userSubscriptionData.subscriptions) ?  userSubscriptionData.subscriptions.filter((subscription) => {
-      return subscription.active;
-    }) : [];
 
-    // this is old, probably not used, see user model .access logic
-    userSubscriptionData.isActiveSubscriber = activeSubscriptions.length > 0 ? 'yes' : 'no';
+    if (subscriptionAlreadyExists && subscriptionAlreadyExists.active === subscriptionData.active) {
+      console.log('Subscription trying to update already exists for user with same status new subscriptionData ', subscriptionData, ' for user subscription', userSubscriptionData)
+      return
+    } else if (subscriptionAlreadyExists && subscriptionAlreadyExists.active !== subscriptionData.active) {
+      console.log('Subscription already exists but not active anymore so set to inactive', userSubscriptionData);
+      // set subscriptionAlreadyExists active to false
+      console.log('SsubscriptionAlreadyExists', subscriptionAlreadyExists.uuid);
 
-    // if user already has subscriptions but updates to a new one, we cancel this one, and refund the days left in case it's a web sign up.
-    // Apple automatically / Google also I think :)
+      userSubscriptions = userSubscriptions.map((subscription) => {
+        console.log('SsubscriptionAlreadyExists', subscription.uuid);
 
-    if (activeSubscriptions.length > 0) {
-      for (const activeSubscription of activeSubscriptions) {
-        try {
-          await cancel({
-            activeSubscription, refundLeftOverDays: true, paystackClient, mollieClient
-          });
-        } catch (e) {
-          console.log('Error in cancellation of existing subscription: ', e);
-          throw Error(e);
-          return;
+        if (subscriptionAlreadyExists.uuid === subscription.uuid) {
+
+          subscription.active = subscriptionData.active;
+        }
+
+        return subscription;
+      });
+    } else if (!subscriptionAlreadyExists) {
+      console.log('Subscription doesnt exists, so create a new one, and cancel the old ones ', userSubscriptionData);
+
+      const activeSubscriptions = userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions.filter((subscription) => {
+        return subscription.active;
+      }) : [];
+
+      // this is old, probably not used, see user model .access logic
+      userSubscriptionData.isActiveSubscriber = activeSubscriptions.length > 0 ? 'yes' : 'no';
+
+      // if user already has subscriptions but updates to a new one, we cancel this one, and refund the days left in case it's a web sign up.
+      // Apple automatically / Google also I think :)
+
+      if (activeSubscriptions.length > 0) {
+        for (const activeSubscription of activeSubscriptions) {
+          try {
+            await cancel({
+              activeSubscription, refundLeftOverDays: true, paystackClient, mollieClient
+            });
+          } catch (e) {
+            console.log('Error in cancellation of existing subscription: ', e);
+            throw Error(e);
+            return;
+          }
         }
       }
+      // set all active to false
+      userSubscriptions = userSubscriptions.map((subscription) => {
+        subscription.active = false;
+        return subscription;
+      });
+
+      /**
+       * In case it's a new subscription, and there is an active one, we cancel the old one
+       *
+       * Can be either a down or upgrade.
+       */
+      userSubscriptions.push(subscriptionData);
+
+      // cancel
+    } else {
+      console.log('We do nothing in subscription create or update....')
     }
 
-    console.log('userSubscription ends', userSubscriptions);
-
-    // set all active to false
-    userSubscriptions = userSubscriptions.map((subscription) => {
-      subscription.active = false;
-      return subscription;
-    });
-
-    /**
-     * In case it's a new subscription, and there is an active one, we cancel the old one
-     *
-     * Can be either a down or upgrade.
-     */
-    userSubscriptions.push(subscriptionData);
-
-    console.log('userSubscriptions', userSubscriptions)
 
     userSubscriptionData.subscriptions = userSubscriptions;
 
@@ -271,7 +293,7 @@ const cancel = async ({
 
           console.log('Paystack paystackTransactionToRefund', paystackTransactionToRefund);
 
-          await paystackClient.createRefund(paystackTransactionId, amountLeft);
+          //await paystackClient.createRefund(paystackTransactionId, amountLeft);
         }
 
         break;
@@ -319,7 +341,7 @@ const cancel = async ({
 
           console.log('Mollliee refundOptions', refundOptions);
 
-          const paymentRefund = await mollieClient.paymentRefunds.create(refundOptions);
+          //const paymentRefund = await mollieClient.paymentRefunds.create(refundOptions);
         }
 
         break;
@@ -342,4 +364,4 @@ const getActiveSubscriptionEntries = (userSubscriptionData) => {
   return userSubscriptionData.filter(sub => sub.active)
 }
 
-exports.update = update;
+exports.createOrUpdate = createOrUpdate;

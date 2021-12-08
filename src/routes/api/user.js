@@ -54,10 +54,69 @@ const filterBody = (req, res, next) => {
     next();
 }
 
-const mergeData = (req, res, next) => {
+const mergeData = async (req, res, next) => {
     const data = req.body;
     const bodySiteData = req.body && req.body.siteData ? req.body.siteData : {};
-    const userSiteData = req.body && req.body.userSiteData ? req.body.siteData : {};
+
+    if (bodySiteData) {
+        const siteDataKeysToUpdate = Object.key(bodySiteData);
+
+        for (const siteDataKey of siteDataKeysToUpdate) {
+            let eventsData;
+
+            if (siteDataKey === 'weightEntries') {
+                eventsData = {
+                    status: 'activity',
+                    message: '',
+                    userId: req.user.id,
+                    resourceType: 'weightEntries',
+                    name: 'weightEntryUpdate',
+                    extraData: bodySiteData && bodySiteData['weightEntries'] && Array.isArray(bodySiteData['weightEntries']) ? bodySiteData['weightEntries'][bodySiteData['weightEntries'].length - 1] : null
+                }
+            }
+
+            if (siteDataKey === 'userWorkoutSessions') {
+                const latestSession =  bodySiteData && bodySiteData['userWorkoutSessions'] && Array.isArray(bodySiteData['userWorkoutSessions']) ? bodySiteData['userWorkoutSessions'][bodySiteData[userWorkoutSessions].length - 1] : null;
+
+                if (latestSession && latestSession.finishedAt) {
+                    eventsData = {
+                        status: 'activity',
+                        message: '',
+                        userId: req.user.id,
+                        resourceType: 'workout',
+                        name: 'workoutDone',
+                        extraData: latestSession
+                    }
+                }
+
+            }
+
+
+            if (siteDataKey === 'selectedPrograms') {
+                eventsData = {
+                    status: 'activity',
+                    message: '',
+                    userId: req.user.id,
+                    resourceType: 'workoutProgram',
+                    name: 'programSelected',
+                    extraData: bodySiteData && bodySiteData['selectedPrograms'] && Array.isArray(bodySiteData['selectedPrograms']) ? bodySiteData['selectedPrograms'][bodySiteData['selectedPrograms'].length - 1] : null
+                }
+            }
+
+
+            if (eventsData) {
+                try {
+                    await db.Events.create(eventsData);
+                } catch (e) {
+                    console.log('Eroror in creating event on user update: ', e, 'trying to save: ', eventsData);
+                }
+            }
+        }
+
+        req.user.siteData
+    }
+
+    const userSiteData = req.user && req.user.siteData ? req.user.siteData : {};
     data.siteData  = Object.assign(userSiteData, bodySiteData);
     req.body = data;
     next();

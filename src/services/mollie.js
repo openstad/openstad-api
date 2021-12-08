@@ -72,7 +72,7 @@ exports.processPayment = async (paymentId, mollieApiKey, site, order, user, mail
 
       console.log('Found subscription: ', subscription);
       
-      await subscriptionService.update({
+      await subscriptionService.createOrUpdate({
         user,
         provider: 'mollie',
         subscriptionActive: true,

@@ -179,7 +179,7 @@ router.route('/paystack')
 
             console.log('product', product)
 
-            await subscriptionService.update({
+            await subscriptionService.createOrUpdate({
               user,
               provider: 'paystack',
               subscriptionActive: true,
@@ -239,7 +239,7 @@ router.route('/paystack')
 
           const user = await db.User.findOne({where: {id: req.order.userId}});
 
-          await subscriptionService.update({
+          await subscriptionService.createOrUpdate({
             user,
             provider: 'paystack',
             subscriptionActive : true,

@@ -12,7 +12,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 
         message: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
 
         name: {
@@ -21,6 +21,11 @@ module.exports = function( db, sequelize, DataTypes ) {
         },
 
         userId : {
+            type         : DataTypes.INTEGER,
+            defaultValue : 0,
+        },
+
+        siteId : {
             type         : DataTypes.INTEGER,
             defaultValue : 0,
         },
@@ -48,8 +53,8 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 
     Event.auth = Event.prototype.auth = {
-        listableBy: 'admin',
-        viewableBy: 'admin',
+        listableBy:  ['moderator','owner', 'admin'],
+        viewableBy: ['moderator','owner', 'admin'],
         createableBy: ['editor','owner', 'admin'],
         updateableBy: ['editor','owner', 'admin'],
         deleteableBy: ['editor','owner', 'admin'],

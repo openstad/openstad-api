@@ -71,7 +71,6 @@ const addOne = async function (req, res, next) {
     req.supportChat = supportChat;
     req.results = supportChat;
 
-
     next();
   } catch (e) {
     next(e);
@@ -194,7 +193,6 @@ router.route('/:requestingUserId')
 
       await supportChat.save();
 
-
       const response = await pusher.trigger('support-chat-' + req.params.requestingUserId, 'new-message', message);
 
       // only send push messages to the requesting user and only send if user Id is not the one
@@ -209,6 +207,19 @@ router.route('/:requestingUserId')
           );
         } catch (e) {
           console.log('Error sending onesignal push: ', e)
+        }
+      } else {
+        try {
+          await db.Events.create({
+            status: 'activity',
+            message: '',
+            userId:  req.params.requestingUserId,
+            resourceType: 'supportChat',
+            name: 'supportChatMessage',
+            extraData: message
+          });
+        } catch (e) {
+          console.log('Error creating events in support chat: ', e);
         }
       }
 

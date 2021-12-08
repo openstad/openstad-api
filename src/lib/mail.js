@@ -50,8 +50,6 @@ function sendMail( options ) {
     });
   }
 
-
-
   mailTransporter.getTransporter().sendMail(
     merge(defaultSendMailOptions, options),
     function( error, info ) {
