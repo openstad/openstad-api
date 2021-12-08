@@ -251,7 +251,7 @@ router.route('/:tourId(\\d+)')
         const resourcesChanged = req.query.resourcesChanged;
 
 
-        const response = await pusher.trigger('editor-update', 'editor-refresh-resources', {
+        const response = await pusher.trigger('editor-update-' + tour.id, 'editor-refresh-resources', {
           resources: req.query.resourcesChanged,
           editorSession: req.query.editorSession
         });
