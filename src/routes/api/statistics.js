@@ -5,6 +5,7 @@
  */
 const config = require('config');
 const dbConfig = config.get('database');
+const db = require('../../db');
 // get the client
 const mysql = require('mysql2/promise');
 
@@ -26,10 +27,12 @@ const domainsToFilter = ['@ymove.app']
  * @returns [{counted: INT, date: DATE}]
  */
 const addMissingDays = (results) => {
+
     // in case results are one or less return the results directly
-    if (results.length <= 1) {
+    if ( results.length <= 1) {
         return results;
     }
+
 
     // just to be sure, sort the order to DESC by date
     // SQL already should have done this, but this makes it a bit more stable
@@ -97,7 +100,7 @@ router.route('/')
         // let isViewable = req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable;
         const isViewable = (req.user && (req.user.role == 'admin' || req.user.role == 'moderator' || req.user.role == 'editor'))
 
-        if (isViewable) {
+        if ( isViewable) {
             return next();
         } else {
             return next(createError(403, 'Forbidden'));
@@ -126,42 +129,52 @@ router.route('/')
                 title: 'Amount of active users',
                 description: 'Users with an active subscription, either paid or manually turned on',
                 logic: async () => {
-                   let users = await db.Users
-                       .fetchAll({
-                           where: {
-                               email: {
-                                   [Op.notLike]: domainsToFilter.map((domain) => {
-                                       return '%' + domain
-                                   })
-                               },
-                               isActive: true
-                           }
-                       })
+                    const query = db.sequelize.literal(`email NOT LIKE "%ymove.app"`);
 
-                    users = users.filter((user) => {
-                        return user.access.active;
-                    })
 
-                    return users.length;
+                    let users = await db.User
+                        .findAll({
+                            // raw: true,
+                            where: {
+                                [Op.and]: query,
+                                siteId: req.site.id
+                                //   isActive: true
+                            }
+                        })
+
+
+                    let activeUserCount = 0;
+
+                    for (const user of users) {
+
+                        if (user.access && user.access.active) {
+                            activeUserCount++;
+                        }
+                    }
+
+                    console.log('activeUserCount', activeUserCount);
+
+                    return activeUserCount;
                 },
                 resultType: 'count',
                 // will be filled after running the query
             },
+
             {
                 key: 'signUpsPerDay',
                 title: 'New accounts created per day',
                 description: 'Sign ups per day',
                 sql: `SELECT count(users.id) AS counted, DATE_FORMAT(users.createdAt, '%Y-%m-%d') as date
                     FROM users 
-                    WHERE users.deletedAt IS NOT NULL 
-                    AND users.subscriptionData LIKE '%"active": true%'
+                    WHERE users.subscriptionData LIKE '%"active": true%'
                     AND users.deletedAt IS NULL AND users.siteId=?
+                    AND users.email NOT LIKE "%ymove.app"
                     GROUP BY date
                     ORDER BY date ASC`,
                 variables: [req.params.siteId],
                 formatResults: addMissingDays,
             },
-            /*
+/*
             {
                 key: 'activeUsersPerType',
                 title: 'New accounts created per day',
@@ -271,16 +284,23 @@ router.route('/')
 
             try {
                 if (query.logic) {
-                    [result, fields] = await query.logic();
+                    console.log('Fire logic')
+                    result = await query.logic();
                 } else {
-                    [result, fields] = await req.mysqlConnection.execute(query.sql, query.variables);
+                    console.log('raw query', query)
+                  const response  = await req.mysqlConnection.execute(query.sql, query.variables);
+                    console.log('raw response', response)
+                    result = response[0];
                 }
             } catch (e) {
                 console.log('Error while executing statistic query: ', JSON.stringify(query), ' with error: ', e);
                 return next(createError(403, 'Error while executing statistic query: ' + e));
             }
 
+
+
             return {
+                title: query.title,
                 key: query.key,
                 description: query.description,
                 result: query.formatResults ? query.formatResults(result) : result

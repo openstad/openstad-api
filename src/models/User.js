@@ -502,21 +502,16 @@ module.exports = function (db, sequelize, DataTypes) {
                 const extraData = this.getDataValue('extraData') ? this.getDataValue('extraData') : {};
 
                 const activeSubscription = subscriptionData && subscriptionData.subscriptions && subscriptionData.subscriptions.find((subscription) => {
-                    console.log('MsubscriptionData.subscriptionCancelledButStillValidTill', subscription.subscriptionCancelledButStillValidTill)
 
                     // if not active but the cancellatidon date was before last payment was still vali
                     if (!subscription.active && subscription.subscriptionCancelledButStillValidTill) {
                         const nowTime = Date.now();
-                        console.log('Mysql time in datatata', subscription.subscriptionCancelledButStillValidTill)
-
                      //   const mysqlTime = mysqlDateToTime(subscription.subscriptionCancelledButStillValidTill + ' 23:00:00');
 
                         const mysqlTime = new Date(subscription.subscriptionCancelledButStillValidTill+ ' 06:00:00').getTime();
 
-                        console.log('Mysql time in active', mysqlTime);
 
                         const isPassed =  mysqlTime < nowTime;
-                        console.log('isPassed', isPassed);
 
                         // if not passed
                         return !isPassed;
@@ -551,17 +546,12 @@ module.exports = function (db, sequelize, DataTypes) {
 
                 // mollie cancels subscriptions immedeatily, so we register the subscription as cancelled
                 // and inactive. but we still allow access till
-                console.log('MsubscriptionData.subscriptionCancelledButStillValidTill', subscriptionData.subscriptionCancelledButStillValidTill)
-
-
 
                 /*
                 if (!activeSubscription && trialDate) {
                     @todo implement trial
                 }
                  */
-
-                console.log('access', access)
 
 
                 // if subscribers
@@ -991,20 +981,6 @@ module.exports = function (db, sequelize, DataTypes) {
 
         },
     }
-
-    User.addHook('afterUpdate', (instance) => {
-        console.log('instance._change', instance._change)
-
-        /*
-        await db.Events.create({
-            status: 'activity',
-            message: '',
-            resourceType: 'supportChat',
-            resourceName: 'supportChatMessage',
-            extraData: message
-        });
-        */
-    });
 
 
     return User;

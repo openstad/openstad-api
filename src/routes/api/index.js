@@ -63,6 +63,7 @@ router.use( '/site/:siteId(\\d+)/user', require('./user') );
 
 router.use( '/site/:siteId(\\d+)/event', require('./event') );
 
+router.use( '/site/:siteId(\\d+)/statistics', require('./statistics') );
 
 // users
 router.use( '/site/:siteId(\\d+)/user/:userId/user-subscription', require('./user-subscription') );
