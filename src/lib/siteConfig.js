@@ -68,6 +68,8 @@ module.exports = {
   },
 
   getMailTransport: function () {
+    console.log('this.config.mail', this.config.mail);
+
     return this.config.mail.transport[this.getMailMethod()];
   },
 

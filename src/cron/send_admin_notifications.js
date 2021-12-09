@@ -14,12 +14,15 @@ module.exports = {
     cronTime: '1 * * * * *',
     runOnInit: true,
     onTick: async function() {
-        return;
         // first get all sites;
-        const sites = await db.Site.findAll();
+        try {
+            const sites = await db.Site.findAll();
 
-        for (const site of sites) {
-            adminNotificationsService.send(site);
+            for (const site of sites) {
+                adminNotificationsService.send(site);
+            }
+        } catch (e) {
+            console.log('Error in sending everyone notificatoins: ', e);
         }
     }
 };

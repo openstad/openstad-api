@@ -9,9 +9,11 @@ exports.getTransporter = () => {
   
   const method = siteConfig.getMailMethod();
   const transporterConfig = siteConfig.getMailTransport();
-
+  /*
+  console.log('siteConfig', siteConfig);
   console.log('transporterConfig', transporterConfig);
   console.log('method', method);
+*/
 
   let transporter;
   

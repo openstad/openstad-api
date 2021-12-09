@@ -44,7 +44,13 @@ module.exports = function( db, sequelize, DataTypes ) {
             type: DataTypes.JSON,
             allowNull : true,
             defaultValue : {},
+        },
+
+        notified: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true
         }
+
     });
 
     Event.associate = function( models ) {
@@ -62,6 +68,18 @@ module.exports = function( db, sequelize, DataTypes ) {
             return data;
         }
     }
+
+    Event.scopes = () => {
+        return {
+            includeUser: {
+                include: [{
+                    model: db.User,
+                    attributes: ['id', 'role', 'firstName', 'lastName']
+                }]
+            },
+        }
+    }
+
 
 
     return Event;

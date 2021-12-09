@@ -87,23 +87,31 @@
 		<table cellpadding="0" cellspacing="0" border="0" align="center" width="100%" id="backgroundTable" style="background-color: #FFF; color: #000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; width:100%;">
 			<tr>
 				<td>
-				    Hello,
+				    Hi!
+				    <br />
+				    <br />
 
 				    An update on what's been happening at the Your Move platorm.
 
                   {% for eventGroup in eventGroups %}
 
+                  {% if eventGroup.events.length > 0 %}
                   <h3>{{eventGroup.title}}</h3>
                   <p>
                     {{eventGroup.description}}
                   </p>
-                    {% for eventGroup in eventGroup.events %}
-                    {% if eventGroup.eventName === 'chatSupportMessage' %}
-                    <div class="">
-                        {{event.title}}
-                    </div>
+                    {% for event in eventGroup.events %}
+                    {% if eventGroup.name === 'supportChatMessage'  %}
+                    <p>
+                        "{{event.extraData.text}}".
+                        <br />
+                        From: {{event.user.firstName}} {{event.user.lastName}}
+                        <br />
+                        <a href="{{site.config.cms.url}}/dashboard/chat/{{event.user.id}}"> Reply </a>
+                    </p>
+                    {% endif %}
                     {% endfor %}
-
+                    {% endif %}
                   {% endfor %}
                 </td>
             </tr>
