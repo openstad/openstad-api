@@ -387,6 +387,7 @@ router.route('/:userId(\\d+)')
     // -----------
     .put(auth.useReqUser)
     .put(filterBody)
+    .put(mergeData)
     .put(function (req, res, next) {
 
         const user = req.results;
