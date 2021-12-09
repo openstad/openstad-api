@@ -59,9 +59,16 @@ const mergeData = async (req, res, next) => {
     const bodySiteData = req.body && req.body.siteData ? req.body.siteData : {};
 
     if (bodySiteData) {
+        console.log('bodySiteData', bodySiteData)
         const siteDataKeysToUpdate = Object.key(bodySiteData);
 
+        console.log('siteDataKeysToUpdate', siteDataKeysToUpdate)
+
+
         for (const siteDataKey of siteDataKeysToUpdate) {
+
+            console.log('siteDataKey', siteDataKey)
+
             let eventsData;
 
             if (siteDataKey === 'weightEntries') {

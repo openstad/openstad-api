@@ -210,7 +210,7 @@ router.route('/:requestingUserId')
         }
       } else {
         try {
-          await db.Events.create({
+          await db.Event.create({
             status: 'activity',
             message: '',
             userId:  req.params.requestingUserId,
