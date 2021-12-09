@@ -112,8 +112,10 @@ const mergeData = async (req, res, next) => {
 
 
             if (eventsData) {
+                eventsData.siteId = req.site.id;
+
                 try {
-                    await db.Events.create(eventsData);
+                    await db.Event.create(eventsData);
                 } catch (e) {
                     console.log('Eroror in creating event on user update: ', e, 'trying to save: ', eventsData);
                 }

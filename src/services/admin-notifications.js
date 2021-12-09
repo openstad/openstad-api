@@ -39,7 +39,7 @@ const send = async (site) => {
 
     // format email
     for (const eventGroup of eventGroups) {
-        const events = await db.Events.fetchAll({
+        const events = await db.Event.fetchAll({
             where: {
                 name: eventGroup.eventName
             }

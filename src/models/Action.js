@@ -233,6 +233,7 @@ module.exports = function( db, sequelize, DataTypes ) {
                             return await db.Event.create({
                                 message: `Tried to email ${recipientEmail} double in action ${action.id}`,
                                 name: 'doubleEmailAttemptStop',
+                                siteId: req.site.id,
                                 type: 'warning',
                                 resourceId: action.id,
                                 resourceType: 'action'

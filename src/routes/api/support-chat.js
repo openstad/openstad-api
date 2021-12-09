@@ -212,6 +212,7 @@ router.route('/:requestingUserId')
         try {
           await db.Event.create({
             status: 'activity',
+            siteId: req.site.id,
             message: '',
             userId:  req.params.requestingUserId,
             resourceType: 'supportChat',
