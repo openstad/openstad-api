@@ -60,7 +60,7 @@ const mergeData = async (req, res, next) => {
 
     if (bodySiteData) {
         console.log('bodySiteData', bodySiteData)
-        const siteDataKeysToUpdate = Object.key(bodySiteData);
+        const siteDataKeysToUpdate = Object.keys(bodySiteData);
 
         console.log('siteDataKeysToUpdate', siteDataKeysToUpdate)
 
