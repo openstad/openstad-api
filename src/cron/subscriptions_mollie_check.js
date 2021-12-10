@@ -118,28 +118,6 @@ module.exports = {
                   update: true
                 });
 
-                // We assume you cant come here when subscription is not active.
-                if (mollieSubscription.status !== 'active') {
-                  try {
-
-                    await db.Event.create({
-                      status: 'activity',
-                      siteId: req.site.id,
-                      message: 'Mollie user was not found',
-                      userId:  user.id,
-                      resourceType: 'subscription',
-                      name: 'mollieCancelledInActiveSubscription',
-                      extraData: {
-                        'mollieCustomerId': mollieCustomerId,
-                        'mollieSubscriptionId': mollieSubscription.id,
-                        'mollieSubscriptionStatus': mollieSubscription.status,
-                      }
-                    });
-
-                  } catch (e) {
-                    console.log('Error creating events in support chat: ', e);
-                  }
-                }
 
               }
             }

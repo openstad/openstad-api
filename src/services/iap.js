@@ -165,16 +165,5 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
       }
     }
 
-    if (updateAction && !subscriptionIsActive) {
-      await db.Event.create({
-        status: 'activity',
-        siteId: req.site.id,
-        message: 'App Subscription cancelled ',
-        userId:  user.id,
-        resourceType: 'subscription',
-        name: 'IAPSubscriptionCancelled' + app,
-        extraData: { }
-      });
-    }
   }
 }

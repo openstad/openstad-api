@@ -138,12 +138,29 @@ const createOrUpdate = async ({
         console.log('SsubscriptionAlreadyExists', subscription.uuid);
 
         if (subscriptionAlreadyExists.uuid === subscription.uuid) {
-
           subscription.active = subscriptionData.active;
         }
 
         return subscription;
       });
+
+
+      if (!subscriptionData.active) {
+        try {
+          await db.Event.create({
+            status: 'activity',
+            siteId: siteId,
+            message: 'App Subscription cancelled',
+            userId: user.id,
+            resourceType: 'subscription',
+            name: 'subscriptionCancelled' + provider,
+          });
+        } catch (e) {
+          console.log('Error in creating event sub update', e)
+        }
+      }
+
+
     } else if (!subscriptionAlreadyExists) {
       console.log('Subscription doesnt exists, so create a new one, and cancel the old ones ', userSubscriptionData);
 
@@ -183,12 +200,25 @@ const createOrUpdate = async ({
        */
       userSubscriptions.push(subscriptionData);
 
+        try {
+          await db.Event.create({
+            status: 'activity',
+            siteId: siteId,
+            message: 'New subscription created',
+            userId: user.id,
+            resourceType: 'subscription',
+            name: 'subscriptionCreated' + provider,
+            extraData: subscriptionData
+          });
+        } catch (e) {
+          console.log('Error in creating event sub create', e)
+        }
+
       // cancel
     } else {
       console.log('We do nothing in subscription create or update....')
     }
-
-
+    
     userSubscriptionData.subscriptions = userSubscriptions;
 
     await user.update({subscriptionData: userSubscriptionData});
