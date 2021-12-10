@@ -115,10 +115,12 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
   console.log('environment', environment)
   console.log('user id', user.id)
 
+  const subscriptionIsActive = !isCancelled && !isExpired;
+
   await subscriptionService.createOrUpdate({
     user,
     provider: validationResponse.service,
-    subscriptionActive: !isCancelled && !isExpired,
+    subscriptionActive: subscriptionIsActive,
     // subscriptionProductId: subscriptionProductId,
     siteId: siteId,
     environment,
@@ -161,6 +163,18 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
       } catch (e) {
         console.warn('Error validating subscription purchase: ', e)
       }
+    }
+
+    if (updateAction && !subscriptionIsActive) {
+      await db.Event.create({
+        status: 'activity',
+        siteId: req.site.id,
+        message: 'App Subscription cancelled ',
+        userId:  user.id,
+        resourceType: 'subscription',
+        name: 'IAPSubscriptionCancelled' + app,
+        extraData: { }
+      });
     }
   }
 }

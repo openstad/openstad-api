@@ -64,9 +64,6 @@ module.exports = function( db, sequelize, DataTypes ) {
         createableBy: ['editor','owner', 'admin'],
         updateableBy: ['editor','owner', 'admin'],
         deleteableBy: ['editor','owner', 'admin'],
-        toAuthorizedJSON: function(user, data) {
-            return data;
-        }
     }
 
     Event.scopes = () => {

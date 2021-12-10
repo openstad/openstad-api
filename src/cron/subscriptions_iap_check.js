@@ -50,8 +50,6 @@ module.exports = {
             }) : [];
 
 
-
-
             for (const activeSubscription of activeSubscriptions) {
               console.log('checking activeSubscription.uuid  ', activeSubscription.uuid);
 

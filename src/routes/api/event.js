@@ -27,18 +27,21 @@ router.route('/')
         dbQuery.where.siteId = req.site.id;
 
         return db.Event
+            .scope('includeUser')
             .findAndCountAll(dbQuery)
             .then(function(result) {
-                console.log('result', result)
+                console.log('result', result.rows )
                 req.results = result.rows || [];
                 req.dbQuery.count = result.count;
                 return next();
             })
             .catch(next);
     })
+    .get(auth.useReqUser)
     .get(searchResults)
     .get(pagination.paginateResults)
     .get(function(req, res, next) {
+        console.log('req.results', req.results)
 
         res.json(req.results);
     })
