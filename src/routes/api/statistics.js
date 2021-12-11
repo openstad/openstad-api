@@ -17,6 +17,7 @@ const createError = require('http-errors')
 const {Op} = require('sequelize');
 
 const router = express.Router({mergeParams: true});
+const pagination = require('../../middleware/pagination');
 
 const domainsToFilter = ['@ymove.app']
 
@@ -100,7 +101,7 @@ router.route('/')
         // let isViewable = req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable;
         const isViewable = (req.user && (req.user.role == 'admin' || req.user.role == 'moderator' || req.user.role == 'editor'))
 
-        if ( isViewable) {
+        if (isViewable) {
             return next();
         } else {
             return next(createError(403, 'Forbidden'));
@@ -310,13 +311,16 @@ router.route('/')
         Promise.all(queries)
             .then((result) => {
                 req.stats = result;
+                req.results = result;
+
                 next();
             })
             .catch((e) => {
                 next(e);
             })
     })
+    .get(pagination.paginateResults)
     .get((req, res, next) => {
-        res.json(req.stats);
+        res.json(req.results);
     });
 module.exports = router;
