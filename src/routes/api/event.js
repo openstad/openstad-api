@@ -26,6 +26,14 @@ router.route('/')
 
         dbQuery.where.siteId = req.site.id;
 
+        if (req.query.names) {
+            dbQuery.where.name = req.query.names;
+        }
+
+        if (req.query.userId) {
+            dbQuery.where.userId = req.query.userId;
+        }
+
         dbQuery.order = [
             ['createdAt', 'DESC'],
         ]

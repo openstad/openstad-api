@@ -1,4 +1,5 @@
 const {v4: uuidv4} = require('uuid');
+const db = require('../db')
 
 const getDaysArray = (start, end) => {
   for (var arr = [], dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
