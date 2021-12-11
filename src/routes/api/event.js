@@ -26,6 +26,10 @@ router.route('/')
 
         dbQuery.where.siteId = req.site.id;
 
+        dbQuery.order = [
+            ['createdAt', 'DESC'],
+        ]
+
         return db.Event
             .scope('includeUser')
             .findAndCountAll(dbQuery)

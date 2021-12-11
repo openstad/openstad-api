@@ -104,7 +104,7 @@
                     <p>
                         "{{event.extraData.text}}".
                         <br />
-                        From: {{event.user.firstName}} {{event.user.lastName}}
+                        From: {{event.user.firstName}} {{event.user.lastName}} at  {{event.createdAt | date}}
                         <br />
                         <a href="{{site.config.cms.url}}/dashboard/chat/{{event.user.id}}"> Reply </a>
                     </p>
