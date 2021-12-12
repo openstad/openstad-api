@@ -83,7 +83,7 @@ const mergeData = async (req, res, next) => {
             }
 
             if (siteDataKey === 'userWorkoutSessions') {
-                const latestSession =  bodySiteData && bodySiteData['userWorkoutSessions'] && Array.isArray(bodySiteData['userWorkoutSessions']) ? bodySiteData['userWorkoutSessions'][bodySiteData[userWorkoutSessions].length - 1] : null;
+                const latestSession =  bodySiteData && bodySiteData['userWorkoutSessions'] && Array.isArray(bodySiteData['userWorkoutSessions']) ? bodySiteData['userWorkoutSessions'][bodySiteData['userWorkoutSessions'].length - 1] : null;
 
                 if (latestSession && latestSession.finishedAt) {
                     eventsData = {
