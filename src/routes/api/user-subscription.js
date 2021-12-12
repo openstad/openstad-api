@@ -29,7 +29,6 @@ router.route('/:subscriptionId/cancel')
             console.log('user is found???', !!user.id)
             console.log('user is found???', user.access)
 
-
             const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 
             let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
@@ -66,10 +65,22 @@ router.route('/:subscriptionId/cancel')
                         customerId: mollieCustomerId,
                     });
 
+
+                    if (!subscription) {
+                        throw createError(404, `Could not find  subscription in mollie with id ${req.params.subscriptionId} and user id ${user.id}`);
+                        return;
+                    }
+
                     if (subscription.status !== 'active') {
                         throw createError(403, `Error: subscription with id ${req.params.subscriptionId} and user id ${user.id} is already cancelled`);
                         return;
                     }
+
+                    const nextPaymentDate = subscription.nextPaymentDate;
+
+                    const response = await mollieClient.customers_subscriptions.delete(foundSubscription.mollieSubscriptionId, {
+                        customerId: mollieCustomerId,
+                    });
 
                     // We set the next payment date to valid
                     // This way
@@ -78,8 +89,8 @@ router.route('/:subscriptionId/cancel')
                         console.log('userSubscription.uuid', userSubscription.uuid)
                         console.log('subscription.nextPaymentDate.uuid', subscription.nextPaymentDate)
 
-                        if (foundSubscription.uuid === userSubscription.uuid && subscription.nextPaymentDate) {
-                            foundSubscription.subscriptionCancelledButStillValidTill = subscription.nextPaymentDate;
+                        if (foundSubscription.uuid === userSubscription.uuid && nextPaymentDate) {
+                            foundSubscription.subscriptionCancelledButStillValidTill = nextPaymentDate;
                             foundSubscription.active = false;
                         }
 
@@ -92,14 +103,19 @@ router.route('/:subscriptionId/cancel')
                         subscriptionData: userSubscriptionData
                     });
 
-                    if (!subscription) {
-                        throw createError(404, `Could not find  subscription in mollie with id ${req.params.subscriptionId} and user id ${user.id}`);
-                        return;
-                    }
 
-                    const response = await mollieClient.customers_subscriptions.delete(foundSubscription.mollieSubscriptionId, {
-                        customerId: mollieCustomerId,
-                    });
+                    try {
+                        await db.Event.create({
+                            status: 'activity',
+                            siteId: req.site.id,
+                            message: 'App Subscription cancelled',
+                            userId: user.id,
+                            resourceType: 'subscription',
+                            name: 'subscriptionCancelled' + 'mollie',
+                        });
+                    } catch (e) {
+                        console.log('Error in creating event sub update', e)
+                    }
 
                     console.log('response', response);
 
