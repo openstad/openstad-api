@@ -3,7 +3,8 @@ const config = require('config')
     , pick = require('lodash/pick');
 const Sequelize = require('sequelize')
 const {Op} = require('sequelize')
-const _    = require('lodash');
+const _ = require('lodash');
+const moment = require('moment')
 
 const Url = require('url');
 
@@ -118,11 +119,10 @@ module.exports = function (db, sequelize, DataTypes) {
     }
 
 
-    
     Action.scopes = function scopes() {
         return {
             includeSite: {
-                include : [{
+                include: [{
                     model: db.Site,
                 }]
             },
@@ -134,30 +134,30 @@ module.exports = function (db, sequelize, DataTypes) {
     }
 
     Action.types = [
-       /*
-        TODO!
+        /*
+         TODO!
 
-            name: 'createModel',
-            act: async (action, selectedResource, req, res) => {
-                const {modelName, values} = settings;
+             name: 'createModel',
+             act: async (action, selectedResource, req, res) => {
+                 const {modelName, values} = settings;
 
-                if (!modelName) {
-                    throw new Error('No model name defined for create resource action');
-                }
+                 if (!modelName) {
+                     throw new Error('No model name defined for create resource action');
+                 }
 
-                if (!db[resource]) {
-                    throw new Error('No modelname defined for create resource action');
-                }
+                 if (!db[resource]) {
+                     throw new Error('No modelname defined for create resource action');
+                 }
 
-                try {
-                    await db[resource].create(values);
-                } catch (e) {
-                    throw new Error('Error while creating model in createModel action for variables: ' + JSON.stringify(variables));
-                }
+                 try {
+                     await db[resource].create(values);
+                 } catch (e) {
+                     throw new Error('Error while creating model in createModel action for variables: ' + JSON.stringify(variables));
+                 }
 
-            }
-        },
-         */
+             }
+         },
+          */
 
         /***
          * models can be updated
@@ -425,7 +425,7 @@ module.exports = function (db, sequelize, DataTypes) {
                 break;
 
             default:
-                //throw new Error(`Event defined as ${modelName} in conditions of action with id ${action.id}`)
+            //throw new Error(`Event defined as ${modelName} in conditions of action with id ${action.id}`)
         }
 
         // add filters to where object
@@ -455,31 +455,37 @@ module.exports = function (db, sequelize, DataTypes) {
     };
 
     Action.run = async (req, res) => {
-        const self = this;
+        let currentRun;
 
-        // Get last run
-        const lastRun = await db.ActionRun.findOne({
-            order: [['createdAt', 'DESC']],
-        });
-
-
-        if (lastRun && lastRun.status === 'running') {
-            throw new Error(`Last run with id ${lastRun.id} still has status running, new run not starting`);
-            return;
-        }
-
-        // if it fails before we get to the end, currently the run will be stuck, need to have a self healing
-        // mechanism, or report option
-        const currentRun = await db.ActionRun.create({status: 'running'});
-
-        //resource, action, lastCheck
-        // trigger, resource created
         try {
+            const self = this;
 
+            // Get last run
+            const lastRun = await db.ActionRun.findOne({
+                order: [['createdAt', 'DESC']],
+            });
+
+            const afterCreationDate = moment(lastRun.createdAt).add(30, "minutes");
+            const reasonableTimeAfterCreation = moment().isAfter(afterCreationDate);
+
+            // if in some case a status running gets stuck make sure after certain time the actions
+            // the reasons why it's blocking is because we want to prevent double action execution
+            if (lastRun && lastRun.status === 'running' && !reasonableTimeAfterCreation) {
+                throw new Error(`Last run with id ${lastRun.id} still has status running, new run not starting`);
+                return;
+            }
+
+            // if it fails before we get to the end, currently the run will be stuck, need to have a self healing
+            // mechanism, or report option
+            currentRun = await db.ActionRun.create({
+                status: 'running',
+            });
+
+            //resource, action, lastCheck
+            // trigger, resource created
             // Get last run date, or now, don't leave blanco otherwise a run can target all previous resources
             // Running actions on lots of rows in the past. In same cases that might desired, but is not default behaviour
             const lastRunDate = lastRun ? lastRun.createdAt : new Date().toISOString().slice(0, 19).replace('T', ' ');
-
 
             const actions = await db.Action.findAll({
                 where: {
@@ -510,7 +516,6 @@ module.exports = function (db, sequelize, DataTypes) {
                     throw new Error(`Action type ${action.type} not found in ActionSequence with id ${self.id}`);
                 }
 
-
                 // array, can be one or more
                 const selectionToActUpon = await action.getSelection(action, lastRunDate);
 
@@ -531,19 +536,22 @@ module.exports = function (db, sequelize, DataTypes) {
                             });
                         }
 
-
-                       /* await db.ActionLog.create({
+                        await db.ActionLog.create({
                             actionId: action.id,
-                           // settings: settings,
+                            // settings: settings,
                             status: 'success'
-                        });*/
+                        });
                     } catch (e) {
                         console.log('Errror: ', e)
-                     /*   await db.ActionLog.create({
-                            actionId: action.id,
-                          //  settings: settings,
-                            status: 'error'
-                        });*/
+                        try {
+                            await db.ActionLog.create({
+                                actionId: action.id,
+                                //  settings: settings,
+                                status: 'error'
+                            });
+                        } catch (e) {
+                            console.log('Errror in creating ActionLog ', e)
+                        }
                     }
                 }
             }
@@ -551,15 +559,18 @@ module.exports = function (db, sequelize, DataTypes) {
 
             await currentRun.update({status: 'finished'});
         } catch (e) {
-            const errorMessage = 'Error while executing ActionSequence with id ' + currentRun.id + ' with the following error: ' + e;
+            console.log('Error in action run ', e)
+            if (currentRun) {
+                const currentRunId = currentRun ? currentRun.id : '';
+                const errorMessage = 'Error while executing ActionSequence with id ' + currentRunId + ' with the following error: ' + e;
 
-            console.log('errorMessage', errorMessage)
+                console.log('errorMessage', errorMessage)
 
-            await currentRun.update({
-                status: 'errored',
-                message: errorMessage
-            });
-
+                await currentRun.update({
+                    status: 'errored',
+                    message: errorMessage
+                });
+            }
         }
     }
 
