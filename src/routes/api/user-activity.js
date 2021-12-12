@@ -159,6 +159,7 @@ router.route('/')
     if (!req.activities.includes('ideas')) return next();
     let where = { userId: req.userIds };
     return db.Idea
+      .scope(['includeSite'])
       .findAll({ where })
       .then(function(rows) {
         req.results.ideas = rows;
@@ -233,11 +234,16 @@ router.route('/')
           const config = activityConfig[which];
           const idea = which === 'ideas' ? resource : resource.idea;
 
+          const site =  req.results.sites.find((site) => {
+            return site.id === idea.siteId;
+          })
+
           return {
              //strip html tags
             description: resource[config.descriptionKey] ? resource[config.descriptionKey].replace(/<[^>]+>/g, '') : '',
             type: config.type,
             idea: idea,
+            site: site ? site : false,
             createdAt: resource.createdAt
           }
         }) : [];

@@ -75,7 +75,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 				return {
 					include: [{
 						model      : db.Idea,
-						attributes : ['id', 'title', 'status', 'viewableByRole']
+						attributes : ['id', 'title', 'siteId', 'status', 'viewableByRole']
 					}]
 				}
 			},
