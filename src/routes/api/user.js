@@ -58,12 +58,12 @@ const mergeData = async (req, res, next) => {
     const data = req.body;
     const bodySiteData = req.body && req.body.siteData ? req.body.siteData : {};
 
-    if (bodySiteData) {
+
+    if (bodySiteData && Object.keys(bodySiteData) && Object.keys(bodySiteData).length === 1) {
         console.log('bodySiteData', bodySiteData)
         const siteDataKeysToUpdate = Object.keys(bodySiteData);
 
         console.log('siteDataKeysToUpdate', siteDataKeysToUpdate)
-
 
         for (const siteDataKey of siteDataKeysToUpdate) {
 

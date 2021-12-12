@@ -29,7 +29,7 @@ module.exports = {
          // add an active check??
         const users = await db.User.findAll({
           where: {
-            [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "${appType}"%'`),
+            [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "${appType}"% AND email LIKE "%ymove.app"'`),
           }
         });
 
