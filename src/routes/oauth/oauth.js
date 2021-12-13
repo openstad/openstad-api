@@ -231,7 +231,7 @@ router
         //check if redirect domain is allowed
         if (isAllowedRedirectDomain(redirectUrl, req.site && req.site.config && req.site.config.allowedDomains)) {
             if (redirectUrl.match('[[jwt]]')) {
-                jwt.sign({userId: req.userData.id}, config.authorization['jwt-secret'], {expiresIn: 182 * 24 * 60 * 60}, (err, token) => {
+                jwt.sign({userId: req.userData.id, client: which}, config.authorization['jwt-secret'], {expiresIn: 182 * 24 * 60 * 60}, (err, token) => {
                     if (err) return next(err)
                     req.redirectUrl = redirectUrl.replace('[[jwt]]', token);
                     return next();
