@@ -79,7 +79,7 @@ function parseAuthHeader(authorizationHeader) {
     }
   }
 
-  return null;
+  return {};
 }
 
 /**
