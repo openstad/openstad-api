@@ -19,9 +19,9 @@ module.exports = async function getUser( req, res, next ) {
       return nextWithEmptyUser(req, res, next);
     }
 
-    const userId = getUserId(req.headers['x-authorization']);
+    const { userId, client } = parseAuthHeader(req.headers['x-authorization']);
 
-    const which = req.query.useOauth || 'default';
+    const which = client || req.query.useOauth || 'default';
     let siteConfig = req.site && merge({}, req.site.config, { id: req.site.id });
 
     if(userId === null) {
@@ -32,6 +32,7 @@ module.exports = async function getUser( req, res, next ) {
     req.user = userEntity
     // Pass user entity to template view.
     res.locals.user = userEntity;
+    
     next();
   } catch(error) {
     console.error(error);
@@ -64,17 +65,17 @@ function UserId(id, fixed) {
   this.fixed = fixed;
 }
 
-function getUserId(authorizationHeader) {
+function parseAuthHeader(authorizationHeader) {
   const tokens = config && config.authorization && config.authorization['fixed-auth-tokens'];
 
   if (authorizationHeader.match(/^bearer /i)) {
     const jwt = parseJwt(authorizationHeader);
-    return (jwt && jwt.userId) ? new UserId(jwt.userId, false) : null;
+    return (jwt && jwt.userId) ? { userId: new UserId(jwt.userId, false), client: jwt.client } : null;
   }
   if (tokens) {
     const token = tokens.find(token => token.token === authorizationHeader);
     if (token) {
-      return new UserId(token.userId, true);
+      return { userId: new UserId(token.userId, true), client: token.client }
     }
   }
 
