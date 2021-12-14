@@ -71,7 +71,7 @@ module.exports = function (db, sequelize, DataTypes) {
 					if (!self) return;
 
 					const updateAllRoles = ['admin'];
-					const updateMemberRoles = ['editor'];
+					const updateMemberRoles = ['moderator'];
 					const fallBackRole = 'anonymous';
 					const memberRole = 'member';
 
