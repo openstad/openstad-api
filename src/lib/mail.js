@@ -94,6 +94,7 @@ function sendThankYouMail(resource, resourceType, site, user) {
   const hostname    = siteConfig.getCmsHostname();
   const sitename    = siteConfig.getTitle();
   let fromAddress   = siteConfig.getFeedbackEmailFrom(resourceType) || config.email;
+  if (!resourceType) return console.error('Email error: fromAddress not provided');
   if (fromAddress.match(/^.+<(.+)>$/, '$1')) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
 
   // todo: als je dan toch met een siteConfig.get werkt, moet deze search-and-replace dan niet ook daar?
