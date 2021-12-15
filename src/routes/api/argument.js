@@ -239,16 +239,9 @@ router.route('/:argumentId(\\d+)/vote')
 
       })
       .catch(next);
-  });
-
-// output
-// ------
-// TODO: nu als voorbeeld, alleen gebruikt door post vote, maar kan voor alle routes
-// de vraag is: wil ik dat
-router
-  .all('*', function(req, res, next) {
+  })
+  .post(function(req, res, next) {
     res.json(req.results);
   });
-
 
 module.exports = router;
