@@ -7,6 +7,8 @@ const sanitize = require('../util/sanitize');
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
 const roles = require('../lib/sequelize-authorization/lib/roles');
+const { StreamChat } = require('stream-chat');
+
 
 const mysqlDateToTime = (myDate) => {
     console.log('myDate', myDate);
@@ -44,7 +46,6 @@ module.exports = function (db, sequelize, DataTypes) {
             type: DataTypes.INTEGER,
             defaultValue: config.siteId && typeof config.siteId == 'number' ? config.siteId : 0,
         },
-
 
         externalUserId: {
             type: DataTypes.INTEGER,
@@ -412,19 +413,6 @@ module.exports = function (db, sequelize, DataTypes) {
             }
         },
 
-        streetName: {
-            type: DataTypes.STRING(64),
-            auth: {
-                listableBy: ['editor', 'owner'],
-                viewableBy: ['editor', 'owner'],
-                createableBy: ['editor', 'owner'],
-                updateableBy: ['editor', 'owner'],
-            },
-            allowNull: true,
-            set: function (value) {
-                this.setDataValue('streetName', sanitize.noTags(value));
-            }
-        },
 
         houseNumber: {
             type: DataTypes.STRING(64),
@@ -438,6 +426,17 @@ module.exports = function (db, sequelize, DataTypes) {
             set: function (value) {
                 this.setDataValue('houseNumber', sanitize.noTags(value));
             }
+        },
+
+        chatToken: {
+            type: DataTypes.STRING(128),
+            auth: {
+                listableBy: ['editor', 'owner'],
+                viewableBy: ['editor', 'owner'],
+                createableBy: ['editor', 'owner'],
+                updateableBy: ['editor', 'owner'],
+            },
+            allowNull: true,
         },
 
         postcode: {
@@ -481,6 +480,7 @@ module.exports = function (db, sequelize, DataTypes) {
                 this.setDataValue('suffix', sanitize.noTags(value));
             }
         },
+
 
 
         /**
@@ -918,6 +918,58 @@ module.exports = function (db, sequelize, DataTypes) {
                 return vote ? true : false;
             })
     }
+
+
+    User.prototype.getChatToken = async function (site) {
+        const chatActive = site.config && site.config.chat ? site.config.chat.active : true;
+        const streamChatApiKey = site.config && site.config.chat ? site.config.chat.streamApiKey : 'fbfjcf9tj729';
+        const streamChatApiSecret = site.config && site.config.chat ? site.config.chat.streamApSecret : '2ktgnz5ypfpt3b6649jtzf8bh9mw79a492raqzm3t2k8etsqfhzw39cmw6r5dbgb';
+
+        if (!chatActive) {
+            return false;
+        }
+
+        let chatToken = this.getDataValue('chatToken');
+
+        if (chatToken) {
+            return chatToken;
+        } else {
+
+
+
+            const serverSideClient = new StreamChat(
+              streamChatApiKey,
+              streamChatApiSecret
+            );
+
+            const firstName = this.getDataValue('firstName');
+            const lastName = this.getDataValue('lastName');
+
+
+            const username = 'user-' + this.id;
+            const token = serverSideClient.createToken(username);
+
+            try {
+                await serverSideClient.updateUser(
+                  {
+                      id: username,
+                      name: `${firstName} ${lastName}`,
+                  },
+                  token
+                );
+
+                this.set('chatToken', token);
+                this.save();
+
+                return chatToken;
+            } catch (err) {
+                console.log(err);
+                return false;
+            }
+        }
+
+    }
+
 
     User.auth = User.prototype.auth = {
         listableBy: 'editor',

@@ -304,7 +304,15 @@ router
 // --------------------------
 router
     .route('(/site/:siteId)?/me')
-    .get(function (req, res, next) {
+    .get(async function (req, res, next) {
+       let userChatToken;
+
+       try {
+         userChatToken = await req.user.getChatToken(req.site);
+       } catch (e) {
+         console.log('Error in creating user chat token', e)
+       }
+
         const data = {
             "id": req.user.id,
             "complete": req.user.complete,
@@ -332,7 +340,8 @@ router
             "createdAt": req.user.createdAt,
             "updatedAt": req.user.updatedAt,
             "deletedAt": req.user.deletedAt,
-            'votes': req.user.votes
+            'votes': req.user.votes,
+            'chatToken' : userChatToken
         };
 
         res.json(data);
