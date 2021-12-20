@@ -167,15 +167,26 @@ router.route('/*')
 
 // heb je al gestemd
 	.post(function(req, res, next) {
-		db.Vote // get existing votes for this user
-			.scope(req.scope)
-			.findAll({ where: { userId: req.user.id } })
+		db.sequelize.transaction()
+			.then(transaction => {
+				res.locals.transaction = transaction
+				return db.Vote // get existing votes for this user
+				.scope(req.scope)
+				.findAll({ where: { userId: req.user.id }, transaction })
+			})
 			.then(found => {
 				if (req.site.config.votes.voteType !== 'likes' && req.site.config.votes.withExisting == 'error' && found && found.length ) throw createError(403, 'Je hebt al gestemd');
 				req.existingVotes = found.map(entry => entry.toJSON());
 				return next();
 			})
-			.catch(next)
+			.catch(err => {
+				if (res.locals.transaction) {
+					return res.locals.transaction.rollback()
+						.then(() => next(err))
+						.catch(() => next(err))
+				}
+				next(err)
+			})
 	})
 
 // filter body
@@ -198,7 +209,15 @@ router.route('/*')
     if (req.site.config.votes.withExisting == 'merge') {
       // no double votes
       try {
-        if (req.existingVotes.find( newVote => votes.find( oldVote => oldVote.ideaId == newVote.ideaId) )) throw createError(403, 'Je hebt al gestemd');
+        if (req.existingVotes.find( newVote => votes.find( oldVote => oldVote.ideaId == newVote.ideaId) )) {
+			const transaction = res.locals.transaction
+			const err = createError(403, 'Je hebt al gestemd')
+			if (transaction) {
+				return transaction.commit()
+					.finally(() => next(err))
+			}
+			throw err
+		}
       } catch (err) {
         return next(err);
       }
@@ -229,8 +248,9 @@ router.route('/*')
   // validaties: bestaan de ideeen waar je op wilt stemmen
 	.post(function(req, res, next) {
 		let ids = req.votes.map( entry => entry.ideaId );
+		let transaction = res.locals.transaction
 		db.Idea
-			.findAll({ where: { id:ids, siteId: req.site.id } })
+			.findAll({ where: { id:ids, siteId: req.site.id }, transaction })
 			.then(found => {
 
 				if (req.votes.length != found.length) {
@@ -243,10 +263,19 @@ router.route('/*')
 				req.ideas = found;
 				return next();
 			})
+			.catch(err => {
+				if (transaction) {
+					return transaction.rollback()
+						.then(() => next(err))
+						.catch(() => next(err))
+				}
+				next(err)
+			})
 	})
 
   // validaties voor voteType=likes
 	.post(function(req, res, next) {
+		let transaction = res.locals.transaction
 		if (req.site.config.votes.voteType != 'likes') return next();
 
 		if (req.site.config.votes.voteType == 'likes' && req.site.config.votes.requiredUserRole == 'anonymous') {
@@ -271,14 +300,21 @@ router.route('/*')
 
 				// get existing votes for this IP
 				db.Vote
-					.findAll({ where: whereClause })
+					.findAll({ where: whereClause, transaction })
 					.then(found => {
 						if (found && found.length > 0) {
 							throw createError(403, 'Je hebt al gestemd');
 						}
 						return next();
 					})
-					.catch(next)
+					.catch(err => {
+						if (transaction) {
+							return transaction.rollback()
+								.then(() => next(err))
+								.catch(() => next(err))
+						}
+						next(err)
+					})
 			});
 		} else {
 			return next();
@@ -369,7 +405,8 @@ router.route('/*')
 	})
 
 	.post(function(req, res, next) {
-
+		let transaction = res.locals.transaction;
+		
 		let actions = [];
 		switch(req.site.config.votes.voteType) {
 
@@ -403,23 +440,33 @@ router.route('/*')
 			.map(actions, function(action) {
 				switch(action.action) {
 					case 'create':
-						return db.Vote.create( action.vote ) // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
-						break;
+						return db.Vote.create( action.vote, { transaction } ) // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
 					case 'update':
-						return db.Vote.update(action.vote, { where: { id: action.vote.id } });
-						break;
+						return db.Vote.update(action.vote, { where: { id: action.vote.id }, transaction });
 					case 'delete':
-						return db.Vote.destroy({ where: { id: action.vote.id } });
-						break;
+						return db.Vote.destroy({ where: { id: action.vote.id }, transaction });
 				}
 			}).then(
 				result => {
 					req.result = result;
-					return next();
-				},
-				error => next(error)
+					if (transaction) {
+						return transaction.commit()
+							.finally(() => result)
+					}
+					return result
+				}
 			)
-			.catch(next)
+			.then(() => {
+				return next();
+			})
+			.catch(err => {
+				if (transaction) {
+					return transaction.rollback()
+						.then(() => next(err))
+						.catch(() => next(err))
+				}
+				next(err)
+			})
 
 	})
 
