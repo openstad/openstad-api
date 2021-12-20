@@ -1,6 +1,6 @@
 # Changelog
 
-## UNRELEASED
+## v0.20.0 (2021-12-20)
 * Make submissions listable & viewable, and allow them to be filtered by formId
 * Add choices guide stats endpoint
 
