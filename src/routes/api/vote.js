@@ -1,4 +1,3 @@
-const Promise     = require('bluebird');
 const express     = require('express');
 const createError = require('http-errors')
 const db          = require('../../db');
@@ -40,7 +39,7 @@ router.route('*')
 	.all(function(req, res, next) {
 		if (req.method == 'GET') return next(); // nvt
 
-		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');
+		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');  // TODO: er staat een functie bovenin deze file; waarom gerbuik je die niet?
 
 		if (!req.user) {
 			return next(createError(401, 'Geen gebruiker gevonden'));
@@ -78,7 +77,7 @@ router.route('/')
 
 // mag je de stemmen bekijken
 	.get(function(req, res, next) {
-		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');
+		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');  // TODO: er staat een functie bovenin deze file; waarom gerbuik je die niet?
 
 		if (!(req.site.config.votes.isViewable || hasModeratorRights)) {
 			return next(createError(403, 'Stemmen zijn niet zichtbaar'));
@@ -436,17 +435,24 @@ router.route('/*')
 
 		}
 
-		Promise
-			.map(actions, function(action) {
+    let promises = [];
+    actions.map(action => {
 				switch(action.action) {
 					case 'create':
-						return db.Vote.create( action.vote, { transaction } ) // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
+						promises.push(db.Vote.create( action.vote, { transaction })); // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
+						break;
 					case 'update':
-						return db.Vote.update(action.vote, { where: { id: action.vote.id }, transaction });
+						promises.push(db.Vote.update(action.vote, { where: { id: action.vote.id }, transaction }));
+						break;
 					case 'delete':
-						return db.Vote.destroy({ where: { id: action.vote.id }, transaction });
+						promises.push(db.Vote.destroy({ where: { id: action.vote.id }, transaction }));
+						break;
 				}
-			}).then(
+    });
+
+		Promise
+			.all(promises)
+      .then(
 				result => {
 					req.result = result;
 					if (transaction) {

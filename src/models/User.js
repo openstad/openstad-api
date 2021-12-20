@@ -26,7 +26,7 @@ module.exports = function (db, sequelize, DataTypes) {
       auth: {
         listableBy: 'admin',
         viewableBy: 'admin',
-        createableBy: 'editor',
+        createableBy: 'moderator',
         updateableBy: 'admin',
       },
       allowNull: true,
@@ -121,9 +121,9 @@ module.exports = function (db, sequelize, DataTypes) {
     email: {
       type: DataTypes.STRING(255),
       auth: {
-        listableBy: ['editor', 'owner'],
-        viewableBy: ['editor', 'owner'],
-        createableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        createableBy: ['moderator', 'owner'],
         updateableBy: ['editor'],
       },
       allowNull: true,
@@ -181,10 +181,10 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.STRING(64),
       allowNull: true,
       auth: {
-        listableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
         viewableBy: 'all',
-        createableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       set: function (value) {
         if (this.site && this.site.config && this.site.config.users && this.site.config.users.allowUseOfNicknames) {
@@ -199,10 +199,10 @@ module.exports = function (db, sequelize, DataTypes) {
     firstName: {
       type: DataTypes.STRING(64),
       auth: {
-        listableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
         viewableBy: 'all',
-        createableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
       set: function (value) {
@@ -213,10 +213,10 @@ module.exports = function (db, sequelize, DataTypes) {
     lastName: {
       type: DataTypes.STRING(64),
       auth: {
-        listableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
         viewableBy: 'all',
-        createableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
       set: function (value) {
@@ -225,21 +225,21 @@ module.exports = function (db, sequelize, DataTypes) {
     },
 
     listableByRole: {
-      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      type: DataTypes.ENUM('admin', 'editor', 'moderator', 'member', 'anonymous', 'all'),
       defaultValue: null,
       auth: {
-        viewableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
     },
 
     detailsViewableByRole: {
-      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      type: DataTypes.ENUM('admin', 'editor', 'moderator', 'member', 'anonymous', 'all'),
       defaultValue: null,
       auth: {
-        viewableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
     },
@@ -247,9 +247,9 @@ module.exports = function (db, sequelize, DataTypes) {
     phoneNumber: {
       type: DataTypes.STRING(64),
       auth: {
-        listableBy: ['editor', 'owner'],
-        viewableBy: ['editor', 'owner'],
-        createableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        createableBy: ['moderator', 'owner'],
         updateableBy: ['editor', 'owner'],
       },
       allowNull: true,
@@ -261,10 +261,10 @@ module.exports = function (db, sequelize, DataTypes) {
     streetName: {
       type: DataTypes.STRING(64),
       auth: {
-        listableBy: ['editor', 'owner'],
-        viewableBy: ['editor', 'owner'],
-        createableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
       set: function (value) {
@@ -275,10 +275,10 @@ module.exports = function (db, sequelize, DataTypes) {
     houseNumber: {
       type: DataTypes.STRING(64),
       auth: {
-        listableBy: ['editor', 'owner'],
-        viewableBy: ['editor', 'owner'],
-        createableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
       set: function (value) {
@@ -289,10 +289,10 @@ module.exports = function (db, sequelize, DataTypes) {
     postcode: {
       type: DataTypes.STRING(64),
       auth: {
-        listableBy: ['editor', 'owner'],
-        viewableBy: ['editor', 'owner'],
-        createableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
       set: function (value) {
@@ -303,10 +303,10 @@ module.exports = function (db, sequelize, DataTypes) {
     city: {
       type: DataTypes.STRING(64),
       auth: {
-        listableBy: ['editor', 'owner'],
-        viewableBy: ['editor', 'owner'],
-        createableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
       set: function (value) {
@@ -317,10 +317,10 @@ module.exports = function (db, sequelize, DataTypes) {
     suffix: {
       type: DataTypes.STRING(64),
       auth: {
-        listableBy: ['editor', 'owner'],
-        viewableBy: ['editor', 'owner'],
-        createableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
       set: function (value) {
@@ -372,10 +372,10 @@ module.exports = function (db, sequelize, DataTypes) {
     zipCode: {
       type: DataTypes.STRING(10),
       auth: {
-        listableBy: ['editor', 'owner'],
-        viewableBy: ['editor', 'owner'],
-        createableBy: ['editor', 'owner'],
-        updateableBy: ['editor', 'owner'],
+        listableBy: ['moderator', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
       allowNull: true,
       validate: {
@@ -392,10 +392,10 @@ module.exports = function (db, sequelize, DataTypes) {
       postcode: {
         type: DataTypes.STRING(10),
         auth: {
-          listableBy: ['editor', 'owner'],
-          viewableBy: ['editor', 'owner'],
-          createableBy: ['editor', 'owner'],
-          updateableBy: ['editor', 'owner'],
+          listableBy: ['moderator', 'owner'],
+          viewableBy: ['moderator', 'owner'],
+          createableBy: ['moderator', 'owner'],
+          updateableBy: ['moderator', 'owner'],
         },
         allowNull: true,
         validate: {
@@ -684,8 +684,8 @@ module.exports = function (db, sequelize, DataTypes) {
         externalAccessToken: null,
         role: 'anonymous',
         passwordHash: null,
-        listableByRole: 'moderator',
-        detailsViewableByRole: 'moderator',
+        listableByRole: 'editor',
+        detailsViewableByRole: 'editor',
         viewableByRole: 'admin',
         email: null,
         nickName: null, 
@@ -720,11 +720,11 @@ module.exports = function (db, sequelize, DataTypes) {
   }
 
   User.auth = User.prototype.auth = {
-    listableBy: 'editor',
+    listableBy: 'moderator',
     viewableBy: 'all',
-    createableBy: 'editor',
-    updateableBy: ['editor', 'owner'],
-    deleteableBy: ['editor', 'owner'],
+    createableBy: 'moderator',
+    updateableBy: ['moderator', 'owner'],
+    deleteableBy: ['moderator', 'owner'],
 
     canCreate: function(user, self) {
 

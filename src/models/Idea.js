@@ -1,23 +1,19 @@
-var Sequelize = require('sequelize');
-var co = require('co')
+const Sequelize = require('sequelize');
+const getSequelizeConditionsForFilters = require('./../util/getSequelizeConditionsForFilters');
+const co = require('co')
 , config = require('config')
 , moment = require('moment-timezone')
-, pick = require('lodash/pick')
-, Promise = require('bluebird');
+, pick = require('lodash/pick');
 
-var sanitize = require('../util/sanitize');
-// var ImageOptim    = require('../ImageOptim');
-var notifications = require('../notifications');
+const sanitize = require('../util/sanitize');
+const notifications = require('../notifications');
 
 const merge = require('merge');
 
-var argVoteThreshold = config.ideas && config.ideas.argumentVoteThreshold;
+const argVoteThreshold = config.ideas && config.ideas.argumentVoteThreshold;
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 const roles = require('../lib/sequelize-authorization/lib/roles');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
-const hasModeratorRights = (user) => {
-  return userHasRole(user, 'editor', self.userId) || userHasRole(user, 'admin', self.userId) || userHasRole(user, 'moderator', self.userId);
-}
 
 function hideEmailsForNormalUsers(args) {
   return args.map((argument) => {
@@ -48,7 +44,7 @@ module.exports = function (db, sequelize, DataTypes) {
     userId: {
       type: DataTypes.INTEGER,
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
       },
       allowNull: false,
       defaultValue: 0,
@@ -56,7 +52,7 @@ module.exports = function (db, sequelize, DataTypes) {
 
     startDate: {
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
       },
       type: DataTypes.DATE,
       allowNull: false
@@ -89,7 +85,7 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.STRING(255),
       allowNull: true,
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
         authorizeData: function(data, action, user, self, site) {
           if (!self) return;
           site = site || self.site;
@@ -113,14 +109,14 @@ module.exports = function (db, sequelize, DataTypes) {
     status: {
       type: DataTypes.ENUM('OPEN', 'CLOSED', 'ACCEPTED', 'DENIED', 'BUSY', 'DONE'),
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
       },
       defaultValue: 'OPEN',
       allowNull: false
     },
 
     viewableByRole: {
-      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      type: DataTypes.ENUM('admin', 'editor', 'moderator', 'member', 'anonymous', 'all'),
       defaultValue: 'all',
       auth:  {
         updateableBy: ['editor', 'owner'],
@@ -254,8 +250,8 @@ module.exports = function (db, sequelize, DataTypes) {
     modBreak: {
       type: DataTypes.TEXT,
       auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
+        createableBy: 'moderator',
+        updateableBy: 'moderator',
       },
       allowNull: true,
       set: function (text) {
@@ -267,8 +263,8 @@ module.exports = function (db, sequelize, DataTypes) {
     modBreakUserId: {
       type: DataTypes.INTEGER,
       auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
+        createableBy: 'moderator',
+        updateableBy: 'moderator',
       },
       allowNull: true
     },
@@ -276,8 +272,8 @@ module.exports = function (db, sequelize, DataTypes) {
     modBreakDate: {
       type: DataTypes.DATE,
       auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
+        createableBy: 'moderator',
+        updateableBy: 'moderator',
       },
       allowNull: true
     },
@@ -592,10 +588,6 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
       filter: function (filtersInclude, filtersExclude) {
-        let conditions = {
-          [Sequelize.Op.and]:[]
-        };
-
         const filterKeys = [
           {
             'key': 'id'
@@ -616,67 +608,8 @@ module.exports = function (db, sequelize, DataTypes) {
             'extraData': true
           },
         ];
-
-        filterKeys.forEach((filter, i) => {
-          //first add include filters
-          if (filtersInclude) {
-            let filterValue = filtersInclude[filter.key];
-
-            if (filtersInclude[filter.key]) {
-              if (filter.extraData) {
-                filterValue = Array.isArray(filterValue) ? filterValue : [filterValue];
-
-                const escapedKey = sequelize.escape(`$.${filter.key}`);
-                filterValue.forEach((value, key)=>{
-                  const escapedValue = sequelize.escape(value);
-                  conditions[Sequelize.Op.and].push({
-                    [Sequelize.Op.and] : sequelize.literal(`extraData->${escapedKey}=${escapedValue}`)
-                  });
-                });
-
-              } else {
-                conditions[Sequelize.Op.and].push({
-                  [filter.key] : filterValue
-                });
-              }
-            }
-          }
-
-          //add exclude filters
-          if (filtersExclude) {
-            let excludeFilterValue = filtersExclude[filter.key];
-
-            if (excludeFilterValue) {
-              if (filter.extraData) {
-                excludeFilterValue = Array.isArray(excludeFilterValue) ? excludeFilterValue : [excludeFilterValue];
-
-                //filter out multiple conditions
-                const escapedKey = sequelize.escape(`$.${filter.key}`);
-                excludeFilterValue.forEach((value, key)=>{
-                  const escapedValue = sequelize.escape(value);
-                  conditions[Sequelize.Op.and].push({
-                    [Sequelize.Op.and] : sequelize.literal(`extraData->${escapedKey}!=${escapedValue}`)
-                  });
-
-
-                })
-
-              } else {
-                /*
-                TODO
-                conditions[Sequelize.Op.and].push({
-                  [filter.key] : filterValue
-                });
-                */
-              }
-            }
-          }
-        });
-
-        return {
-          where: sequelize.and(conditions)
-          //where: sequelize.and(conditions)
-        }
+        
+        return getSequelizeConditionsForFilters(filterKeys, filtersInclude, sequelize, filtersExclude);
       },
 
       // vergelijk getRunning()

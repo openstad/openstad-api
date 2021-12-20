@@ -16,7 +16,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		parentId: {
 			type         : DataTypes.INTEGER,
       auth: {
-        updateableBy : 'moderator',
+        updateableBy : 'editor',
       },
 			allowNull    : true
 		},
@@ -24,7 +24,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		ideaId: {
 			type         : DataTypes.INTEGER,
       auth: {
-        updateableBy : 'moderator',
+        updateableBy : 'editor',
       },
 			allowNull    : false
 		},
@@ -32,7 +32,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		userId: {
 			type         : DataTypes.INTEGER,
       auth: {
-        updateableBy : 'moderator',
+        updateableBy : 'editor',
       },
 			allowNull    : false,
 			defaultValue: 0,

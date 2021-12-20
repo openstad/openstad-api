@@ -8,9 +8,6 @@ const dbConfig = config.get('database');
 // get the client
 const mysql = require('mysql2/promise');
 
-// get the promise implementation, we will use bluebird
-const bluebird = require('bluebird');
-
 const express = require('express');
 const createError = require('http-errors')
 
@@ -92,7 +89,7 @@ router.route('/')
     .get((req, res, next) => {
 
        // let isViewable = req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable;
-        const isViewable = (req.user && (req.user.role == 'admin' || req.user.role == 'moderator' || req.user.role == 'editor'))
+        const isViewable = (req.user && (req.user.role == 'admin' || req.user.role == 'editor' || req.user.role == 'moderator'))
 
         if (isViewable) {
             return next();
@@ -233,7 +230,7 @@ router.route('/')
                 user: dbConfig.user,
                 password: dbConfig.password,
                 database: dbConfig.database,
-                Promise: bluebird
+                Promise
             });
 
             next();
