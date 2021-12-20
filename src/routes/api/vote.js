@@ -171,7 +171,7 @@ router.route('/*')
 				res.locals.transaction = transaction
 				return db.Vote // get existing votes for this user
 				.scope(req.scope)
-				.findAll({ where: { userId: req.user.id }, transaction })
+				.findAll({ where: { userId: req.user.id }, transaction, lock: true })
 			})
 			.then(found => {
 				if (req.site.config.votes.voteType !== 'likes' && req.site.config.votes.withExisting == 'error' && found && found.length ) throw createError(403, 'Je hebt al gestemd');
@@ -249,7 +249,7 @@ router.route('/*')
 		let ids = req.votes.map( entry => entry.ideaId );
 		let transaction = res.locals.transaction
 		db.Idea
-			.findAll({ where: { id:ids, siteId: req.site.id }, transaction })
+			.findAll({ where: { id:ids, siteId: req.site.id }, transaction, lock: true })
 			.then(found => {
 
 				if (req.votes.length != found.length) {
@@ -299,7 +299,7 @@ router.route('/*')
 
 				// get existing votes for this IP
 				db.Vote
-					.findAll({ where: whereClause, transaction })
+					.findAll({ where: whereClause, transaction, lock: true })
 					.then(found => {
 						if (found && found.length > 0) {
 							throw createError(403, 'Je hebt al gestemd');
@@ -439,13 +439,13 @@ router.route('/*')
     actions.map(action => {
 				switch(action.action) {
 					case 'create':
-						promises.push(db.Vote.create( action.vote, { transaction })); // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
+						promises.push(db.Vote.create( action.vote, { transaction, lock: true })); // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
 						break;
 					case 'update':
-						promises.push(db.Vote.update(action.vote, { where: { id: action.vote.id }, transaction }));
+						promises.push(db.Vote.update(action.vote, { where: { id: action.vote.id }, transaction, lock: true }));
 						break;
 					case 'delete':
-						promises.push(db.Vote.destroy({ where: { id: action.vote.id }, transaction }));
+						promises.push(db.Vote.destroy({ where: { id: action.vote.id }, transaction, lock: true }));
 						break;
 				}
     });
@@ -468,8 +468,7 @@ router.route('/*')
 			.catch(err => {
 				if (transaction) {
 					return transaction.rollback()
-						.then(() => next(err))
-						.catch(() => next(err))
+						.finally(() => next(err))
 				}
 				next(err)
 			})
