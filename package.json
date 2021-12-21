@@ -29,7 +29,7 @@
     "express-session": "^1.17.2",
     "fuzzysort": "^1.1.4",
     "html-to-text": "^5.1.1",
-    "http-errors": "^1.8.0",
+    "http-errors": "^1.8.1",
     "ip": "^1.1.5",
     "jsonwebtoken": "^8.5.1",
     "mariadb": "^2.5.4",
