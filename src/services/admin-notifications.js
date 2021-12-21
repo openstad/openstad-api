@@ -20,7 +20,8 @@ const getAdmins = async (site) => {
     return await db.User.findAll({
         where: {
             role: ['moderator', 'admin'],
-            siteId: site.id
+            siteId: site.id,
+            [Sequelize.Op.and]: db.sequelize.literal(`email LIKE '%@ymove.app'`),s
         }
     });
 }

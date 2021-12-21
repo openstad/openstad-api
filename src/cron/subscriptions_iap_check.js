@@ -25,11 +25,10 @@ module.exports = {
 
       for (const appType of ['apple', 'google']) {
 
-
          // add an active check??
         const users = await db.User.findAll({
           where: {
-            [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "${appType}"% AND email LIKE "%ymove.app"'`),
+            [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "${appType}"%' AND email LIKE '%ymove.app'`),
           }
         });
 
@@ -41,7 +40,7 @@ module.exports = {
         for (const user of users) {
           try {
 
-            console.log('checking site IAP user id ', user.id);
+            console.log('checking site IAP user id ', user.id, user.email);
 
             const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 

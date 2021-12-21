@@ -37,7 +37,7 @@ module.exports = {
 
         const users = await db.User.findAll({
           where: {
-            [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "mollie"% AND email LIKE "%ymove.app"'`),
+            [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "mollie"%' AND email LIKE '%ymove.app'`),
           }
         });
 
