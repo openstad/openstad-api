@@ -14,7 +14,7 @@ const Sequelize = require('sequelize');
 module.exports = {
   //cronTime: '0 0 1 * * *',
   cronTime: '*/15 * * * *',
- // runOnInit: true,
+ //runOnInit: true,
   onTick: async function() {
     // first get all sites;
     const sites = await db.Site.findAll();
@@ -28,15 +28,16 @@ module.exports = {
       const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
       const mollieApiKey = site.config && site.config.payment && site.config.payment.mollieApiKey ? site.config.payment.mollieApiKey : '';
 
-      console.log('Error get mollie mollieApiKey', mollieApiKey)
+     // console.log('Error get mollie mollieApiKey', mollieApiKey)
 
       if (mollieApiKey) {
         const mollieClient = createMollieClient({apiKey: mollieApiKey});
 
-        console.log('mollieClient: for mollieApiKey',mollieApiKey)
+       // console.log('mollieClient: for mollieApiKey',mollieApiKey)
 
         const users = await db.User.findAll({
           where: {
+            siteId: site.id,
             [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "mollie"%' AND email LIKE '%ymove.app'`),
           }
         });
@@ -44,7 +45,7 @@ module.exports = {
         console.log('Amount of users found: ', users.length)
 
         for (const user of users) {
-          console.log('Checking user with ID: ', user.id)
+          console.log('Checking user with ID: ', user.id, user.email)
 
           const customerUserKey = paymentModus + '_mollieCustomerId';
           const mollieCustomerId = user.siteData[customerUserKey];
