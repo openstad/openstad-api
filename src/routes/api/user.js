@@ -200,6 +200,7 @@ router.route('/')
       const options = {
           ...dbQuery,
           where: queryConditions,
+          attributes: ['id', 'firstName', 'lastName', 'email','role'],
       }
 
       db.User
@@ -447,7 +448,6 @@ router.route('/:userId(\\d+)')
                 return db.User
                     .scope(['includeSite'])
                     .findAll({
-                        attributes: ['id', 'firstName', 'lastName', 'email', 'subscriptionData', 'role', 'chatToken', 'access'],
                         where: {
                             externalUserId: json.id,
                             // old users have no siteId, this will break the update
