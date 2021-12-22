@@ -167,7 +167,7 @@ router.route('/')
       const sort = req.query.sort;
 
       if (sort) {
-          req.scope.push({ method: ['sort', req.query.sort] });
+         // req.scope.push({ method: ['sort', req.query.sort] });
       }
 
 
@@ -200,7 +200,7 @@ router.route('/')
       const options = {
           ...dbQuery,
           where: queryConditions,
-          attributes: ['id', 'firstName', 'lastName', 'email','role'],
+        //  attributes: ['id', 'firstName', 'lastName', 'email','role', 'access', 'subscriptionData'],
       }
 
       db.User
