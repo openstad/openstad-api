@@ -55,12 +55,14 @@ module.exports = {
             for (const activeSubscription of activeSubscriptions) {
               console.log('checking activeSubscription.uuid  ', activeSubscription.uuid);
 
-              const receipt = activeSubscription.receipt;
 
               const appTypes = {
                 apple: 'ios',
                 google: 'android',
               }
+
+              const receipt = appTypes[appType] === 'ios' ? activeSubscription.receipt : JSON.parse(activeSubscription.receipt);
+
 
               await IAPservice.processPurchase(appTypes[appType], user, receipt, androidAppSettings, iosAppSettings, site.id);
             }
