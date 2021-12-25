@@ -10,8 +10,8 @@ const adminNotificationsService = require('../services/admin-notifications')
 //
 // Runs every night at 1:00.
 module.exports = {
-    cronTime: '0 0 1 * * *',
-    cronTime: '1 * * * * *',
+  //  cronTime: '0 0 1 * * *',
+    cronTime: '*/5 * * * *',
     //runOnInit: true,
     onTick: async function() {
         // first get all sites;

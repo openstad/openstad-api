@@ -11,7 +11,7 @@ const Sequelize = require('sequelize');
 //
 // Runs every night at 1:00.
 module.exports = {
-  cronTime: '1 * * * * *',
+  cronTime: '*/5 * * * *',
   runOnInit: true,
   onTick: async function() {
     // first get all sites;
