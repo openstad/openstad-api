@@ -59,6 +59,16 @@ const mergeData = async (req, res, next) => {
     const bodySiteData = req.body && req.body.siteData ? req.body.siteData : {};
 
 
+    const userToUpdate = req.results;
+
+    if (!userToUpdate) {
+        throw new Error('No user update found');
+        return
+    } else {
+        console.log('User to update ',userToUpdate.id, userToUpdate.siteData)
+    }
+
+
     if (bodySiteData && Object.keys(bodySiteData) && Object.keys(bodySiteData).length === 1) {
         console.log('bodySiteData', bodySiteData)
         const siteDataKeysToUpdate = Object.keys(bodySiteData);
@@ -125,8 +135,9 @@ const mergeData = async (req, res, next) => {
         req.user.siteData
     }
 
-    const userSiteData = req.user && req.user.siteData ? req.user.siteData : {};
+    const userSiteData = userToUpdate.siteData ? userToUpdate.siteData : {};
     data.siteData  = Object.assign(userSiteData, bodySiteData);
+
     req.body = data;
     next();
 }
