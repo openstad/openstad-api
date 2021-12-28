@@ -12,19 +12,50 @@ var createError = require('http-errors');
 // scopes: for all get requests
 router
     .all('*', function(req, res, next) {
-        req.scope = ['api'];
-        req.scope.push('includeSite');
+       // req.scope = ['api'];
+       // req.scope.push('includeSite');
         return next();
     });
 
 router.route('/:subscriptionId/cancel')
+    .all(auth.useReqUser)
+    .all(async (req, res, next) => {
+
+
+
+        const user = await db.User.findOne({
+            where: {
+                id: req.params.userId,
+                siteId: req.site.id
+            }
+        })
+
+        if (!user) {
+            throw createError(404, `User not found with id ${req.params.userId}`);
+            return;
+        }
+        console.log('req.user', req.user)
+        console.log('req.user.role', req.user.role)
+
+        const role =  req.user.role;
+        const reqUserId = req.user.id;
+
+
+        if ((role !== 'moderator' && role !== 'admin') &&  user.id !== reqUserId) {
+            return next(new Error('You cannot update this user 2'));
+        }
+
+        req.results = user;
+        next();
+    })
+    //
     .all(async function(req, res, next) {
         try {
-            const user = await db.User.findOne({
-                where: {
-                    id: req.params.userId
-                }
-            })
+
+
+
+            const user = req.results;
+
 
             console.log('user is found???', !!user.id)
             console.log('user is found???', user.access)
@@ -57,14 +88,48 @@ router.route('/:subscriptionId/cancel')
                     const paymentModus = site.config && site.config.payment && site.config.payment.mollieModus ? site.config.payment.mollieModus : 'live';
                     const customerUserKey = paymentModus + '_mollieCustomerId';
 
-                    const mollieCustomerId = user.siteData[customerUserKey];
+                    // fetch customer id
+
 
                     const mollieClient = createMollieClient({apiKey: mollieApiKey});
+
+
+
+                    const originalOrder = await db.Order.findOne({
+                        where: {
+                            userId: user.id,
+                            paymentStatus: 'PAID'
+                        }
+                    });
+
+                    console.log('Found originalOrder id', originalOrder.id, originalOrder.extraData)
+
+                    if (!originalOrder) {
+                        throw createError(404, `Could not find original order for ${req.params.subscriptionId} and user id ${user.id}`);
+                        return;
+                    }
+
+                    const paymentId = originalOrder.extraData && originalOrder.extraData.paymentId ? originalOrder.extraData.paymentId : false;
+
+                    console.log('Found payment id', paymentId)
+
+                    if (!paymentId) {
+                        throw createError(404, `Could not find paymentId for ${req.params.subscriptionId} and user id ${user.id}`);
+                        return;
+                    }
+
+
+                    const payment = await mollieClient.payments.get(paymentId);
+
+                    console.log('Found payment', payment);
+
+                    const mollieCustomerId = payment.customerId;
+
+                    console.log('Found mollieCustomerId', mollieCustomerId);
 
                     const subscription = await mollieClient.customers_subscriptions.get(foundSubscription.mollieSubscriptionId, {
                         customerId: mollieCustomerId,
                     });
-
 
                     if (!subscription) {
                         throw createError(404, `Could not find  subscription in mollie with id ${req.params.subscriptionId} and user id ${user.id}`);

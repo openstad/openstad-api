@@ -10,7 +10,7 @@ var db      = require('../db');
 // Runs every night at 4:00.
 module.exports = {
 	cronTime: '0 0 4 * * *',
-	runOnInit: true,
+	runOnInit: false,
 	onTick: function() {
 		Promise.all([
 			db.Vote.anonimizeOldVotes(),
