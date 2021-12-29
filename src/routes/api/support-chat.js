@@ -121,7 +121,7 @@ const enrichMessagesWithUser = async (messages) => {
 router.route('/:requestingUserId')
   .all(addOne)
   .get(auth.useReqUser)
-  //.get(auth.can('SupportChat', 'View'))
+  .get(auth.can('SupportChat', 'View'))
   .get(async function (req, res, next) {
     const usersForChat = {};
 

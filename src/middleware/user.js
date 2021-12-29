@@ -18,9 +18,13 @@ module.exports = async function getUser( req, res, next ) {
 		}
 		const userId = getUserId(req.headers['x-authorization']);
 
+		console.log('userId', userId)
+
 		const which = req.query.useOauth || 'default';
 
 		const siteOauthConfig = (req.site && req.site.config && req.site.config.oauth && req.site.config.oauth[which]) || {};
+
+
 
 		if(userId === null) {
 			return nextWithEmptyUser(req, res, next);

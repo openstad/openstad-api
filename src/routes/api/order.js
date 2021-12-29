@@ -387,6 +387,7 @@ router.route('/')
           if (req.user.siteData && req.user.siteData[customerUserKey]) {
             customerId = req.user.siteData[customerUserKey];
           } else {
+
             const customer = await mollieClient.customers.create({
               name: req.user.firstName + ' ' + req.user.lastName,
               email: req.user.email,

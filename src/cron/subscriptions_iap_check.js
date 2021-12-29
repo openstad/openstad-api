@@ -11,8 +11,8 @@ const Sequelize = require('sequelize');
 //
 // Runs every night at 1:00.
 module.exports = {
-  cronTime: '*/15 * * * *',
-//  runOnInit: true,
+  cronTime: '*/5 * * * *',
+  runOnInit: true,
   onTick: async function() {
     // first get all sites;
     const sites = await db.Site.findAll();
@@ -28,6 +28,7 @@ module.exports = {
          // add an active check??
         const users = await db.User.findAll({
           where: {
+            siteId: site.id,
             [Sequelize.Op.and]: db.sequelize.literal(`subscriptionData LIKE '%"subscriptionPaymentProvider": "${appType}"%' AND email LIKE '%ymove.app'`),
           }
         });
@@ -45,6 +46,8 @@ module.exports = {
             const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
 
             const activeSubscriptions = userSubscriptionData.subscriptions  && Array.isArray(userSubscriptionData.subscriptions) ?  userSubscriptionData.subscriptions.filter((subscription) => {
+              console.log('checking site IAP  subscription.active id ',  subscription.active);
+
               return subscription.active;
             }) : [];
 
@@ -52,12 +55,14 @@ module.exports = {
             for (const activeSubscription of activeSubscriptions) {
               console.log('checking activeSubscription.uuid  ', activeSubscription.uuid);
 
-              const receipt = activeSubscription.receipt;
 
               const appTypes = {
                 apple: 'ios',
                 google: 'android',
               }
+
+              const receipt = appTypes[appType] === 'ios' ? activeSubscription.receipt : JSON.parse(activeSubscription.receipt);
+
 
               await IAPservice.processPurchase(appTypes[appType], user, receipt, androidAppSettings, iosAppSettings, site.id);
             }

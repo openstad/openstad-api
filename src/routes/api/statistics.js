@@ -270,6 +270,7 @@ router.route('/')
                 user: dbConfig.user,
                 password: dbConfig.password,
                 database: dbConfig.database,
+                port					: dbConfig.port || 3306,
                 Promise: bluebird
             });
 
