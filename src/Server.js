@@ -125,10 +125,23 @@ module.exports = {
         this.app.use(require('./middleware/security-headers'));
 
 
-        if (!req.originalUrl.includes('/stripe')) {
-            this.app.use(bodyParser.json({limit: '100mb'}));
-            this.app.use(bodyParser.urlencoded({limit: '100mb', extended: true}));
-        }
+        this.app.use((req, res, next) => {
+            if (!req.originalUrl.includes('payment/stripe')) {
+                console.log('payment/stripe skip body parser')
+                next();
+            } else {
+                bodyParser.json({limit: '100mb'})(req, res, next);
+            }
+        });
+
+        this.app.use((req, res, next) => {
+            if (!req.originalUrl.includes('/stripe')) {
+                console.log('payment/stripe skip body parser 2')
+                next();
+            } else {
+                bodyParser.urlencoded({limit: '100mb', extended: true})(req, res, next);
+            }
+        });
 
 
         this.app.use(cookieParser(config.get('security.sessions.secret')));
