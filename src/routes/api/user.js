@@ -442,7 +442,13 @@ router.route('/:userId(\\d+)')
                 'Content-Type': 'application/json',
             },
             mode: 'cors',
-            body: JSON.stringify(Object.assign(apiCredentials, data))
+            body: JSON.stringify(Object.assign(apiCredentials, {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                password: data.password,
+                //email: data.email
+
+            }))
         }
 
         fetch(authUpdateUrl, options)
@@ -453,7 +459,7 @@ router.route('/:userId(\\d+)')
 
                 console.log('rresponse', response);
 
-                throw createError(401, 'Could not create a user, most likely user exists already', response);
+                throw createError(401, 'Could not update a user, most likely user exists already', response);
             })
             .then((json) => {
                 return db.User
