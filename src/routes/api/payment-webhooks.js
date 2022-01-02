@@ -264,10 +264,95 @@ router.route('/paystack')
 
 
 router.route('/stripe')
-  .post(function (req, res, next) {
+  .all(async (req, res, next) => {
+    const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
+    const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
+    const stripeApiKey = paymentConfig.stripeApiKey ? paymentConfig.stripeApiKey : '';
+    const stripeWebhookSecret = paymentConfig.stripeWebhookSecret ? paymentConfig.stripeWebhookSecret : '';
+
+    const Stripe = require('stripe')(stripeApiKey);
+
     /**
      * @TODO
      */
+
+    let event;
+
+    // Verify the event came from Stripe
+    try {
+      const sig = req.headers['stripe-signature'];
+      event = Stripe.webhooks.constructEvent(req.body, sig, stripeWebhookSecret);
+    } catch (err) {
+      // On error, log and return the error message
+      console.log(`❌ Error message: ${err.message}`);
+      next(err)
+    }
+
+    const eventData = event.data.object;
+
+    console.log('Stripe webhook: eventData received', eventData);
+
+    const stripeCustomerId = eventData && data.customer ? eventData.customer : '';
+    const stripeCustomerIdKey = paymentModus + '_stripeCustomerId';
+    let user;
+
+    try {
+      const escapedKey = db.sequelize.escape(`$.${stripeCustomerIdKey}`);
+      const escapedValue = db.sequelize.escape(stripeCustomerId);
+      const query = db.sequelize.literal(`siteData->${escapedKey}=${escapedValue}`);
+
+      console.log('query', query)
+
+      user = await db.User.findOne({
+        where: {
+          [Sequelize.Op.and]: query,
+          siteId: req.site.id
+        }
+      });
+    } catch(e) {
+      console.warn('Webhook stripe: Error in fetching a user', e);
+      next(e);
+    }
+
+
+    // Successfully constructed event
+    switch (event.type) {
+      case 'customer.subscription.created': {
+        try {
+          await subscriptionService.createOrUpdate({
+            user,
+            provider: 'stripe',
+            subscriptionActive: true,
+            stripeSubscriptionId: eventData.id,
+            siteId: req.site.id,
+            subscriptionProductId: eventData.metadata.productId,
+            planId: eventData.metadata.planId
+          });
+
+        } catch (e) {
+          console.log('Webhook stripe: ErrorsubscriptionService.createOrUpdate ', order.id, e);
+          next(e);
+        }
+
+        try {
+          const order = await db.Order.findOne({
+            where: {
+              id: eventData.metadata.orderId
+            }
+          });
+
+          order.set('paymentStatus', 'PAID');
+          await order.save();
+          mail.sendThankYouMail(order, 'order', user);
+        } catch (e) {
+          console.log('Webhook stripe: Error processing order ', order.id, e);
+          next(e);
+        }
+
+        break
+      }
+      default:
+    }
 
   });
 

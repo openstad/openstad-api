@@ -291,153 +291,314 @@ router.route('/')
       .catch(next)
   })
   .post(async function (req, res, next) {
-      const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
-      const paymentProvider = paymentConfig.provider ? paymentConfig.provider : 'mollie';
-      const paymentApiUrl = config.url + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment';
-      const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
+    const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
+    const paymentProvider = paymentConfig.provider ? paymentConfig.provider : 'mollie';
+    const paymentApiUrl = config.url + '/api/site/' + req.params.siteId + '/order/' + req.results.id + '/payment';
+    const siteUrl = req.site.config.cms.url;
 
-      if (paymentProvider === 'paystack') {
-        const paystackApiKey = paymentConfig.paystackApiKey ? paymentConfig.paystackApiKey : '';
+    const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
 
-        const PaystackClient = new PayStack(paystackApiKey);
+    if (paymentProvider === 'stripe') {
 
-        const customerUserIdKey = paymentModus + '_paystackCustomerId';
-        const customerUserCodeKey = paymentModus + '_paystackCustomerCode';
+      const stripeApiKey = paymentConfig.stripeApiKey ? paymentConfig.stripeApiKey : '';
+      const stripeTrialDays = paymentConfig.stripeTrialDays ? paymentConfig.stripeTrialDays : '';
 
-        let customerCode;
+      console.log('Stripe start creating subscription with stripeApiKey', stripeApiKey);
 
+      const Stripe = require('stripe')(stripeApiKey);
+
+      const stripeCustomerIdKey = paymentModus + '_stripeCustomerId';
+      const stripeCustomerId = req.user.siteData[stripeCustomerIdKey];
+
+      console.log('Stripe start creating subscription for stripeCustomerId', stripeCustomerId);
+
+      let stripeCustomer;
+
+      if (stripeCustomerId) {
         try {
-          if (req.user.siteData && req.user.siteData[customerUserCodeKey]) {
-            customerCode = req.user.siteData[customerUserCodeKey];
-          } else {
-            let createCustomerResponse = await PaystackClient.createCustomer({
-              email: req.user.email,
-              first_name: req.user.firstName,
-              last_name: req.user.lastName,
-            });
+          stripeCustomer = await Stripe.customers.retrieve(stripeCustomerId)
+        } catch (e) {
+          console.log('Stripe customer call error', stripeCustomerId, 'error: e', e);
+        }
+      }
 
-            createCustomerResponse = typeof createCustomerResponse === 'string' ? JSON.parse(createCustomerResponse) : createCustomerResponse;
-            createCustomerResponse = createCustomerResponse.body;
+      console.log('Stripe start creating found stripeCustomer', stripeCustomer);
 
-            customerCode = createCustomerResponse.data.code;
 
-            const siteData = req.user.siteData ? req.user.siteData : {};
-
-            siteData[customerUserIdKey] = createCustomerResponse.data.id;
-            siteData[customerUserCodeKey] = createCustomerResponse.data.customer_code;
-
-            console.log('siteDatasiteData', siteData);
-
-            await req.user.update({
-              siteData: siteData
-            })
-          }
-
-          let total = req.results.total;
-
-          total = total.toFixed ? total.toFixed(2) : total;
-
-          const paystackOptions = {
-            amount: Math.round((total * 100)), // Paystack wants cents
+      if (!stripeCustomer) {
+        try {
+          stripeCustomer = await Stripe.customers.create({
             email: req.user.email,
-            callback_url: paymentApiUrl,
-          }
-
-          if (req.subscriptionProduct) {
-            paystackOptions['plan'] = req.subscriptionProduct.extraData.paystackPlanCode;
-          }
-
-          let createTransactionResponse = await PaystackClient.initializeTransaction(paystackOptions);
-
-          createTransactionResponse = typeof createTransactionResponse === 'string' ? JSON.parse(createTransactionResponse) : createTransactionResponse;
-
-          createTransactionResponse = createTransactionResponse.body;
-          console.log('createTransactionResponse', createTransactionResponse);
-
-          const orderExtraData = req.results.extraData;
-
-          orderExtraData.paymentUrl = createTransactionResponse.data.authorization_url;
-          orderExtraData.paystackAccessCode = createTransactionResponse.data.access_code;
-          orderExtraData.paystackReference = createTransactionResponse.data.reference;
-          orderExtraData.paymentProvider = paymentProvider;
-
-          req.redirectUrl = orderExtraData.paymentUrl;
-
-          await req.results.update({
-            extraData: orderExtraData
+            name: req.user.firstName + ' ' + req.user.lastName
           });
 
-          next();
-        } catch (error) {
-          next(error);
+          console.log('Stripe created stripeCustomer', stripeCustomer);
+
+          const siteData = req.user.siteData;
+
+          siteData[stripeCustomerIdKey] = stripeCustomer.id;
+
+          await req.user.update({
+            siteData
+          })
+
+        } catch (e) {
+          console.log('Stripe customer call error', stripeCustomerId, 'error: e', e);
+          next(e);
+        }
+      }
+
+
+      let stripeSession;
+
+      try {
+        const subscriptionProduct = req.subscriptionProduct;
+
+        let stripeInterval;
+        const subscriptionInterval = req.subscriptionProduct ? req.subscriptionProduct.subscriptionInterval : '';
+
+        switch (subscriptionInterval) {
+          //interval: Either day, week, month or year.
+          //interval_count: The number of intervals between subscription billings. For example, interval=month and interval_count=3 bills every 3 months. Maximum of one year interval allowed (1 year, 12 months, or 52 weeks).
+
+          case '1 day':
+            stripeInterval = {
+              interval: 'day',
+              interval_count: 1
+            }
+            break;
+
+          case '1 week':
+              stripeInterval = {
+                interval: 'week',
+                interval_count: 1
+              }
+              break;
+
+          case '1 month':
+            stripeInterval = {
+              interval: 'month',
+              interval_count: 1
+            }
+            break;
+
+          case '3 months':
+            stripeInterval = {
+              interval: 'month',
+              interval_count: 3
+            }
+            break;
+
+          case '6 months':
+            stripeInterval = {
+              interval: 'month',
+              interval_count: 3
+            }
+            break;
+
+          case '1 year':
+            stripeInterval = {
+              interval: 'year',
+              interval_count: 1
+            }
+            break;
+
+          case '12 months':
+            stripeInterval = {
+              interval: 'year',
+              interval_count: 1
+            }
+            break;
+
+
         }
 
-      } else if (paymentProvider === 'mollie') {
-        const mollieApiKey = paymentConfig.mollieApiKey ? paymentConfig.mollieApiKey : '';
+        console.log('stripeInterval', stripeInterval)
 
-        // google pay, apple pay, paystack,
-        const mollieClient = createMollieClient({apiKey: mollieApiKey});
-        const customerUserKey =  paymentModus + '_mollieCustomerId';
-        const baseUrl = config.url;
-
-
-        try {
-          let customerId;
-
-          if (req.user.siteData && req.user.siteData[customerUserKey]) {
-            customerId = req.user.siteData[customerUserKey];
-          } else {
-
-            const customer = await mollieClient.customers.create({
-              name: req.user.firstName + ' ' + req.user.lastName,
-              email: req.user.email,
-            });
-
-            const siteData = req.user.siteData;
-
-            siteData[customerUserKey] = customer.id;
-
-            await req.user.update({siteData})
-
-            customerId = req.user.siteData[customerUserKey];
-          }
+        const stripeSessionConfig = {
+          mode: 'subscription',
+          currency: req.results.extraData.currency,
+          payment_method_types: ['card'],
+          stripeCustomer,
+          line_items: [
+            {
+              price: req.results.total,
+              quantity: 1,
+              price_data: {
+                recurring: stripeInterval
+              }
+            }
+          ],
+          subscription_data: {
+            metadata: {
+              planId: subscriptionProduct.extraData.planId,
+              productId:  subscriptionProduct.id,
+              orderId: req.results.id
+            }
+          },
+          success_url: siteUrl + '/thankyou',
+          //redirect will just send them back and see inactive account
+          cancel_url:  siteUrl,// `http://localhost:4242/failed`
+        }
 
 
-          const mollieOptions = {
-            customerId: customerId,
-            amount: {
-              value: req.results.total,
-              currency: req.results.extraData.currency
-            },
-            description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
-            redirectUrl: paymentApiUrl,
-            webhookUrl: baseUrl + '/api/site/' + req.params.siteId + '/payment/mollie'
-            //	webhookUrl:  paymentApiUrl,
-          }
+        if (stripeTrialDays) {
+          stripeSessionConfig.subscription_data.trial_period_days = stripeTrialDays;
+        }
 
-          if (req.subscriptionProduct) {
-            mollieOptions['sequenceType'] = 'first';
-          }
+        console.log('Stripe create sessions with config', stripeSessionConfig);
 
-          const payment = await mollieClient.payments.create(mollieOptions);
+        stripeSession = await Stripe.checkout.sessions.create(stripeSessionConfig)
+      } catch (e) {
+        console.log('Stripe create sessions call error', stripeCustomerId, 'found: e', e);
+      }
 
-          const orderExtraData = req.results.extraData ? req.results.extraData : {};
-          orderExtraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
-          orderExtraData.paymentIds.push(payment.id);
-          orderExtraData.paymentId = payment.id;
-          orderExtraData.paymentUrl = payment.getCheckoutUrl();
-          orderExtraData.paymentProvider = paymentProvider;
+      console.log('Stripe created sessions', stripeSession);
 
-          req.redirectUrl = orderExtraData.paymentUrl;
+      return res.redirect(stripeSession.url);
 
-          await req.results.update({
-            extraData: orderExtraData
+    } else if (paymentProvider === 'paystack') {
+      const paystackApiKey = paymentConfig.paystackApiKey ? paymentConfig.paystackApiKey : '';
+
+      const PaystackClient = new PayStack(paystackApiKey);
+
+      const customerUserIdKey = paymentModus + '_paystackCustomerId';
+      const customerUserCodeKey = paymentModus + '_paystackCustomerCode';
+
+      let customerCode;
+
+      try {
+        if (req.user.siteData && req.user.siteData[customerUserCodeKey]) {
+          customerCode = req.user.siteData[customerUserCodeKey];
+        } else {
+          let createCustomerResponse = await PaystackClient.createCustomer({
+            email: req.user.email,
+            first_name: req.user.firstName,
+            last_name: req.user.lastName,
           });
 
-          next();
-        } catch (error) {
-          next(error);
+          createCustomerResponse = typeof createCustomerResponse === 'string' ? JSON.parse(createCustomerResponse) : createCustomerResponse;
+          createCustomerResponse = createCustomerResponse.body;
+
+          customerCode = createCustomerResponse.data.code;
+
+          const siteData = req.user.siteData ? req.user.siteData : {};
+
+          siteData[customerUserIdKey] = createCustomerResponse.data.id;
+          siteData[customerUserCodeKey] = createCustomerResponse.data.customer_code;
+
+          console.log('siteDatasiteData', siteData);
+
+          await req.user.update({
+            siteData: siteData
+          })
         }
+
+        let total = req.results.total;
+
+        total = total.toFixed ? total.toFixed(2) : total;
+
+        const paystackOptions = {
+          amount: Math.round((total * 100)), // Paystack wants cents
+          email: req.user.email,
+          callback_url: paymentApiUrl,
+        }
+
+        if (req.subscriptionProduct) {
+          paystackOptions['plan'] = req.subscriptionProduct.extraData.paystackPlanCode;
+        }
+
+        let createTransactionResponse = await PaystackClient.initializeTransaction(paystackOptions);
+
+        createTransactionResponse = typeof createTransactionResponse === 'string' ? JSON.parse(createTransactionResponse) : createTransactionResponse;
+
+        createTransactionResponse = createTransactionResponse.body;
+        console.log('createTransactionResponse', createTransactionResponse);
+
+        const orderExtraData = req.results.extraData;
+
+        orderExtraData.paymentUrl = createTransactionResponse.data.authorization_url;
+        orderExtraData.paystackAccessCode = createTransactionResponse.data.access_code;
+        orderExtraData.paystackReference = createTransactionResponse.data.reference;
+        orderExtraData.paymentProvider = paymentProvider;
+
+        req.redirectUrl = orderExtraData.paymentUrl;
+
+        await req.results.update({
+          extraData: orderExtraData
+        });
+
+        next();
+      } catch (error) {
+        next(error);
+      }
+
+    } else if (paymentProvider === 'mollie') {
+      const mollieApiKey = paymentConfig.mollieApiKey ? paymentConfig.mollieApiKey : '';
+
+      // google pay, apple pay, paystack,
+      const mollieClient = createMollieClient({apiKey: mollieApiKey});
+      const customerUserKey = paymentModus + '_mollieCustomerId';
+      const baseUrl = config.url;
+
+
+      try {
+        let customerId;
+
+        if (req.user.siteData && req.user.siteData[customerUserKey]) {
+          customerId = req.user.siteData[customerUserKey];
+        } else {
+
+          const customer = await mollieClient.customers.create({
+            name: req.user.firstName + ' ' + req.user.lastName,
+            email: req.user.email,
+          });
+
+          const siteData = req.user.siteData;
+
+          siteData[customerUserKey] = customer.id;
+
+          await req.user.update({siteData})
+
+          customerId = req.user.siteData[customerUserKey];
+        }
+
+
+        const mollieOptions = {
+          customerId: customerId,
+          amount: {
+            value: req.results.total,
+            currency: req.results.extraData.currency
+          },
+          description: paymentConfig.description ? paymentConfig.description : 'Bestelling bij ' + req.site.name,
+          redirectUrl: paymentApiUrl,
+          webhookUrl: baseUrl + '/api/site/' + req.params.siteId + '/payment/mollie'
+          //	webhookUrl:  paymentApiUrl,
+        }
+
+        if (req.subscriptionProduct) {
+          mollieOptions['sequenceType'] = 'first';
+        }
+
+        const payment = await mollieClient.payments.create(mollieOptions);
+
+        const orderExtraData = req.results.extraData ? req.results.extraData : {};
+        orderExtraData.paymentIds = req.results.extraData.paymentIds ? req.results.extraData.paymentIds : [];
+        orderExtraData.paymentIds.push(payment.id);
+        orderExtraData.paymentId = payment.id;
+        orderExtraData.paymentUrl = payment.getCheckoutUrl();
+        orderExtraData.paymentProvider = paymentProvider;
+
+        req.redirectUrl = orderExtraData.paymentUrl;
+
+        await req.results.update({
+          extraData: orderExtraData
+        });
+
+        next();
+      } catch (error) {
+        next(error);
+      }
 
     }
   })

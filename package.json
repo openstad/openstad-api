@@ -60,6 +60,7 @@
     "sanitize-html": "^1.27.5",
     "sequelize": "^5.22.3",
     "stream-chat": "^5.0.1",
+    "stripe": "^8.195.0",
     "umzug": "^2.3.0",
     "useragent": "^2.3.0",
     "uuid": "^8.3.2",

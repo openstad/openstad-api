@@ -16,6 +16,7 @@ const createOrUpdate = async ({
                         subscriptionActive,
                         subscriptionProductId,
                         planId,
+                                apiProductId,
                         siteId,
                         paystackPlanCode,
                         paystackSubscriptionCode,
@@ -24,6 +25,7 @@ const createOrUpdate = async ({
                         mollieCustomerId,
                         productId,
                         receipt,
+                        stripeSubscriptionId,
                         transactionId,
                         latestReceipt,
                         validationResponse,
@@ -76,7 +78,7 @@ const createOrUpdate = async ({
         break
 
       case "stripe":
-
+        subscriptionData.apiProductId = apiProductId;
         break
 
       default:
@@ -115,6 +117,7 @@ const createOrUpdate = async ({
           isFound = userSubscription.productId === productId;
           break
         case "stripe":
+          isFound = userSubscription.stripeSubscriptionId === stripeSubscriptionId;
           break
         default:
       }
