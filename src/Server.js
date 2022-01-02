@@ -124,9 +124,12 @@ module.exports = {
 
         this.app.use(require('./middleware/security-headers'));
 
-        this.app.use(bodyParser.json({limit: '100mb'}));
 
-        this.app.use(bodyParser.urlencoded({limit: '100mb', extended: true}));
+        if (!req.originalUrl.includes('/stripe')) {
+            this.app.use(bodyParser.json({limit: '100mb'}));
+            this.app.use(bodyParser.urlencoded({limit: '100mb', extended: true}));
+        }
+
 
         this.app.use(cookieParser(config.get('security.sessions.secret')));
         this.app.use(methodOverride(function (req, res) {

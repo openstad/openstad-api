@@ -9,6 +9,9 @@ const rp = require('request-promise');
 const crypto = require('crypto');
 const mail = require('../../lib/mail');
 
+const bodyParser = require('body-parser');
+
+
 const auth = require('../../middleware/sequelize-authorization-middleware');
 const Sequelize = require('sequelize');
 const subscriptionService = require('../../services/subscription');
@@ -264,6 +267,7 @@ router.route('/paystack')
 
 
 router.route('/stripe')
+  .all(bodyParser.raw({type: 'application/json'}))
   .all(async (req, res, next) => {
     const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
     const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
