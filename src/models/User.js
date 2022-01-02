@@ -933,22 +933,19 @@ module.exports = function (db, sequelize, DataTypes) {
             return false;
         }
 
-        let chatToken = this.getDataValue('chatToken');
+        let chatToken = this.chatToken;
 
         if (chatToken) {
             return chatToken;
         } else {
-
-
 
             const serverSideClient = new StreamChat(
               streamChatApiKey,
               streamChatApiSecret
             );
 
-            const firstName = this.getDataValue('firstName');
-            const lastName = this.getDataValue('lastName');
-
+            const firstName = this.firstName;
+            const lastName = this.lastName;
 
             const username = 'user-' + this.id;
             const token = serverSideClient.createToken(username);
