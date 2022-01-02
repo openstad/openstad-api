@@ -426,7 +426,7 @@ router.route('/')
               price_data: {
                 recurring: stripeInterval,
                 currency: req.results.extraData.currency,
-                unit_amount_decimal: req.results.total,
+                unit_amount: req.results.total * 100,
                 product_data: {
                   name: subscriptionProduct.name
                 }
@@ -451,6 +451,7 @@ router.route('/')
         }
 
         console.log('Stripe create sessions with config', stripeSessionConfig);
+        console.log('Stripe create sessions with config line_items', stripeSessionConfig.line_items);
 
         stripeSession = await Stripe.checkout.sessions.create(stripeSessionConfig)
       } catch (e) {
@@ -459,7 +460,9 @@ router.route('/')
 
       console.log('Stripe created sessions', stripeSession);
 
-      return res.redirect(stripeSession.url);
+      req.redirectUrl = stripeSession.url;
+
+      next();
 
     } else if (paymentProvider === 'paystack') {
       const paystackApiKey = paymentConfig.paystackApiKey ? paymentConfig.paystackApiKey : '';
@@ -527,6 +530,8 @@ router.route('/')
         orderExtraData.paymentProvider = paymentProvider;
 
         req.redirectUrl = orderExtraData.paymentUrl;
+
+
 
         await req.results.update({
           extraData: orderExtraData
