@@ -281,6 +281,10 @@ router.route('/stripe')
     // Verify the event came from Stripe
     try {
       const sig = req.headers['stripe-signature'];
+      console.log('Try Stripe req.body', req.body)
+      console.log('Try Stripe sig',sig)
+      console.log('Try Stripe stripeWebhookSecret',stripeWebhookSecret)
+
       event = Stripe.webhooks.constructEvent(req.body, sig, stripeWebhookSecret);
     } catch (err) {
       // On error, log and return the error message

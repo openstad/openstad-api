@@ -417,7 +417,7 @@ router.route('/')
 
         const stripeSessionConfig = {
           mode: 'subscription',
-          currency: req.results.extraData.currency,
+          //
           payment_method_types: ['card'],
           customer: stripeCustomer.id,
           line_items: [
@@ -425,7 +425,8 @@ router.route('/')
               price: req.results.total,
               quantity: 1,
               price_data: {
-                recurring: stripeInterval
+                recurring: stripeInterval,
+                currency: req.results.extraData.currency,
               }
             }
           ],
