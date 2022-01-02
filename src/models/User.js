@@ -923,7 +923,7 @@ module.exports = function (db, sequelize, DataTypes) {
     User.prototype.getChatToken = async function (site) {
         const chatActive = site.config && site.config.chat ? site.config.chat.active : true;
         const streamChatApiKey = site.config && site.config.chat ? site.config.chat.streamApiKey : false;
-        const streamChatApiSecret = site.config && site.config.chat ? site.config.chat.streamApSecret : false;
+        const streamChatApiSecret = site.config && site.config.chat ? site.config.chat.streamApiSecret : false;
 
         if (!streamChatApiSecret) {
             return false;

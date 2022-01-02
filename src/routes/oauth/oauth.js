@@ -308,7 +308,15 @@ router
        let userChatToken;
 
        try {
-         userChatToken = await req.user.getChatToken(req.site);
+         if (req.user) {
+           const site = db.Site.findOne({
+             where: {
+               id: req.params.siteId
+             }
+           })
+
+           userChatToken = await req.user.getChatToken(site);
+         }
        } catch (e) {
          console.log('Error in creating user chat token', e)
        }
