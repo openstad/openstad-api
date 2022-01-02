@@ -422,11 +422,14 @@ router.route('/')
           customer: stripeCustomer.id,
           line_items: [
             {
-              price: req.results.total,
               quantity: 1,
               price_data: {
                 recurring: stripeInterval,
                 currency: req.results.extraData.currency,
+                unit_amount_decimal: req.results.total,
+                product_data: {
+                  name: subscriptionProduct.name
+                }
               }
             }
           ],
