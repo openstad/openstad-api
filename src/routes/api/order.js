@@ -419,7 +419,7 @@ router.route('/')
           mode: 'subscription',
           currency: req.results.extraData.currency,
           payment_method_types: ['card'],
-          stripeCustomer,
+          customer: stripeCustomer.id,
           line_items: [
             {
               price: req.results.total,
