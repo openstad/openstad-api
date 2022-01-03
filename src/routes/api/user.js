@@ -446,8 +446,7 @@ router.route('/:userId(\\d+)')
                 firstName: data.firstName,
                 lastName: data.lastName,
                 password: data.password,
-                //email: data.email
-
+                email: data.email
             }))
         }
 
