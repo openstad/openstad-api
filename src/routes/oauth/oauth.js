@@ -309,11 +309,12 @@ router
 
        try {
          if (req.user) {
-           const site = db.Site.findOne({
+           const site = await db.Site.findOne({
              where: {
                id: req.params.siteId
              }
-           })
+           });
+
 
            userChatToken = await req.user.getChatToken(site);
          }

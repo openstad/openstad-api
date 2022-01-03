@@ -925,6 +925,10 @@ module.exports = function (db, sequelize, DataTypes) {
         const streamChatApiKey = site.config && site.config.chat ? site.config.chat.streamApiKey : false;
         const streamChatApiSecret = site.config && site.config.chat ? site.config.chat.streamApiSecret : false;
 
+        const firstName = this.firstName;
+        const lastName = this.lastName
+
+
         if (!streamChatApiSecret) {
             return false;
         }
@@ -936,6 +940,7 @@ module.exports = function (db, sequelize, DataTypes) {
         let chatToken = this.chatToken;
 
         if (chatToken) {
+
             return chatToken;
         } else {
 
@@ -943,9 +948,6 @@ module.exports = function (db, sequelize, DataTypes) {
               streamChatApiKey,
               streamChatApiSecret
             );
-
-            const firstName = this.firstName;
-            const lastName = this.lastName;
 
             const username = 'user-' + this.id;
             const token = serverSideClient.createToken(username);
@@ -960,7 +962,7 @@ module.exports = function (db, sequelize, DataTypes) {
                 );
 
                 this.set('chatToken', token);
-                this.save();
+                await this.save();
 
                 return chatToken;
             } catch (err) {

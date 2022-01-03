@@ -21,7 +21,7 @@ module.exports = {
 
     for (const site of sites) {
 
-      console.log('Start checking site IAP for site.id ', site.id);
+    //  console.log('Start checking site IAP for site.id ', site.id);
 
       for (const appType of ['apple', 'google']) {
 
@@ -36,7 +36,7 @@ module.exports = {
         const androidAppSettings = site && site.config && site.config.appGoogle ? site.config.appGoogle : {};
         const iosAppSettings = site && site.config && site.config.appIos ? site.config.appIos : {};
 
-        console.log(' checking site IAP users lenght: ', users.length);
+       // console.log(' checking site IAP users lenght: ', users.length);
 
         for (const user of users) {
           try {
