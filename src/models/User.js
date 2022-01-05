@@ -927,6 +927,9 @@ module.exports = function (db, sequelize, DataTypes) {
 
         const firstName = this.firstName;
         const lastName = this.lastName
+        const userRole = this.role;
+
+        console.log('API role userRole', userRole)
 
 
         if (!streamChatApiSecret) {
@@ -953,9 +956,10 @@ module.exports = function (db, sequelize, DataTypes) {
             const token = serverSideClient.createToken(username);
 
             try {
-                await serverSideClient.updateUser(
+                await serverSideClient.upsertUser(
                   {
                       id: username,
+                      role: (userRole === 'admin' || userRole === 'moderator') ? 'admin' : 'user',
                       name: `${firstName} ${lastName}`,
                   },
                   token
