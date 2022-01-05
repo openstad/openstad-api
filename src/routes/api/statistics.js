@@ -169,7 +169,7 @@ router.route('/')
                     FROM users 
                     WHERE users.subscriptionData LIKE '%"active": true%'
                     AND users.deletedAt IS NULL AND users.siteId=?
-                    AND users.email NOT LIKE "%ymove.app"
+                    AND users.email NOT LIKE '%ymove.app'
                     GROUP BY date
                     ORDER BY date ASC`,
                 variables: [req.params.siteId],
