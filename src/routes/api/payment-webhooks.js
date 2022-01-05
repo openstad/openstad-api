@@ -267,7 +267,7 @@ router.route('/paystack')
 
 
 router.route('/stripe')
-  .all(bodyParser.raw({type: 'application/json'}))
+  .all(express.raw({type: 'application/json'}))
   .all(async (req, res, next) => {
     const paymentConfig = req.site.config && req.site.config.payment ? req.site.config.payment : {};
     const paymentModus = paymentConfig.paymentModus ? paymentConfig.paymentModus : 'live';
@@ -282,6 +282,9 @@ router.route('/stripe')
 
     let event;
 
+    console.log('Stripe webhook: eventData start');
+
+
     // Verify the event came from Stripe
     try {
       const sig = req.headers['stripe-signature'];
@@ -295,6 +298,9 @@ router.route('/stripe')
       console.log(`❌ Error message: ${err.message}`);
       next(err)
     }
+    console.log('Stripe webhook: event', event);
+    console.log('✅ Success:', event.id);
+
 
     const eventData = event.data.object;
 

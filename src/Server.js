@@ -130,7 +130,6 @@ module.exports = {
 
 
         this.app.use((req, res, next) => {
-            console.log()
             if (req.originalUrl.includes('payment/stripe')) {
                 console.log('payment/stripe skip body parser')
                 next();
