@@ -500,6 +500,7 @@ module.exports = function (db, sequelize, DataTypes) {
                // const trialDate = this.getDataValue('trialDate');
                 const subscriptionData = this.getDataValue('subscriptionData') ? this.getDataValue('subscriptionData') : {};
                 const extraData = this.getDataValue('extraData') ? this.getDataValue('extraData') : {};
+                const siteData = this.getDataValue('siteData') ? this.getDataValue('siteData') : {};
 
                 const activeSubscription = subscriptionData && subscriptionData.subscriptions && subscriptionData.subscriptions.find((subscription) => {
 
@@ -538,6 +539,17 @@ module.exports = function (db, sequelize, DataTypes) {
                 if (activeSubscription && activeSubscription.planId) {
                     access.planId  = activeSubscription.planId;
                 }
+
+                console.log('access.planId 2', access.planId)
+                console.log('siteData.manualPlanId', siteData.manualPlanId)
+
+                //
+                if (siteData && siteData.manualPlanId) {
+                    access.planId  = siteData.manualPlanId;
+                }
+
+
+                console.log('access.planId 5', access.planId)
 
                 if (!access.active && extraData && extraData.isActiveSubscriber && extraData.isActiveSubscriber === 'yes') {
                     access.active = true;
