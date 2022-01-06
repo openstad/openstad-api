@@ -357,6 +357,7 @@ router.route('/stripe')
           order.set('paymentStatus', 'PAID');
           await order.save();
           mail.sendThankYouMail(order, 'order', user);
+
         } catch (e) {
           console.log('Webhook stripe: Error processing order ', order.id, e);
           next(e);
@@ -367,6 +368,7 @@ router.route('/stripe')
       default:
     }
 
+    res.send(200);
   });
 
 module.exports = router;
