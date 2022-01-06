@@ -63,9 +63,10 @@ const mergeData = async (req, res, next) => {
 
     if (!userToUpdate) {
         throw new Error('No user update found');
-        return
+        next();
+        return;
     } else {
-        console.log('User to update ',userToUpdate.id, userToUpdate.siteData)
+        //console.log('User to update ',userToUpdate.id, userToUpdate.siteData)
     }
 
 

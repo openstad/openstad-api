@@ -302,7 +302,7 @@ router.route('/stripe')
 
     console.log('Stripe webhook: eventData received', eventData);
 
-    const stripeCustomerId = eventData && data.customer ? eventData.customer : '';
+    const stripeCustomerId = eventData && eventData.customer ? eventData.customer : '';
     const stripeCustomerIdKey = paymentModus + '_stripeCustomerId';
     let user;
 
@@ -319,6 +319,8 @@ router.route('/stripe')
           siteId: req.site.id
         }
       });
+      console.log('user', user)
+
     } catch(e) {
       console.warn('Webhook stripe: Error in fetching a user', e);
       next(e);
@@ -328,6 +330,7 @@ router.route('/stripe')
     // Successfully constructed event
     switch (event.type) {
       case 'customer.subscription.created': {
+        console.log('Lets go')
         try {
           await subscriptionService.createOrUpdate({
             user,
