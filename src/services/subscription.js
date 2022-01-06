@@ -130,9 +130,38 @@ const createOrUpdate = async ({
     console.log('subscriptionAlreadyExists subscriptionData', subscriptionData);
 
 
-    if (subscriptionAlreadyExists && subscriptionAlreadyExists.active === subscriptionData.active) {
+    if (subscriptionAlreadyExists && subscriptionAlreadyExists.active === subscriptionData.active && subscriptionAlreadyExists.planId === subscriptionData.planId) {
       console.log('Subscription trying to update already exists for user with same status new subscriptionData ', subscriptionData, ' for user subscription', userSubscriptionData)
       return
+
+    } else if (subscriptionAlreadyExists && subscriptionAlreadyExists.planId !== subscriptionData.planId) {
+      console.log('Subscription already exists but planId changed', userSubscriptionData);
+
+      userSubscriptions = userSubscriptions.map((subscription) => {
+        console.log('SsubscriptionAlreadyExists', subscription.uuid);
+
+        if (subscriptionAlreadyExists.uuid === subscription.uuid) {
+          subscription.planId = subscriptionData.planId;
+        }
+
+        return subscription;
+      });
+
+
+      try {
+        await db.Event.create({
+          status: 'activity',
+          siteId: siteId,
+          message: 'App Subscription plan ID changed' ,
+          userId: user.id,
+          resourceType: 'subscription',
+          name: 'subscriptionUpdatePlanId' + provider,
+        });
+      } catch (e) {
+        console.log('Error in creating event sub update', e)
+      }
+
+
     } else if (subscriptionAlreadyExists && subscriptionAlreadyExists.active !== subscriptionData.active) {
       console.log('Subscription already exists but not active anymore so set to inactive', userSubscriptionData);
       // set subscriptionAlreadyExists active to false
