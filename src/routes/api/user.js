@@ -250,7 +250,7 @@ router.route('/')
         return next();
     })
     .post(filterBody)
-    .post(mergeData)
+  //  .post(mergeData)
     .post(function (req, res, next) {
         console.log('Step 2 create a user')
         console.log('reqboy', req.body)
