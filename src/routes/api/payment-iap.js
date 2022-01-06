@@ -51,7 +51,12 @@ router.route('/')
       subscription: true,
     };
 
-    await IAPservice.processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id, planId);
+    const purchaseProductId =  purchase.productId;
+
+    console.log('purchaseProductId found', purchaseProductId);
+
+
+    await IAPservice.processPurchase(appType, user, receipt, androidAppSettings, iosAppSettings, req.site.id, planId, false, purchaseProductId);
 
     res.end();
   } catch (e) {

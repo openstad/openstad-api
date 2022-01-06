@@ -12,7 +12,7 @@ const iapTestMode = process.env.IAP_TEST_MODE === 'true';
 const androidPackageName = process.env.ANDROID_PACKAGE_NAME;
 const subscriptionService = require('../services/subscription');
 
-exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppSettings, siteId, planId, updateAction) => {
+exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppSettings, siteId, planId, updateAction, purchaseProductId) => {
   const iapConfig = {
     // If you want to exclude old transaction, set this to true. Default is false:
     appleExcludeOldTransactions: true,
@@ -49,9 +49,10 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
     || (app === 'ios' && validationResponse.service === 'apple'));
 
   const purchaseData = iap.getPurchaseData(validationResponse);
-  console.log('IAP purchaseData', purchaseData)
+  console.log('IN APP payment with request received', purchaseData)
 
   const firstPurchaseItem = purchaseData[0];
+
 
   const isCancelled = iap.isCanceled(firstPurchaseItem);
   const isExpired = iap.isExpired(firstPurchaseItem);
@@ -60,7 +61,13 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
   console.log('IAP isExpired', isExpired)
 
   // const isExpired = iap.isExpired(firstPurchaseItem);
-  const {productId} = firstPurchaseItem;
+  let { productId } = firstPurchaseItem;
+
+  console.log('productId from first', firstPurchaseItem)
+
+  productId = purchaseProductId  ? purchaseProductId : productId;
+
+  console.log('productId from purchaseProductId', purchaseProductId;
 
   const origTxId = app === 'ios' ? firstPurchaseItem.originalTransactionId : firstPurchaseItem.transactionId;
   const latestReceipt = app === 'ios' ? validationResponse.latest_receipt : JSON.stringify(receipt);
