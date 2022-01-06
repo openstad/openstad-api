@@ -67,7 +67,7 @@ exports.processPurchase = async (app, user, receipt, androidAppSettings, iosAppS
 
   productId = purchaseProductId  ? purchaseProductId : productId;
 
-  console.log('productId from purchaseProductId', purchaseProductId;
+  console.log('productId from purchaseProductId', purchaseProductId);
 
   const origTxId = app === 'ios' ? firstPurchaseItem.originalTransactionId : firstPurchaseItem.transactionId;
   const latestReceipt = app === 'ios' ? validationResponse.latest_receipt : JSON.stringify(receipt);
