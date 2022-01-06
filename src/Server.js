@@ -133,7 +133,6 @@ module.exports = {
             if (req.originalUrl.includes('payment/stripe')) {
                 console.log('payment/stripe skip body parser 1');
                 bodyParser.raw({type: 'application/json'})(req, res, next);
-                next();
             } else {
                 bodyParser.json({limit: '100mb'})(req, res, next);
             }
