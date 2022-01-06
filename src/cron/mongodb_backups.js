@@ -1,5 +1,3 @@
-var Promise = require('bluebird');
-
 var log     = require('debug')('app:cron');
 var db      = require('../db');
 

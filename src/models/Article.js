@@ -2,8 +2,7 @@ var Sequelize = require('sequelize');
 var co        = require('co')
   , config        = require('config')
   , moment        = require('moment-timezone')
-  , pick          = require('lodash/pick')
-  , Promise       = require('bluebird');
+  , pick          = require('lodash/pick');
 
 var sanitize      = require('../util/sanitize');
 // var ImageOptim    = require('../ImageOptim');
@@ -44,41 +43,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 				} catch( error ) {
 					return (error.message || 'dateFilter error').toString()
 				}
-			}
-		},
-
-		endDate: {
-			type         : DataTypes.DATE,
-			allowNull    : true,
-			get          : function() {
-				var date = this.getDataValue('endDate');
-      },
-		},
-
-		endDateHumanized: {
-			type         : DataTypes.VIRTUAL,
-			get          : function() {
-				var date = this.getDataValue('endDate');
-				try {
-					if( !date )
-						return 'Onbekende datum';
-					return  moment(date).format('LLL');
-				} catch( error ) {
-					return (error.message || 'dateFilter error').toString()
-				}
-			}
-		},
-
-		duration: {
-			type         : DataTypes.VIRTUAL,
-			get          : function() {
-				if( this.getDataValue('status') != 'OPEN' ) {
-					return 0;
-				}
-
-				var now     = moment();
-				var endDate = this.getDataValue('endDate');
-				return Math.max(0, moment(endDate).diff(Date.now()));
 			}
 		},
 
@@ -260,11 +224,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 		individualHooks: true,
 
 		validate: {
-			validDeadline: function() {
-				if( this.endDate - this.startDate < 43200000 ) {
-					throw Error('An article must run at least 1 day');
-				}
-			},
 			validExtraData: function(next) {
 
         let self = this;
@@ -464,7 +423,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			includeUser: {
 				include: [{
 					model      : db.User,
-					attributes : ['role', 'nickName', 'firstName', 'lastName', 'email']
+					attributes : ['role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
 				}]
 			},
 
@@ -482,7 +441,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 						order = [['createdAt', 'DESC']];
 						break;
 					case 'date_asc':
-						order = [['endDate', 'ASC']];
+						order = [['startDate', 'ASC']];
 						break;
 					case 'date_desc':
 					default:
@@ -494,7 +453,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 								WHEN 'DENIED'   THEN 0
 								                ELSE 1
 							END DESC,
-							endDate DESC
+							startDate DESC
 						`);
 
 				}
@@ -518,7 +477,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			withUser: {
 				include: [{
 					model      : db.User,
-					attributes : ['role', 'nickName', 'firstName', 'lastName', 'email']
+					attributes : ['role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
 				}]
 			},
 			withPosterImage: {
@@ -554,7 +513,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 				order = [['createdAt', 'DESC']];
 				break;
 			case 'date_asc':
-				order = [['endDate', 'ASC']];
+				order = [['startDate', 'ASC']];
 				break;
 			case 'date_desc':
 			default:
@@ -566,7 +525,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 								WHEN 'DENIED'   THEN 0
 								                ELSE 1
 							END DESC,
-							endDate DESC
+							startDate DESC
 						`);
 		}
 
@@ -748,13 +707,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 						return site;
 					})
 					.then( site => {
-
-						// Automatically determine `endDate`
-						if( instance.changed('startDate') ) {
-							var duration = ( instance.config && instance.config.articles && instance.config.articles.duration ) || 90;
-							var endDate  = moment(instance.startDate).add(duration, 'days').toDate();
-							instance.setDataValue('endDate', endDate);
-						}
 
 						return resolve();
 

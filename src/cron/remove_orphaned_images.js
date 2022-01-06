@@ -16,7 +16,7 @@ module.exports = {
 			WHERE
 				ideaId IS NULL AND
 				DATEDIFF(UTC_TIMESTAMP(), createdAt) > 7
-		`).spread(function( result, metaData ) {
+		`).then(function([ result, metaData ]) {
 			log('Removed orphaned images: %d', metaData.affectedRows);
 		});
 	}

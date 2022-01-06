@@ -1,4 +1,3 @@
-const Promise = require('bluebird');
 const express = require('express');
 const db      = require('../../db');
 const auth    = require('../../middleware/sequelize-authorization-middleware');
@@ -99,7 +98,6 @@ function createMarker(idea) {
 		},
 		href: `/plan/${idea.id}`,
 		status: idea.status,
-		endDate: idea.endDate,
 	}
 
 }

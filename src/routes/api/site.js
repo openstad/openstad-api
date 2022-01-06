@@ -1,4 +1,3 @@
-const Promise 				= require('bluebird');
 const express 				= require('express');
 const config 					= require('config');
 const fetch           = require('node-fetch');
@@ -201,6 +200,7 @@ router.route('/:siteIdOrDomain') //(\\d+)
 		// when succesfull return site JSON
 		res.json(req.results);
 	})
+
 // delete site
 // ---------
 	.delete(auth.can('Site', 'delete'))
