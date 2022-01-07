@@ -458,7 +458,12 @@ router.route('/')
                                     currency: req.results.extraData.currency,
                                     unit_amount: req.results.total * 100,
                                     product_data: {
-                                        name: subscriptionProduct.name
+                                        name: subscriptionProduct.name,
+                                        metadata: {
+                                            planId: subscriptionProduct.extraData.planId,
+                                            productId: subscriptionProduct.id,
+                                            orderId: req.results.id
+                                        }
                                     }
                                 }
                             }
@@ -479,7 +484,7 @@ router.route('/')
                         stripeSessionConfig.subscription_data.trial_period_days = stripeTrialDays;
                     }
                 }
-                
+
 
                 console.log('Stripe create sessions with config', stripeSessionConfig);
                 console.log('Stripe create sessions with config line_items', stripeSessionConfig.line_items);

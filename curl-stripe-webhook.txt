@@ -6,3 +6,5 @@ curl https://api.stripe.com/v1/webhook_endpoints \
   -d "enabled_events[]"="customer.subscription.deleted" \
   -d "enabled_events[]"="customer.subscription.updated" \
   -d "enabled_events[]"="charge.succeeded"
+
+  whsec_MjguOKkgdrIDjlBa0Twpt0uMfGzXQWIi

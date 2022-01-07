@@ -366,7 +366,7 @@ router.route('/stripe')
 
         break
       }
-      case 'charge.succeeded':
+      case 'checkout.session.completed':
         console.log('Webhook startcharge.succeededa', eventData)
 
         const amountOfDaysAccess = eventData.metadata.amountOfDaysAccess;
