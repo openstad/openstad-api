@@ -369,7 +369,7 @@ router.route('/stripe')
       case 'checkout.session.completed':
         console.log('Webhook startcharge.succeededa', eventData)
 
-        const amountOfDaysAccess = eventData.metadata.amountOfDaysAccess;
+        let amountOfDaysAccess = eventData.metadata.amountOfDaysAccess;
         console.log('Webhook stripe charge.succeeded eventData.metadata', amountOfDaysAccess)
 
         console.log('Webhook stripe amountOfDaysAccess', amountOfDaysAccess)
@@ -380,6 +380,8 @@ router.route('/stripe')
             let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
 
             let newDateTime = new Date();
+            amountOfDaysAccess = parseInt(amountOfDaysAccess, 10);
+
             newDateTime.setDate(newDateTime.getDate() + amountOfDaysAccess);
 
             userSubscriptions.push({

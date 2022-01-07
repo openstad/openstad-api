@@ -14,6 +14,12 @@ const Server     = require('./src/Server');
 const Cron       = require('./src/Cron');
 // const ImageOptim = require('./src/ImageOptim');
 
+/*
+let newDateTime = new Date();
+newDateTime.setDate(newDateTime.getDate() + 35);
+
+console.log('--->>>>>', newDateTime.toISOString().slice(0, 10))
+*/
 
 
 Cron.start();
