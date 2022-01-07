@@ -354,6 +354,7 @@ router.route('/stripe')
             }
           });
 
+
           order.set('paymentStatus', 'PAID');
           await order.save();
           mail.sendThankYouMail(order, 'order', user);
@@ -365,6 +366,70 @@ router.route('/stripe')
 
         break
       }
+      case 'charge.succeeded':
+        console.log('Webhook startcharge.succeededa', eventData)
+
+        const amountOfDaysAccess = eventData.metadata.amountOfDaysAccess;
+        console.log('Webhook stripe charge.succeeded eventData.metadata', amountOfDaysAccess)
+
+        console.log('Webhook stripe amountOfDaysAccess', amountOfDaysAccess)
+
+        if (amountOfDaysAccess) {
+          try {
+            const userSubscriptionData = user.subscriptionData ? user.subscriptionData : {};
+            let userSubscriptions = userSubscriptionData && userSubscriptionData.subscriptions && Array.isArray(userSubscriptionData.subscriptions) ? userSubscriptionData.subscriptions : [];
+
+            let newDateTime = new Date();
+            newDateTime.setDate(newDateTime.getDate() + amountOfDaysAccess);
+
+            userSubscriptions.push({
+              oneTimePaymentProvider: 'stripe',
+              amountOfDaysAccess: amountOfDaysAccess,
+              planId: eventData.metadata.planId,
+              subscriptionCancelledButStillValidTill: newDateTime.toISOString().slice(0, 10),
+              active: false
+            });
+
+            userSubscriptionData.subscriptions = userSubscriptions;
+
+            await user.update({
+              subscriptionData: userSubscriptionData
+            });
+          } catch (e) {
+            console.log('Error trying to process userSubscriptionData one TIME: ', e);
+            next(e);
+          }
+
+          try {
+            const order = await db.Order.findOne({
+              where: {
+                id: eventData.metadata.orderId
+              }
+            });
+
+            order.set('paymentStatus', 'PAID');
+            await order.save();
+            mail.sendThankYouMail(order, 'order', user);
+
+          } catch (e) {
+            console.log('Webhook stripe: Error processing order ', order.id, e);
+            next(e);
+          }
+
+          try {
+            await db.Event.create({
+              status: 'activity',
+              siteId: req.site.id,
+              message: 'One time access created: ',
+              userId: user.id,
+              resourceType: 'subscription',
+              name: 'oneTimeAccessStripe',
+            });
+          } catch (e) {
+            console.log('Error in creating event sub update', e)
+          }
+        }
+
       default:
     }
 

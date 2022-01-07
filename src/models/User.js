@@ -540,21 +540,17 @@ module.exports = function (db, sequelize, DataTypes) {
                     access.planId  = activeSubscription.planId;
                 }
 
-                console.log('access.planId 2', access.planId)
-                console.log('siteData.manualPlanId', siteData.manualPlanId)
-
                 //
                 if (siteData && siteData.manualPlanId) {
                     access.planId  = siteData.manualPlanId;
                 }
 
 
-                console.log('access.planId 5', access.planId)
-
                 if (!access.active && extraData && extraData.isActiveSubscriber && extraData.isActiveSubscriber === 'yes') {
                     access.active = true;
                     access.planId = access.planId ? access.planId : extraData &&  extraData.planId ?  extraData.planId : 1;
                 }
+
 
                 // mollie cancels subscriptions immedeatily, so we register the subscription as cancelled
                 // and inactive. but we still allow access till

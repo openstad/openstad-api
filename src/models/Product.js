@@ -91,7 +91,7 @@ module.exports = function (db, sequelize, DataTypes) {
         },
 
         subscriptionInterval: {
-            type: DataTypes.ENUM('14 days', '12 months', '1 week', '1 month'),
+            type: DataTypes.ENUM('14 days', '12 months', '1 week', '1 month', '3 months', 'once'),
             defaultValue: '1 month',
             allowNull: false
         },

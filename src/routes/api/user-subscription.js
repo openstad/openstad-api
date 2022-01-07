@@ -56,7 +56,6 @@ router.route('/:subscriptionId/cancel')
 
             const user = req.results;
 
-
             console.log('user is found???', !!user.id)
             console.log('user is found???', user.access)
 
