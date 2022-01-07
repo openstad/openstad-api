@@ -1,0 +1,8 @@
+curl https://api.stripe.com/v1/webhook_endpoints \
+  -u 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: \
+  -d url="https://www.api.makkie.baboom.nl/api/site/60/payment/stripe" \
+  -d "enabled_events[]"="charge.failed" \
+  -d "enabled_events[]"="customer.subscription.created" \
+  -d "enabled_events[]"="customer.subscription.deleted" \
+  -d "enabled_events[]"="customer.subscription.updated" \
+  -d "enabled_events[]"="charge.succeeded"

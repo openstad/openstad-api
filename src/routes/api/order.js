@@ -474,12 +474,12 @@ router.route('/')
                         //redirect will just send them back and see inactive account
                         cancel_url: siteUrl,// `http://localhost:4242/failed`
                     }
-                }
 
-
-                if (stripeTrialDays) {
-                    stripeSessionConfig.subscription_data.trial_period_days = stripeTrialDays;
+                    if (stripeTrialDays) {
+                        stripeSessionConfig.subscription_data.trial_period_days = stripeTrialDays;
+                    }
                 }
+                
 
                 console.log('Stripe create sessions with config', stripeSessionConfig);
                 console.log('Stripe create sessions with config line_items', stripeSessionConfig.line_items);
