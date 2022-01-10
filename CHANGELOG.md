@@ -1,6 +1,10 @@
 # Changelog
 
+## unreleased
+* Update Action cron to once every minute
+
 ## v0.20.0 (2021-12-20)
+* Fix responding to not existing routes with to much information
 * Make submissions listable & viewable, and allow them to be filtered by formId
 * Add choices guide stats endpoint
 
