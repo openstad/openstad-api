@@ -195,10 +195,14 @@ router.route('/:siteIdOrDomain') //(\\d+)
 			});
 	})
   // call the site, to let the site know a refresh of the siteConfig is needed
-	.put(refreshSiteConfigMw)
 	.put(function (req, res, next) {
 		// when succesfull return site JSON
 		res.json(req.results);
+    next();
+	})
+	.put(refreshSiteConfigMw) // after response; no need to wait for this
+	.put(function (req, res, next) {
+    // the end
 	})
 
 // delete site
