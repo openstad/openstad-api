@@ -237,7 +237,7 @@ router.route('/')
                 /**
                  *
                  */
-                if (copyConfig.redirectAppUrl ) {
+                if (copyConfig.redirectAppUrl) {
                     req.redirectUrl = fullUrl + copyConfig.redirectAppUrl + '/' + tour.id;
                 } else {
                     req.redirectUrl = fullUrl;
