@@ -10,7 +10,7 @@ var db      = require('../db');
 // Runs every night at 1:00.
 module.exports = {
 	cronTime: '0 0 1 * * *',
-	runOnInit: true,
+	runOnInit: false,
 	onTick: function() {
     const objectStoreUrl = process.env.OBJECT_STORE_URL;
     const objectStoreUser = process.env.OBJECT_STORE_USER;

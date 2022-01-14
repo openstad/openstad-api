@@ -7,6 +7,7 @@ const pagination = require('../../middleware/pagination');
 const searchResults = require('../../middleware/search-results-user');
 const oauthClients = require('../../middleware/oauth-clients');
 const oauthService = require('../../services/oauthApiService')
+var Sequelize, {Op} = require('sequelize');
 
 const checkHostStatus = require('../../services/checkHostStatus')
 const generateToken = require('../../util/generate-token');
@@ -89,12 +90,7 @@ router.route('/')
             try {
                 let {copySiteId, subDomain, mainDomain, name, appType} = req.body;
                 mainDomain = mainDomain ? cleanUrl(mainDomain) : process.env.WILDCARD_HOST;
-
-                if (!allowedDomains.includes(mainDomain)) {
-                    throw new Error('Main domain ' + mainDomain + ' not allowed');
-                    return
-                }
-
+                
                 // format domain
                 let domain = `${subDomain}.${mainDomain}`;
                 domain = cleanUrl(domain);
@@ -106,16 +102,27 @@ router.route('/')
 
                 // We take the copy config from the site we copy
                 const copyConfig = siteToCopy.config && siteToCopy.config.copy ? siteToCopy.config.copy : {};
+                const configAllowedDomains = copyConfig && copyConfig.allowedDomains ? copyConfig.allowedDomains : allowedDomains;
+
+                if (!configAllowedDomains.includes(mainDomain)) {
+                    throw new Error('Main domain ' + mainDomain + ' not allowed');
+                    return
+                }
 
                 if (!copyConfig.isAllowed) {
                     throw new Error('Copy site id: ' + copySiteId + ' not allowed');
                     return
                 }
 
+                const authClientId = config.authorization['auth-client-id'];
+                const authClientSecret = config.authorization['auth-client-secret'];
+
                 const oauthCredentials = {
-                    client_id:  process.env.USER_API_CLIENT_ID,
-                    client_secret: process.env.USER_API_CLIENT_SECRET,
+                    client_id:  authClientId,
+                    client_secret: authClientSecret,
                 }
+
+                console.log('oauthCredentials', oauthCredentials)
 
                 /**
                  * Copy SITE ID
@@ -137,6 +144,10 @@ router.route('/')
                 siteConfig.cms.url = fullUrl;
                 siteConfig.installation = siteConfig.installation ? siteConfig.installation : {};
                 siteConfig.installation.appType = appType;
+                siteConfig.allowedDomains = [
+                    domain,
+                    cleanUrl(config.url)
+                ]
 
                 const oauthConfig = {};
 
@@ -150,7 +161,7 @@ router.route('/')
                         siteUrl: fullUrl,
                         allowedDomains: [
                             domain,
-                            apiUrl
+                            cleanUrl(config.url)
                         ],
                     }, oauthCredentials);
 
@@ -163,13 +174,16 @@ router.route('/')
 
                 siteConfig.oauth = oauthConfig;
 
-                const amountOfTrialDays = copyConfig ? copyConfig.trialDays : 30;
+                const amountOfTrialDays = copyConfig &&  copyConfig.trialDays ? parseInt(copyConfig.trialDays, 10) : 30;
 
-                const future = new Date();
-                future.setDate(future.getDate() + amountOfTrialDays);
+                let now = new Date()
+                console.log(now);
+
+                let endofTrialDate = new Date(now.setDate(now.getDate() + 30))
+                console.log(endofTrialDate)
 
                 siteConfig.trial = siteConfig.trial ? siteConfig.trial : {};
-                siteConfig.trial.trialUntilDate = future.toISOString().substring(0, 10);
+                siteConfig.trial.trialUntilDate = endofTrialDate.toISOString().substring(0, 10);
 
                 const siteData = {
                     name: name,
@@ -179,25 +193,23 @@ router.route('/')
 
                 console.log('Create site with siteData', siteData);
 
-                const newSite = db.Site
-                    .create(siteData)
-                    .then((result) => {
-                        req.results = result;
-                    })
-                    .catch(next)
-
+                const newSite = await db.Site.create(siteData)
+                req.results = newSite;
 
                 //Add admin users from site to copy
                 //const users = req
                 // await oauthProvider.makeUserSiteAdmin(user.externalUserId, apiData.site.config.oauth.default.id);
 
+
+                console.log('newSite', newSite.id)
+
                 //copy all users
-                const usersFromCopySite = await db.User({
+                const usersFromCopySite = await db.User.findAll({
                     where: {
                         siteId: copySiteId,
-                        $or: {
-                            id: req.user.id
-                        }
+                       // id: {
+                        //    [Op.or]: req.user.id
+                        //}
                         //role: ['admin', 'moderator']
                     }
                 });
@@ -205,15 +217,22 @@ router.route('/')
                 console.log('Users to copy from site');
 
                 for (const userToCopy of usersFromCopySite) {
-                    console.log('userToCopy', userToCopy.id, userToCopy.email, userToCopy.role);
 
-                    await db.User.create({
-                        ...userToCopy,
+                    const newUser = {
+                        firstName: userToCopy.firstName,
+                        lastName: userToCopy.lastName,
+                        email : userToCopy.email,
+                        role:  userToCopy.role,
+                        externalUserId: userToCopy.externalUserId,
                         // site and subcsription data are site specific, for convenience we copy extraData.
                         siteData: {},
                         subscriptionData: {},
                         siteId: newSite.id
-                    });
+                    }
+
+                    console.log('newUser 323423423423', newUser);
+
+                    await db.User.create(newUser);
 
                     console.log('Users to copy from userToCopy', userToCopy.id, userToCopy.role);
 
@@ -269,8 +288,14 @@ router.route('/')
     .post(auth.useReqUser)
     .post(refreshSiteConfigMw)
     .post(function (req, res, next) {
-        console.log(req.results);
-        return res.json(req.results);
+        const orderJson = req.results.get({plain: true});
+
+        const returnValues = {
+            ...orderJson,
+            redirectUrl: req.redirectUrl
+        };
+
+        res.json(returnValues);
     })
 
 // one site routes: get site

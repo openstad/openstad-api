@@ -1,4 +1,4 @@
-var Sequelize = require('sequelize');
+var Sequelize, {Op} = require('sequelize');
 var co = require('co')
 , config = require('config')
 , moment = require('moment-timezone')

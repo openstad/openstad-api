@@ -1,8 +1,9 @@
 const rp = require('request-promise');
 const nestedObjectAssign = require('nested-object-assign');
 const httpBuildQuery = require('../util/httpBuildQuery')
+const config = require('config')
 
-const apiUrl = process.env.USER_API;
+const apiUrl =  config.authorization['auth-server-url'] ;
 
 const fetch = (clientId, apiCredentials) => {
     return rp({
@@ -38,7 +39,7 @@ const create = (data, apiCredentials) => {
 
     return rp({
         method: 'POST',
-        uri: `${apiUrl}/client`,
+        uri: `${apiUrl}/api/admin/client`,
         headers: {
             'Accept': 'application/json'
         },
@@ -50,7 +51,7 @@ const create = (data, apiCredentials) => {
 const update = (clientId, data, apiCredentials) => {
     return rp({
         method: 'POST',
-        uri: `${apiUrl}/client/${clientId}`,
+        uri: `${apiUrl}/api/admin/client/${clientId}`,
         headers: {
             'Accept': 'application/json',
         },
@@ -62,7 +63,7 @@ const update = (clientId, data, apiCredentials) => {
 const deleteClient = (clientId, apiCredentials) => {
     return rp({
         method: 'POST',
-        uri: `${apiUrl}/client/${clientId}/delete`,
+        uri: `${apiUrl}/api/admin/client/${clientId}/delete`,
         json: true, // Automatically parses the JSON string in the response
         body: apiCredentials,
     });
@@ -79,7 +80,7 @@ const fetchClientsForSite = async (site, oauthCredentials) => {
         clients.push(client);
     }
 
-    return client;
+    return clients;
 }
 
 const setRoleForUser = (clientId, externalUserId, role, apiCredentials) => {
@@ -88,14 +89,12 @@ const setRoleForUser = (clientId, externalUserId, role, apiCredentials) => {
     const roleId = roleMap[role];
 
     if (!roleId) {
-         throw new Error('role not found');
+         //throw new Error('role not found');
         return
     }
 
-    const url = process.env.USER_API + '/api/admin/user/' + externalUserId;
+    const url = apiUrl + '/api/admin/user/' + externalUserId;
     const body = {
-        client_id: process.env.USER_API_CLIENT_ID,
-        client_secret: process.env.USER_API_CLIENT_SECRET,
         roles: {},
     };
     // Todo: is admin role always 1???
@@ -110,7 +109,7 @@ const setRoleForUser = (clientId, externalUserId, role, apiCredentials) => {
 };
 
 
-export {
+module.exports ={
     fetchClientsForSite,
     create,
     update,
