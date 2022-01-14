@@ -1,16 +1,22 @@
-const Promise 				= require('bluebird');
-const express 				= require('express');
-const config 					= require('config');
-const db      				= require('../../db');
-const auth 						= require('../../middleware/sequelize-authorization-middleware');
-const pagination 			= require('../../middleware/pagination');
-const searchResults 	= require('../../middleware/search-results-user');
-const oauthClients 		= require('../../middleware/oauth-clients');
+const Promise = require('bluebird');
+const express = require('express');
+const config = require('config');
+const db = require('../../db');
+const auth = require('../../middleware/sequelize-authorization-middleware');
+const pagination = require('../../middleware/pagination');
+const searchResults = require('../../middleware/search-results-user');
+const oauthClients = require('../../middleware/oauth-clients');
+const oauthService = require('../../services/oauthApiService')
 
 const checkHostStatus = require('../../services/checkHostStatus')
 const generateToken = require('../../util/generate-token');
 
 let router = express.Router({mergeParams: true});
+
+const cleanUrl = (url) => {
+    return url.replace(/^https?:\/\//, '').replace('www.', '');
+};
+
 
 const refreshSiteConfigMw = function (req, res, next) {
     const site = req.results;
@@ -75,20 +81,186 @@ router.route('/')
     // create site
     // -----------
     .post(auth.can('Site', 'create'))
-    .post(function (req, res, next) {
+    .post(async (req, res, next) => {
         const siteData = req.body;
+        const allowedDomains = ['ymove.app'];
 
-        //name is required to be unique, it's used for db name, so not used for humans
-		siteData.name = siteData.name ? siteData.name : generateToken({ length: 50 });
+        if (req.body.copySiteId) {
+            try {
+                let {copySiteId, subDomain, mainDomain, name, appType} = req.body;
+                mainDomain = mainDomain ? cleanUrl(mainDomain) : process.env.WILDCARD_HOST;
 
-		db.Site
-            .create(req.body)
-            .then((result) => {
-                req.results = result;
+                if (!allowedDomains.includes(mainDomain)) {
+                    return throw new Error('Main domain ' + mainDomain + ' not allowed');
+                }
+
+                // format domain
+                let domain = `${subDomain}.${mainDomain}`;
+                domain = cleanUrl(domain);
+                domain = domain.toLowerCase();
+
+                const fullUrl = 'https://' + domain;
+
+                const siteToCopy = await db.Site.findOne({where: {id: copySiteId}});
+
+                // We take the copy config from the site we copy
+                const copyConfig = siteToCopy.config && siteToCopy.config.copy ? siteToCopy.config.copy : {};
+
+                if (!copyConfig.isAllowed) {
+                    return throw new Error('Copy site id: ' + copySiteId + ' not allowed');
+                }
+
+                const oauthCredentials = {
+                    client_id:  process.env.USER_API_CLIENT_ID,
+                    client_secret: process.env.USER_API_CLIENT_SECRET,
+                }
+
+                /**
+                 * Copy SITE ID
+                 */
+                const siteWithDomainExists = await db.Site.findOne({where: {'domain': cleanUrl(domain)}})
+
+                if (siteWithDomainExists) {
+                    return throw new Error('Site with domain ' + cleanUrl(domain) + ' already exists');
+                }
+
+                // clone to make sure it doesnt contain nested references
+                const siteConfig = JSON.parse(JSON.stringify(siteToCopy.config));
+
+                // we delete the copy config, not all site are allowed to be copied
+                delete siteConfig.copy;
+
+                siteConfig.cms.domain = domain;
+                siteConfig.cms.url = fullUrl;
+                siteConfig.installation = siteConfig.installation ? siteConfig.installation : {};
+                siteConfig.installation.appType = appType;
+
+                const oauthConfig = {};
+
+                const oauthClientsToCopy = await oauthService.fetchClientsForSite(siteToCopy, oauthCredentials)
+
+                for (const oauthClient of oauthClientsToCopy) {
+                    const clientCreated = await oauthService.create({
+                        name: name,
+                        ...oauthClient,
+                        redirectUrl: fullUrl,
+                        siteUrl: fullUrl,
+                        allowedDomains: [
+                            domain,
+                            apiUrl
+                        ],
+                    }, oauthCredentials);
+
+                    oauthConfig[oauthClient.apiType] = {
+                        "id": clientCreated.id,
+                        "auth-client-id": clientCreated.clientId,
+                        "auth-client-secret": clientCreated.clientSecret
+                    }
+                }
+
+                siteConfig.oauth = oauthConfig;
+
+                const amountOfTrialDays = copyConfig ? copyConfig.trialDays : 30;
+
+                const future = new Date();
+                future.setDate(future.getDate() + amountOfTrialDays);
+
+                siteConfig.trial = siteConfig.trial ? siteConfig.trial : {};
+                siteConfig.trial.trialUntilDate = future.toISOString().substring(0, 10);
+
+                const siteData = {
+                    name: name,
+                    domain: domain,
+                    config: siteConfig
+                };
+
+                console.log('Create site with siteData', siteData);
+
+                const newSite = db.Site
+                    .create(siteData)
+                    .then((result) => {
+                        req.results = result;
+                    })
+                    .catch(next)
+
+
+                //Add admin users from site to copy
+                //const users = req
+                // await oauthProvider.makeUserSiteAdmin(user.externalUserId, apiData.site.config.oauth.default.id);
+
+                //copy all users
+                const usersFromCopySite = await db.User({
+                    where: {
+                        siteId: copySiteId,
+                        $or: {
+                            id: req.user.id
+                        }
+                        //role: ['admin', 'moderator']
+                    }
+                });
+
+                console.log('Users to copy from site');
+
+                for (const userToCopy of usersFromCopySite) {
+                    console.log('userToCopy', userToCopy.id, userToCopy.email, userToCopy.role);
+
+                    await db.User.create({
+                        ...userToCopy,
+                        // site and subcsription data are site specific, for convenience we copy extraData.
+                        siteData: {},
+                        subscriptionData: {},
+                        siteId: newSite.id
+                    });
+
+                    console.log('Users to copy from userToCopy', userToCopy.id, userToCopy.role);
+
+                    await oauthService.setRoleForUser(userToCopy.externalUserId, userToCopy.role, oauthCredentials);
+                }
+
+                /**
+                 * This is not ideal.
+                 * @type {*}
+                 */
+                // Resources to create
+                const account = await db.Account.create({
+                    siteId: newSite.id,
+                    name: name,
+                });
+
+                // Resources to create
+                const tour = await db.Tour.create({
+                    siteId: newSite.id,
+                    accountId: account.id,
+                    title: name
+                });
+
+                /**
+                 *
+                 */
+                if (copyConfig.redirectAppUrl ) {
+                    req.redirectUrl = fullUrl + copyConfig.redirectAppUrl + '/' + tour.id;
+                } else {
+                    req.redirectUrl = fullUrl;
+                }
+
                 next();
-                //return checkHostStatus({id: result.id});
-            })
-            .catch(next)
+            } catch (e) {
+                console.warn('Error in creating site from template, error: ', e);
+                next(e)
+            }
+        } else {
+            //name is required to be unique, it's used for db name, so not used for humans
+            siteData.name = siteData.name ? siteData.name : generateToken({length: 50});
+
+            db.Site
+                .create(req.body)
+                .then((result) => {
+                    req.results = result;
+                    next();
+                    //return checkHostStatus({id: result.id});
+                })
+                .catch(next);
+        }
 
     })
     .post(auth.useReqUser)

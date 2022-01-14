@@ -21,10 +21,12 @@ exports.withOneForSite = (req, res, next) => {
 
   const authClientIdDefault = req.site.config && req.site.config.oauth && req.site.config.oauth.default ? req.site.config.oauth.default["auth-client-id"]  : false;
   const authClientId  = authClientIdDefault ? authClientIdDefault : (req.site.config && req.site.config.oauth ? req.site.config.oauth["auth-client-id"] : false);
+
   const apiCredentials = {
       client_id:  process.env.USER_API_CLIENT_ID,
       client_secret: process.env.USER_API_CLIENT_SECRET,
   }
+
   userClientApi
     .fetch(authServerUrl, apiCredentials, authClientId)
     .then((client) => {
@@ -57,6 +59,7 @@ exports.withAllForSite = (req, res, next) => {
   }
 
   const fetchActions = [];
+
   const fetchClient = (req, oauthClientId) => {
     return new Promise((resolve, reject) => {
       return userClientApi
