@@ -91,7 +91,8 @@ router.route('/')
                 mainDomain = mainDomain ? cleanUrl(mainDomain) : process.env.WILDCARD_HOST;
 
                 if (!allowedDomains.includes(mainDomain)) {
-                    return throw new Error('Main domain ' + mainDomain + ' not allowed');
+                    throw new Error('Main domain ' + mainDomain + ' not allowed');
+                    return
                 }
 
                 // format domain
@@ -107,7 +108,8 @@ router.route('/')
                 const copyConfig = siteToCopy.config && siteToCopy.config.copy ? siteToCopy.config.copy : {};
 
                 if (!copyConfig.isAllowed) {
-                    return throw new Error('Copy site id: ' + copySiteId + ' not allowed');
+                    throw new Error('Copy site id: ' + copySiteId + ' not allowed');
+                    return
                 }
 
                 const oauthCredentials = {
@@ -121,7 +123,8 @@ router.route('/')
                 const siteWithDomainExists = await db.Site.findOne({where: {'domain': cleanUrl(domain)}})
 
                 if (siteWithDomainExists) {
-                    return throw new Error('Site with domain ' + cleanUrl(domain) + ' already exists');
+                    throw new Error('Site with domain ' + cleanUrl(domain) + ' already exists');
+                    return
                 }
 
                 // clone to make sure it doesnt contain nested references

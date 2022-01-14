@@ -88,7 +88,8 @@ const setRoleForUser = (clientId, externalUserId, role, apiCredentials) => {
     const roleId = roleMap[role];
 
     if (!roleId) {
-        return throw new Error('role not found');
+         throw new Error('role not found');
+        return
     }
 
     const url = process.env.USER_API + '/api/admin/user/' + externalUserId;
