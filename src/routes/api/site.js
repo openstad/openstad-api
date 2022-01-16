@@ -7,6 +7,8 @@ const pagination = require('../../middleware/pagination');
 const searchResults = require('../../middleware/search-results-user');
 const oauthClients = require('../../middleware/oauth-clients');
 const oauthService = require('../../services/oauthApiService')
+const ingress = require('../../services/ingress');
+
 var Sequelize, {Op} = require('sequelize');
 
 const checkHostStatus = require('../../services/checkHostStatus')
@@ -90,7 +92,7 @@ router.route('/')
             try {
                 let {copySiteId, subDomain, mainDomain, name, appType} = req.body;
                 mainDomain = mainDomain ? cleanUrl(mainDomain) : process.env.WILDCARD_HOST;
-                
+
                 // format domain
                 let domain = `${subDomain}.${mainDomain}`;
                 domain = cleanUrl(domain);
@@ -264,6 +266,10 @@ router.route('/')
                 } else {
                     req.redirectUrl = fullUrl;
                 }
+
+
+                // last but not least we run all ingresses
+                const ingresses = await ingress.ensureIngressForAllDomains();
 
                 next();
             } catch (e) {
