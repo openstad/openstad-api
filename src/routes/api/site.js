@@ -163,7 +163,8 @@ router.route('/')
                         siteUrl: fullUrl,
                         allowedDomains: [
                             domain,
-                            cleanUrl(config.url)
+                            cleanUrl(config.url),
+                            'www.' + cleanUrl(config.url)
                         ],
                     }, oauthCredentials);
 
