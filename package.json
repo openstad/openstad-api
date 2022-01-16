@@ -33,7 +33,7 @@
     "ip": "^1.1.5",
     "jsonwebtoken": "^8.5.1",
     "mariadb": "^2.5.4",
-    "marked": "^0.7.0",
+    "marked": "^4.0.10",
     "merge": "^2.1.1",
     "method-override": "^3.0.0",
     "morgan": "^1.10.0",
