@@ -158,6 +158,22 @@ const getIngressBody = (ingressName, domain, addWww, secretName) => {
     domains.push('www.' + domain);
   }
 
+  const annotations =  {
+    'kubernetes.io/ingress.class': 'nginx',
+    'nginx.ingress.kubernetes.io/from-to-www-redirect': "true",
+    'nginx.ingress.kubernetes.io/proxy-body-size': '5280m',
+    'nginx.ingress.kubernetes.io/configuration-snippet': `more_set_headers "X-Content-Type-Options: nosniff";
+more_set_headers "X-Frame-Options: SAMEORIGIN";
+more_set_headers "X-Xss-Protection: 1";
+more_set_headers "Referrer-Policy: same-origin";`
+  }
+
+  console.log('Secret name', secretName)
+
+  if (!secretName) {
+    annotations['cert-manager.io/cluster-issuer'] = 'openstad-letsencrypt-prod';
+  }
+
   return {
     apiVersions: 'networking.k8s.io/v1beta1',
     kind: 'Ingress',
@@ -166,16 +182,7 @@ const getIngressBody = (ingressName, domain, addWww, secretName) => {
         type: 'user-site'
       },
       name: ingressName,
-      annotations: {
-        'cert-manager.io/cluster-issuer': 'openstad-letsencrypt-prod', // Todo: make this configurable
-        'kubernetes.io/ingress.class': 'nginx',
-        'nginx.ingress.kubernetes.io/from-to-www-redirect': "true",
-        'nginx.ingress.kubernetes.io/proxy-body-size': '5280m',
-        'nginx.ingress.kubernetes.io/configuration-snippet': `more_set_headers "X-Content-Type-Options: nosniff";
-more_set_headers "X-Frame-Options: SAMEORIGIN";
-more_set_headers "X-Xss-Protection: 1";
-more_set_headers "Referrer-Policy: same-origin";`
-      }
+      annotations:
     },
     spec: {
       rules: [{
