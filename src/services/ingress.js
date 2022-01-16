@@ -182,7 +182,7 @@ more_set_headers "Referrer-Policy: same-origin";`
         type: 'user-site'
       },
       name: ingressName,
-      annotations:
+      annotations: annotations,
     },
     spec: {
       rules: [{

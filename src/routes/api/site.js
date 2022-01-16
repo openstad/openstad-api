@@ -259,6 +259,11 @@ router.route('/')
                     title: name
                 });
 
+                
+                const newSiteConfig = newSite.config;
+                newSiteConfig.app = newSiteConfig.app ? newSiteConfig.app : {};
+                newSiteConfig.app.id = tour.id;
+
                 /**
                  *
                  */
