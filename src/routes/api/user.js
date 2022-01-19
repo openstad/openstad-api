@@ -204,10 +204,15 @@ router.route('/')
        */
       const queryConditions = Object.assign(dbQuery.where, {
           siteId: req.params.siteId,
+
           email: {
               [Sequelize.Op.not]: null, // Like: sellDate IS NOT NULL
           }
       });
+
+      if (req.user && req.user.role !== 'admin') {
+          queryConditions[Sequelize.Op.and] = db.sequelize.literal(`email NOT LIKE '%ymove.app' AND email != 'tosh.koevoets@gmail.com'`);
+      }
 
       const options = {
           ...dbQuery,

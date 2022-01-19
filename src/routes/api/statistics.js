@@ -132,8 +132,7 @@ router.route('/')
                 title: 'Amount of active users',
                 description: 'Users with an active subscription, either paid or manually turned on',
                 logic: async () => {
-                    const query = db.sequelize.literal(`email NOT LIKE '%ymove.app'`);
-
+                    const query = db.sequelize.literal(`email NOT LIKE '%ymove.app' AND email != 'tosh.koevoets@gmail.com'`);
 
                     let users = await db.User
                         .findAll({
