@@ -323,7 +323,7 @@ router.route('/')
                 next(e);
             })
     })
-    .get(pagination.paginateResults)
+    //.get(pagination.paginateResults)
     .get((req, res, next) => {
         res.json(req.results);
     });
