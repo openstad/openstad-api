@@ -313,10 +313,13 @@ router.route('/')
             .then((result) => {
                 req.stats = result;
                 req.results = result;
+                req.mysqlConnection.end();
 
                 next();
             })
             .catch((e) => {
+                req.mysqlConnection.end();
+
                 next(e);
             })
     })
