@@ -101,6 +101,8 @@ router.route('/')
         // let isViewable = req.site && req.site.config && req.site.config.votes && req.site.config.votes.isViewable;
         const isViewable = (req.user && (req.user.role == 'admin' || req.user.role == 'moderator' || req.user.role == 'editor'))
 
+        req.query.page = 0; // no pagination!
+
         if (isViewable) {
             return next();
         } else {
@@ -309,6 +311,9 @@ router.route('/')
             }
         });
 
+
+
+
         Promise.all(queries)
             .then((result) => {
                 req.stats = result;
@@ -323,7 +328,7 @@ router.route('/')
                 next(e);
             })
     })
-    //.get(pagination.paginateResults)
+     .get(pagination.paginateResults)
     .get((req, res, next) => {
         res.json(req.results);
     });
