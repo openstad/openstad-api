@@ -259,10 +259,12 @@ router.route('/')
 
         Promise.all(queries)
             .then((result) => {
+                req.mysqlConnection.end();
                 req.stats = result;
                 next();
             })
             .catch((e) => {
+                req.mysqlConnection.end();
                 next(e);
             })
     })
