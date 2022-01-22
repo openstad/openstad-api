@@ -209,8 +209,32 @@ router.route('/:tourId(\\d+)')
   .get(auth.can('Tour', 'view'))
   .get(auth.useReqUser)
   .get(function (req, res, next) {
-    //
-    if (req.query.resource) {
+    const userHasAccess = (req.user && req.user.access && req.user.access.active);
+    const userHasPrivilige = (req.user && (req.user.role === 'moderator' || req.user.role === 'admin'));
+
+    const liveRevisions = req.results.live;
+    let latestLiveRevision = liveRevisions && liveRevisions.length > 0 && liveRevisions[liveRevisions.length - 1] && liveRevisions[liveRevisions.length - 1] ? liveRevisions[liveRevisions.length - 1] : {};
+
+    const accessRestrictedSettings =  latestLiveRevision.resources ? latestLiveRevision.resources.find(resource => resource.name === 'accessRestrictedSettings') : false;
+
+  //  console.log('accessRestrictedSettings', accessRestrictedSettings);
+
+    const appIsFreeForAccess = accessRestrictedSettings && accessRestrictedSettings.items && accessRestrictedSettings.items[0] && accessRestrictedSettings.items[0].freeAccess;
+
+    //console.log('appIsFreeForAccess', appIsFreeForAccess);
+   // console.log('userHasAccess', userHasAccess)
+  //  console.log('userHasAccess', userHasPrivilige)
+
+
+
+    const canAccess = userHasAccess || appIsFreeForAccess || userHasPrivilige;
+
+  //  console.log('User with req.user.id',  req.user.id, req.user.email, ' canAccess ', canAccess);
+
+    const openResources = ['screen', 'membership', 'workoutProgram', 'category', 'styling', 'trackingSettings', 'accessRestrictedSettings', 'chatSettings']
+
+
+    if (canAccess && req.query.resource) {
       const revisions = req.results.revisions;
       const latestRevision = revisions && revisions.length > 0 && revisions[revisions.length - 1] && revisions[revisions.length - 1] ? revisions[revisions.length - 1] : {};
       const resources = latestRevision && latestRevision.resources ? latestRevision.resources : [];
@@ -218,6 +242,33 @@ router.route('/:tourId(\\d+)')
 
       res.json(resourceData ? resourceData : [])
     } else {
+      
+      if (!canAccess) {
+        //console.log('latestRevision latestLiveRevision', latestLiveRevision.resources);
+
+        // filter out all resources that are not open
+        latestLiveRevision.resources = latestLiveRevision && latestLiveRevision.resources ? latestLiveRevision.resources.map((resource) => {
+       //   console.log('latestRevision resource name check', resource.name);
+
+          if (!openResources.includes(resource.name)) {
+            resource.items = [];
+            console.log('not an open resourrce, set items to nothing', resource);
+          } else if (resource.name === 'workoutProgram') {
+            resource.items = resource.items ? resource.items.map((item) => {
+              item.periods = [];
+              return item;
+            }) : [];
+          } else {
+            console.log('is an open resourrce, keep items available', resource);
+          }
+
+          return resource;
+        }) : [];
+
+        req.results.live = [latestLiveRevision];
+        req.results.revisions = [];
+      }
+
       res.json(req.results);
     }
   })

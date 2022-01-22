@@ -116,6 +116,13 @@ module.exports = function (db, sequelize, DataTypes) {
             type: DataTypes.JSON,
             allowNull: false,
             defaultValue: '[]',
+            auth : {
+                listableBy: ['admin', 'editor',  'moderator', 'owner'],
+                viewableBy: ['admin', 'editor',  'moderator', 'owner'],
+                createableBy: ['admin', 'editor',  'moderator', 'owner'],
+                updateableBy: ['admin', 'editor',  'moderator', 'owner'],
+                deleteableBy: ['admin', 'editor',  'moderator', 'owner'],
+            },
             get: function () {
                 let value = this.getDataValue('revisions');
                 try {
