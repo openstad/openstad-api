@@ -8,6 +8,7 @@
     "dev": "nodemon server.js ",
     "test": "npm run test:unit",
     "test:unit": "jest --no-cache --config jest.config.js",
+    "acc-build-deploy" : "sh -c 'docker build -t toshkoevoets/appbuilder-api:$0 . && docker push toshkoevoets/appbuilder-api:$0 && kubectl config use-context do-ams3-ymove-acc && kubectl set image deployment/openstad-api openstad-api=toshkoevoets/appbuilder-api:$0 --record -n openstad'",
     "test:unit:watch": "jest --watch --no-cache",
     "test:e2e": "jest --no-cache --config jest-e2e.config.js --forceExit",
     "test:e2e:debug": "jest --no-cache --config jest-e2e.config.js --verbose --forceExit"
