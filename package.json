@@ -6,6 +6,10 @@
   "scripts": {
     "start": "node migrate.js && node server.js",
     "dev": "nodemon server.js ",
+    "lint": "node ./scripts/lint",
+    "lint:bare": "npx eslint",
+    "prettier": "node ./scripts/prettier",
+    "prettier:bare": "npx prettier",
     "test": "npm run test:unit",
     "test:unit": "jest --no-cache --config jest.config.js",
     "test:unit:watch": "jest --watch --no-cache",
@@ -53,7 +57,15 @@
     "ws": "^7.5.5"
   },
   "devDependencies": {
-    "jest": "^27.2.5",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-sonarjs": "^0.10.0",
+    "jest": "^25.5.4",
+    "npm-commands": "^1.1.0",
+    "prettier": "^2.4.1",
     "sequelize-mock": "^0.10.2",
     "supertest": "^4.0.2"
   },
