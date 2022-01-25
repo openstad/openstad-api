@@ -486,7 +486,7 @@ router.route('/')
                         stripeSessionConfig.subscription_data.trial_period_days = trialDays;
                     }
                 }
-                
+
                 console.log('Stripe create sessions with config', stripeSessionConfig);
                 console.log('Stripe create sessions with config line_items', stripeSessionConfig.line_items);
 

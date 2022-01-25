@@ -210,6 +210,11 @@ router.route('/:tourId(\\d+)')
   .get(auth.useReqUser)
   .get(function (req, res, next) {
     const userHasAccess = (req.user && req.user.access && req.user.access.active);
+
+    console.log('userHasAccess', userHasAccess)
+    console.log(' req.user.access',  req.user.access)
+    console.log(' req.user.email',  req.user.email)
+
     const userHasPrivilige = (req.user && (req.user.role === 'moderator' || req.user.role === 'admin'));
 
     const liveRevisions = req.results.live;
