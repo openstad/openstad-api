@@ -300,7 +300,9 @@ router.route('/')
 
         if (paymentProvider === 'stripe') {
             const stripeApiKey = paymentConfig.stripeApiKey ? paymentConfig.stripeApiKey : '';
-            const stripeTrialDays = paymentConfig.stripeTrialDays ? paymentConfig.stripeTrialDays : '';
+//            const stripeTrialDays = paymentConfig.stripeTrialDays ? paymentConfig.stripeTrialDays : '';
+
+
             const Stripe = require('stripe')(stripeApiKey);
 
             const stripeCustomerIdKey = paymentModus + '_stripeCustomerId';
@@ -319,7 +321,6 @@ router.route('/')
             }
 
             console.log('Stripe start creating found stripeCustomer', stripeCustomer);
-
 
             if (!stripeCustomer) {
                 try {
@@ -349,6 +350,7 @@ router.route('/')
 
             try {
                 const subscriptionProduct = req.subscriptionProduct;
+                const trialDays = subscriptionProduct && subscriptionProduct.extraData && subscriptionProduct.extraData.trialDays ?  subscriptionProduct.extraData.trialDays : 0;
 
                 let stripeInterval;
                 const subscriptionInterval = req.subscriptionProduct ? req.subscriptionProduct.subscriptionInterval : '';
@@ -480,12 +482,11 @@ router.route('/')
                         cancel_url: siteUrl,// `http://localhost:4242/failed`
                     }
 
-                    if (stripeTrialDays) {
-                        stripeSessionConfig.subscription_data.trial_period_days = stripeTrialDays;
+                    if (trialDays) {
+                        stripeSessionConfig.subscription_data.trial_period_days = trialDays;
                     }
                 }
-
-
+                
                 console.log('Stripe create sessions with config', stripeSessionConfig);
                 console.log('Stripe create sessions with config line_items', stripeSessionConfig.line_items);
 
