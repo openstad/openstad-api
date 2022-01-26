@@ -209,9 +209,13 @@ router.route('/:tourId(\\d+)')
   .get(auth.can('Tour', 'view'))
   .get(auth.useReqUser)
   .get(function (req, res, next) {
-    const userHasAccess = (req.user && req.user.access && req.user.access.active);
+    const siteConfig = req.site.config;
 
-    console.log('userHasAccess', userHasAccess)
+    const userHasAccess = (req.user && req.user.access && req.user.access.active);
+    const appBlockAccess =  siteConfig && siteConfig.app && siteConfig.app.appBlockAccess ?  siteConfig.app.appBlockAccess : false;
+
+
+    console.log(' userHasAccess', userHasAccess)
     console.log(' req.user.access',  req.user.access)
     console.log(' req.user.email',  req.user.email)
 
@@ -232,7 +236,7 @@ router.route('/:tourId(\\d+)')
 
 
 
-    const canAccess = userHasAccess || appIsFreeForAccess || userHasPrivilige;
+    const canAccess = !appBlockAccess || (appBlockAccess && (userHasAccess || appIsFreeForAccess || userHasPrivilige));
 
   //  console.log('User with req.user.id',  req.user.id, req.user.email, ' canAccess ', canAccess);
 
