@@ -85,7 +85,7 @@ const fetchClientsForSite = async (site, oauthCredentials) => {
 
 const setRoleForUser = (clientId, externalUserId, role, apiCredentials) => {
     console.log('make user site admin');
-    const roleMap = {'admin': 1, moderator: 5};
+    const roleMap = {'admin': 1, moderator: 4};
     const roleId = roleMap[role];
 
     if (!roleId) {

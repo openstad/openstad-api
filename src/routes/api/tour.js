@@ -236,8 +236,7 @@ router.route('/:tourId(\\d+)')
 
   //  console.log('User with req.user.id',  req.user.id, req.user.email, ' canAccess ', canAccess);
 
-    const openResources = ['screen', 'membership', 'workoutProgram', 'category', 'styling', 'trackingSettings', 'accessRestrictedSettings', 'chatSettings']
-
+    const openResources = ['screen', 'membership', 'component', 'signupSteps', 'workoutProgram', 'category', 'styling', 'trackingSettings', 'accessRestrictedSettings', 'chatSettings']
 
     if (canAccess && req.query.resource) {
       const revisions = req.results.revisions;

@@ -157,8 +157,8 @@ router.route('/')
 
                 for (const oauthClient of oauthClientsToCopy) {
                     const clientCreated = await oauthService.create({
-                        name: name,
                         ...oauthClient,
+                        name: name,
                         redirectUrl: fullUrl,
                         siteUrl: fullUrl,
                         allowedDomains: [
@@ -191,6 +191,7 @@ router.route('/')
                 const siteData = {
                     name: name,
                     domain: domain,
+                    hostname: domain,
                     config: siteConfig
                 };
 
@@ -237,9 +238,9 @@ router.route('/')
 
                     await db.User.create(newUser);
 
-                    console.log('Users to copy from userToCopy', userToCopy.id, userToCopy.role);
+                    const defaultClientId = oauthConfig.default['auth-client-id'];
 
-                    await oauthService.setRoleForUser(userToCopy.externalUserId, userToCopy.role, oauthCredentials);
+                    await oauthService.setRoleForUser(defaultClientId, userToCopy.externalUserId, userToCopy.role, oauthCredentials);
                 }
 
                 /**
@@ -264,6 +265,10 @@ router.route('/')
                 newSiteConfig.app = newSiteConfig.app ? newSiteConfig.app : {};
                 newSiteConfig.app.id = tour.id;
 
+                await newSite.update({
+                    config: newSiteConfig
+                });
+
                 /**
                  *
                  */
@@ -272,7 +277,6 @@ router.route('/')
                 } else {
                     req.redirectUrl = fullUrl;
                 }
-
 
                 // last but not least we run all ingresses
                 const ingresses = await ingress.ensureIngressForAllDomains();
