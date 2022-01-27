@@ -1,9 +1,6 @@
-const AWS = require('aws-sdk');
-const fs = require('fs'); // Needed for example below
 const mysqldump = require('mysqldump');
 const moment = require('moment')
-const log = require('debug')('app:cron');
-const db = require('../db');
+const s3 = require('../services/awsS3');
 
 // Purpose
 // -------
@@ -11,8 +8,14 @@ const db = require('../db');
 //
 // Runs every night at 1:00.
 const backupMysqlToS3 = async () => {
+  if (!!process.env.PREVENT_BACKUP_CRONJOBS === true) {
+    return;
+  }
+  
   const dbsToBackup = process.env.S3_DBS_TO_BACKUP ? process.env.S3_DBS_TO_BACKUP.split(',') : false;
-
+  const isOnK8s = !!process.env.KUBERNETES_NAMESPACE;
+  const namespace = process.env.KUBERNETES_NAMESPACE;
+  
   if (dbsToBackup) {
     dbsToBackup.forEach(async function(dbName) {
       // return the dump from the function and not to a file
@@ -32,24 +35,20 @@ const backupMysqlToS3 = async () => {
           }
       });
 
-      const spacesEndpoint = new AWS.Endpoint(process.env.S3_ENDPOINT);
-
       const created = moment().format('YYYY-MM-DD hh:mm:ss')
 
-      const s3 = new AWS.S3({
-          endpoint: spacesEndpoint,
-          accessKeyId: process.env.S3_KEY,
-          secretAccessKey: process.env.S3_SECRET
-      });
+      const key = isOnK8s ? `mysql/${namespace}/${dbName}_${created}sql` : `mysql/${dbName}_${created}sql`;
 
       var params = {
           Bucket: process.env.S3_BUCKET,
-          Key: 'mysql/' + dbName + '_' + created + ".sql",
+          Key: key,
           Body: result.dump.data,
           ACL: "private"
       };
+      
+      const client = s3.getClient();
 
-      s3.putObject(params, function(err, data) {
+      client.putObject(params, function(err, data) {
           if (err) console.log(err, err.stack);
           else     console.log(data);
       });
@@ -76,6 +75,6 @@ module.exports = {
 	cronTime: '0 0 1 * * *',
 	runOnInit: false,
 	onTick: async function() {
-    backupMysqlToS3();
+    return backupMysqlToS3();
 	}
 };
