@@ -150,7 +150,7 @@ De gedefinieerde config wordt nog wel gebruikt voor defaults etc. Die ziet er nu
         "type": "arrayOfStrings",
         "default": [
           "zipCode",
-          "nickName"
+          "displayName"
         ]
       }
     }
@@ -205,7 +205,6 @@ Je kunt aan de GETs query parameters meegeven. Die werken als scopes voor Sequel
 
 `selectRunning`
 `includeArguments`
-`includeMeeting`
 `includePosterImage`
 `includeUser`
 `includeVoteCount`

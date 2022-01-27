@@ -42,7 +42,7 @@ let parseData = function(siteId, config, value) {
 
     value.forEach(elem => {
 
-      if (typeof elem == 'object' && elem != null && elem.value && elem.siteId) {
+      if (typeof elem == 'object' && elem != null && typeof elem.value != 'undefined' && elem.siteId) {
         siteDataFound = true;
         if (elem.siteId == siteId && config && config.sitespecific ) {
           result = elem.value

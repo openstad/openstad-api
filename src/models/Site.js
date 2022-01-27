@@ -36,7 +36,7 @@ module.exports = function (db, sequelize, DataTypes) {
       set: function (value) {
         var currentconfig = this.getDataValue('config');
         value = value || {};
-        value = merge.recursive(currentconfig, value);
+        value = merge.recursive(true, currentconfig, value);
         this.setDataValue('config', this.parseConfig(value));
       },
       auth: {
@@ -113,6 +113,11 @@ module.exports = function (db, sequelize, DataTypes) {
 
       beforeUpdate: function (instance, options) {
         return beforeUpdateOrCreate(instance, options);
+      },
+
+      beforeDestroy: function (instance, options) {
+        if (!(instance && instance.config && instance.config.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
+        return 
       },
 
     },
@@ -207,6 +212,10 @@ module.exports = function (db, sequelize, DataTypes) {
           'after-login-redirect-uri': {
             type: 'string',
             default: '/oauth/login?jwt=[[jwt]]',
+          },
+          "redirectURI": {
+            type: 'string',
+            default: undefined,
           },
           "widgetDisplaySettings": {
             "type": "object",
@@ -437,7 +446,7 @@ module.exports = function (db, sequelize, DataTypes) {
               },
               showFields: {
                 type: 'arrayOfStrings', // eh...
-                default: ['zipCode', 'nickName'],
+                default: ['zipCode', 'displayName'],
               }
             }
           },
@@ -467,6 +476,10 @@ module.exports = function (db, sequelize, DataTypes) {
           canCreateNewUsers: {
             type: 'boolean',
             default: true,
+          },
+          allowUseOfNicknames: {
+            type: 'boolean',
+            default: false,
           },
         },
       },
@@ -690,6 +703,11 @@ module.exports = function (db, sequelize, DataTypes) {
       "ignoreBruteForce": {
         type: 'arrayOfStrings',
         default: []
+      },
+
+      projectHasEnded: {
+        type: 'boolean',
+        default: false,
       },
 
     }

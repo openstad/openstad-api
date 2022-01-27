@@ -1,5 +1,4 @@
 const fs = require('fs');
-const Promise = require('bluebird');
 const express = require('express');
 const createError = require('http-errors');
 const marked  = require('marked');
