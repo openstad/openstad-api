@@ -1,5 +1,8 @@
 # Changelog
 
+## UNRELEASED
+* Change mongoDB S3 backup to read the database dump in chunks and upload it to the S3 bucket using a MultiPart upload setup.
+
 ## v0.20.0 (2021-12-20)
 * Make submissions listable & viewable, and allow them to be filtered by formId
 * Add choices guide stats endpoint
