@@ -5,6 +5,10 @@ const s3     = require('../services/awsS3');
 const util   = require('util');
 
 const backupMongoDBToS3 = async () => {
+  if (!!process.env.PREVENT_BACKUP_CRONJOBS === true) {
+    return;
+  }
+  
   console.log('backing up to mongodb', process.env.S3_MONGO_BACKUPS);
   
   if (process.env.S3_MONGO_BACKUPS === 'ON') {
