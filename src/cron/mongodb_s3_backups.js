@@ -17,6 +17,8 @@ const backupMongoDBToS3 = async () => {
     const tempFile        = 'db_mongo';
     const isOnK8s         = !!process.env.KUBERNETES_NAMESPACE;
     const namespace       = process.env.KUBERNETES_NAMESPACE;
+    const created = moment().format('YYYY-MM-DD hh:mm:ss')
+    const fileNameInS3 = isOnK8s ? `mongodb/${namespace}/mongo_${created}` : `mongodb/mongo_${created}`;
     const deleteTempFile = () => {
       try {
         console.log ('removing temp file', tempFile);
@@ -36,23 +38,21 @@ const backupMongoDBToS3 = async () => {
         // Most likely, mongodump isn't installed or isn't accessible
         console.error(`mongodump command error: ${err}`);
         deleteTempFile();
-      } else {
-        const created = moment().format('YYYY-MM-DD hh:mm:ss')
-        
-        const statsFile = fs.statSync(tempFile);
-        console.info(`file size: ${Math.round(statsFile.size / 1024 / 1024)}MB`);
-        
-        const fileNameInS3 = isOnK8s ? `mongodb/${namespace}/mongo_${created}` : `mongodb/mongo_${created}`;
-  
-        try {
-          await s3.uploadFile(tempFile, fileNameInS3);
-          deleteTempFile();
-          console.log('successfully uploaded to s3');
-        } catch (e) {
-          deleteTempFile();
-          throw e;
-        }
+        return;
       }
+      
+      const statsFile = fs.statSync(tempFile);
+      console.info(`file size: ${Math.round(statsFile.size / 1024 / 1024)}MB`);
+
+      try {
+        await s3.uploadFile(tempFile, fileNameInS3);
+        deleteTempFile();
+        console.log('successfully uploaded to s3');
+      } catch (e) {
+        deleteTempFile();
+        throw e;
+      }
+      
     });
   }
 }
