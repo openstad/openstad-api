@@ -60,20 +60,10 @@ const uploadFile = async (localFile, fileNameInS3) => {
         // pause the stream to upload this chunk to S3
         readStream.pause();
         
-        const chunkMB = chunkAccumulator.length / 1024 / 1024;
-        
-        const params = {
-          Bucket:        process.env.S3_BUCKET,
-          Key:           fileNameInS3,
-          PartNumber:    partNumber,
-          UploadId:      uploadId,
-          Body:          chunkAccumulator,
-          ContentLength: chunkAccumulator.length,
-        };
-        s3Client.uploadPart(params).promise()
+        s3Client.uploadPart(createUploadPartParams(fileNameInS3, partNumber, uploadId, chunkAccumulator)).promise()
           .then((result) => {
-            console.info(`Data uploaded. Entity tag: ${result.ETag} Part: ${params.PartNumber} Size: ${chunkMB}`);
-            multipartMap.Parts.push({ETag: result.ETag, PartNumber: params.PartNumber});
+            console.info(`Data uploaded. Entity tag: ${result.ETag} Part: ${partNumber} Size: ${chunkAccumulator.length}`);
+            multipartMap.Parts.push({ETag: result.ETag, PartNumber: partNumber});
             partNumber++;
             chunkAccumulator = null;
             // resume to read the next chunk
@@ -87,22 +77,11 @@ const uploadFile = async (localFile, fileNameInS3) => {
     
     readStream.on('close', () => {
       if (chunkAccumulator) {
-        const chunkMB = chunkAccumulator.length / 1024 / 1024;
-        
         // upload the last chunk
-        const params = {
-          Bucket:        process.env.S3_BUCKET,
-          Key:           fileNameInS3,
-          PartNumber:    partNumber,
-          UploadId:      uploadId,
-          Body:          chunkAccumulator,
-          ContentLength: chunkAccumulator.length,
-        };
-        
-        s3Client.uploadPart(params).promise()
+        s3Client.uploadPart(createUploadPartParams(fileNameInS3, partNumber, uploadId, chunkAccumulator)).promise()
           .then((result) => {
-            console.info(`Last Data uploaded. Entity tag: ${result.ETag} Part: ${params.PartNumber} Size: ${chunkMB}`);
-            multipartMap.Parts.push({ETag: result.ETag, PartNumber: params.PartNumber});
+            console.info(`Last Data uploaded. Entity tag: ${result.ETag} Part: ${partNumber} Size: ${chunkAccumulator.length}`);
+            multipartMap.Parts.push({ETag: result.ETag, PartNumber: partNumber});
             chunkAccumulator = null;
             resolve(multipartMap);
           }).catch((err) => {
@@ -113,16 +92,16 @@ const uploadFile = async (localFile, fileNameInS3) => {
     });
   });
   
-  const multipartMap = await uploadPartsPromise;
+  const completedMultipartMap = await uploadPartsPromise;
   
-  console.info(`All parts uploaded, completing multipart upload, parts: ${multipartMap.Parts.length} `);
+  console.info(`All parts uploaded, completing multipart upload, parts: ${completedMultipartMap.Parts.length} `);
   
   // gather all parts' tags and complete the upload
   try {
     const params = {
       Bucket:          process.env.S3_BUCKET,
       Key:             fileNameInS3,
-      MultipartUpload: multipartMap,
+      MultipartUpload: completedMultipartMap,
       UploadId:        uploadId,
     };
     const result = await s3Client.completeMultipartUpload(params).promise();
@@ -131,6 +110,17 @@ const uploadFile = async (localFile, fileNameInS3) => {
   } catch (e) {
     throw new Error(`Error completing S3 multipart. ${e.message}`);
   }
+}
+
+function createUploadPartParams(fileNameInS3, partNumber, uploadId, chunkAccumulator) {
+  return {
+    Bucket:        process.env.S3_BUCKET,
+    Key:           fileNameInS3,
+    PartNumber:    partNumber,
+    UploadId:      uploadId,
+    Body:          chunkAccumulator,
+    ContentLength: chunkAccumulator.length,
+  };
 }
 
 
