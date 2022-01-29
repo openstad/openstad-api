@@ -1,4 +1,6 @@
-name: Build and Publish
+# automatically publishes v tags to dockerhub.
+# so for instance v0.5.1 wil publish but randtom wont
+name: Build and Publish Version Tags
 on:
   push:
     tags:
