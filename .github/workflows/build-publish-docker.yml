@@ -6,7 +6,6 @@ jobs:
     name: Build Docker image and push to repositories
     # run only when code is compiling and tests are passing
     runs-on: ubuntu-latest
-
     # steps to perform in job
     steps:
       - name: Checkout code
