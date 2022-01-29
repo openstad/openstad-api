@@ -24,7 +24,7 @@ module.exports = async function getUser( req, res, next ) {
     const which = client || req.query.useOauth || 'default';
     let siteConfig = req.site && merge({}, req.site.config, { id: req.site.id });
 
-    if(userId === null) {
+    if(userId === null || typeof userId === 'undefined') {
       return nextWithEmptyUser(req, res, next);
     }
 
