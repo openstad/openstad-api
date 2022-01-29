@@ -1,5 +1,8 @@
 name: Build and Publish
-on: [push]
+on:
+  push:
+    tags:
+      - "v*"
 jobs:
   # define job to build and publish docker image
   build-and-push-docker-image:
