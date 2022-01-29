@@ -87,10 +87,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 	});
 
-	kubectl create secret tls ymove-secret \
---key certificate.crt \
---cert certificate.key
-
 	NewsletterSignup.scopes = function() {
 
 		return {
