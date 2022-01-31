@@ -1,3 +1,4 @@
+const Sequelize = require('sequelize');
 const merge = require('merge');
 const moment = require('moment');
 const OAuthApi = require('../services/oauth-api');
@@ -832,7 +833,7 @@ module.exports = function (db, sequelize, DataTypes) {
       if (!self.id) throw Error('Site not found');
       if (!self.config.projectHasEnded) throw Error('Cannot anonymize users on an active site - first set the project-has-ended parameter');
 
-      let users = await db.User.findAll({ where: { siteId: self.id } });
+      let users = await db.User.findAll({ where: { siteId: self.id, externalUserId: { [Sequelize.Op.ne]: null } } });
 
       // do not anonymize admins
       result.admins = users.filter( user => userHasRole(user, 'admin') );
