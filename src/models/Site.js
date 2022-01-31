@@ -866,6 +866,7 @@ module.exports = function (db, sequelize, DataTypes) {
       for (const user of users) {
         user.site = self;
         let res = await user.doAnonymize();
+        user.site = null;
       }
 
     } catch (err) {

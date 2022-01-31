@@ -788,7 +788,7 @@ module.exports = function (db, sequelize, DataTypes) {
 
     return new Promise((resolve, reject) => {
 
-      if (instance.siteId) {
+      if (instance.siteId && !instance.config) {
         db.Site.findByPk(instance.siteId)
           .then(site => {
             instance.config = merge.recursive(true, config, site.config);
