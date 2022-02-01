@@ -17,7 +17,7 @@ router.route('^/$|^/doc/:which$')
 			return next(createError(404, 'File not found'))
 		}
 		let readme = fs.readFileSync(`doc/${which}.md`).toString();
-		let html = marked( readme );
+		let html = marked.parse( readme );
     res.header('Content-Type', 'text/html');
 		res.send(`<!DOCTYPE html>
 <html lang="nl">
