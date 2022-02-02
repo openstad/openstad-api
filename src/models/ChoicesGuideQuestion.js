@@ -87,7 +87,7 @@ module.exports = function( db, sequelize, DataTypes ) {
     },
 
     type: {
-      type: DataTypes.ENUM('continuous', 'enum-buttons', 'enum-radio', 'a-to-b'),
+      type: DataTypes.ENUM('continuous', 'enum-buttons', 'enum-radio', 'a-to-b', 'input', 'textarea', 'multiple-choice'),
       defaultValue: 'continuous',
       allowNull: false
     },
