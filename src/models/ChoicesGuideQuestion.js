@@ -137,6 +137,12 @@ module.exports = function( db, sequelize, DataTypes ) {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    
+    validation: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: {},
+    },
 
   }, {
 
