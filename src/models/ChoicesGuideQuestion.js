@@ -143,6 +143,12 @@ module.exports = function( db, sequelize, DataTypes ) {
       allowNull: false,
       defaultValue: {},
     },
+    
+    extraConfig: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: {},
+    }
 
   }, {
 
