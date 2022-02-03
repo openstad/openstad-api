@@ -1,16 +1,11 @@
 # Changelog
 
-<<<<<<< Updated upstream
+## UNRELEASED
+* Remove remaining sessions
+
 ## v0.40.0
 Update version number
-
-## v0.21.0
-=======
-## Unreleased
-
-## v0.40.0
-* Equelize version numbers over repos
->>>>>>> Stashed changes
+* Remove sessions and cookies - the API is stateless
 * Update Action cron to once every minute
 * Add linter/prettier
 * Unknown fixed-auth-token is no longer an error but is now a not-logged-in

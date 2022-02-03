@@ -30,8 +30,6 @@ let defaultConfig = {
 		},
 		"middleware": [
 			"./middleware/log",
-			"./routes/cookies",
-			"./routes/dev",
 			{ "route": "/api", "router": "./routes/api" },
 			{ "route": "/oauth", "router": "./routes/oauth" },
       { "route": "/stats", "router": "./routes/stats" },
@@ -278,20 +276,6 @@ let defaultConfig = {
 			// all relevant roles for this application.
 			"roles": "default"
 		},
-		"sessions": {
-			"maxAge"       : 15552000000, // six months
-			"cookieName"   : "amsterdam.sid",
-			"onlySecure"   : true,
-			"secret"       : "bsp713oThgtWinJ5yoy5L68qVniW1qAM",
-			// Default cookie is browser-session maxAge. This TTL is for logged in session
-			// cookies only.
-			"cookieTTL"    : 15768000000,
-			// Login token TTL in ms (default: 48hrs). These tokens are created when a user
-			// wants to log in and enters their email address.
-			"tokenTTL"     : 172800000,
-			// Property name to store user ID in `req.session`.
-			"uidProperty"  : "userId",
-		}
 	},
 
 	"sentry": {
@@ -319,8 +303,6 @@ defaultConfig.mail.transport.smtp.requireSSL = process.env.API_MAIL_TRANSPORT_SM
 defaultConfig.mail.transport.smtp.auth.user = process.env.API_MAIL_TRANSPORT_SMTP_AUTH_USER || defaultConfig.mail.transport.smtp.auth.user;
 defaultConfig.mail.transport.smtp.auth.pass = process.env.API_MAIL_TRANSPORT_SMTP_AUTH_PASS || defaultConfig.mail.transport.smtp.auth.pass;
 defaultConfig.notifications.admin.emailAddress = process.env.API_NOTIFICATIONS_ADMIN_EMAILADDRESS || defaultConfig.notifications.admin.emailAddress;
-defaultConfig.security.sessions.cookieName = process.env.API_SECURITY_SESSIONS_COOKIENAME || defaultConfig.security.sessions.cookieName;
-defaultConfig.security.sessions.onlySecure = process.env.API_SECURITY_SESSIONS_ONLYSECURE || defaultConfig.security.sessions.onlySecure;
 defaultConfig.authorization['jwt-secret'] = process.env.API_AUTHORIZATION_JWTSECRET || defaultConfig.authorization['jwt-secret'];
 defaultConfig.authorization['auth-server-url'] = process.env.AUTH_API_URL || defaultConfig.authorization['auth-server-url'];
 defaultConfig.authorization["auth-client-id"] = process.env.AUTH_FIRST_CLIENT_ID || defaultConfig.authorization["auth-client-id"];
