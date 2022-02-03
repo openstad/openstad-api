@@ -4,7 +4,7 @@ module.exports = {
   up: function() {
     try {
       return db.query(`
-        DROP TABLE externalSites;
+        DROP TABLE IF EXISTS externalSites;
 			`);
     } catch(e) {
       return true;
