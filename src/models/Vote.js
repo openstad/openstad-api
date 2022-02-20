@@ -71,10 +71,18 @@ module.exports = function( db, sequelize, DataTypes ) {
 					}],
 				};
 			},
+			withIdea: function() {
+				return {
+					include: [{
+						model      : db.Idea,
+						attributes : ['id', 'title', 'siteId', 'status', 'viewableByRole']
+					}]
+				}
+			},
 			includeUser: {
 				include: [{
 					model      : db.User,
-					attributes : ['role', 'nickName', 'firstName', 'lastName', 'email', 'zipCode']
+					attributes : ['role', 'displayName', 'nickName', 'firstName', 'lastName', 'email', 'zipCode']
 				}]
 			},
 		}
@@ -91,7 +99,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 						DATEDIFF(NOW(), v.updatedAt) > ${anonimizeThreshold} AND
 						checked != 0
 				`)
-			.spread(function( result, metaData ) {
+			.then(function([ result, metaData ]) {
 				return metaData;
 			});
 	}
@@ -108,10 +116,10 @@ module.exports = function( db, sequelize, DataTypes ) {
     listableBy: 'all',
     viewableBy: 'all',
     createableBy: 'member',
-    updateableBy: ['editor', 'owner'],
-    deleteableBy: ['editor', 'owner'],
+    updateableBy: ['moderator', 'owner'],
+    deleteableBy: ['moderator', 'owner'],
     canToggle: function(user, self) {
-      return userHasRole(user, 'editor', self.userId);
+      return userHasRole(user, 'moderator', self.userId);
     }
   }
 

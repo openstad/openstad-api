@@ -10,7 +10,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		ideaId: {
 			type         : DataTypes.INTEGER,
       auth: {
-        updateableBy : 'moderator',
+        updateableBy : 'editor',
       },
 			allowNull    : false
 		},
@@ -18,7 +18,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		userId: {
 			type         : DataTypes.INTEGER,
       auth: {
-        updateableBy : 'moderator',
+        updateableBy : 'editor',
       },
 			allowNull    : false,
 			defaultValue: 0,
@@ -131,7 +131,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultScope: {
 				include: [{
 					model      : db.User,
-					attributes : ['id', 'role', 'nickName', 'firstName', 'lastName', 'email']
+					attributes : ['id', 'role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
 				}]
 			},
 

@@ -1,4 +1,3 @@
-const Promise = require('bluebird');
 const Sequelize = require('sequelize');
 const express = require('express');
 const createError = require('http-errors');
@@ -15,11 +14,13 @@ const OAuthUser = require('../../services/oauth-user');
 
 const filterBody = (req, res, next) => {
   const data = {};
-  const keys = ['firstName', 'lastName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole'];
+  const keys = ['firstName', 'lastName', 'nickName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole'];
 
   keys.forEach((key) => {
-    if (req.body[key]) {
-      data[key] = req.body[key];
+    if (typeof req.body[key] != 'undefined') {
+      let value =  req.body[key];
+      value = typeof value === 'string' ? value.trim() : value;
+      data[key] = value;
     }
   });
 
@@ -151,6 +152,8 @@ router.route('/')
       })
       .then(found => {
         if (found) {
+          console.log('user already exists', found);
+
           throw new Error('User already exists');
         } else {
           next();
@@ -233,7 +236,26 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
       if (!ids) return next();
       if (!Array.isArray(ids)) ids = [ids];
       ids = ids.map(id => parseInt(id)).filter(id => typeof id == 'number');
-      if (ids.length) req.onlyIds = ids;
+      if (ids.length) req.onlyUserIds = ids;
+    } catch (err) {
+      return next(err);
+    }
+    return next();
+  })
+  .put(async function (req, res, next) {
+    // if body contains site ids then anonimize only the users for those sites
+    try {
+      let ids = req.body && req.body.onlySiteIds;
+      if (!ids) return next();
+      if (!Array.isArray(ids)) ids = [ids];
+      ids = ids.map(id => parseInt(id)).filter(id => typeof id == 'number');
+      if (ids.length) {
+        let users = [ req.targetUser, ...req.linkedUsers ];
+        let xx = ids.map( siteId => users.find(user => siteId == user.siteId) );
+        let userIds = ids.map( siteId => users.find(user => siteId == user.siteId) ).filter(user => !!user).map( user => user.id );
+        req.onlyUserIds = (req.onlyUserIds || []).concat(userIds);
+        req.onlyUserIds = req.onlyUserIds.filter((value, index, self) => self.indexOf(value) === index ); // filter duplication
+      }
     } catch (err) {
       return next(err);
     }
@@ -242,7 +264,7 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
   .put(async function (req, res, next) {
     let result;
     if (!(req.targetUser && req.targetUser.can && req.targetUser.can('update', req.user))) return next(new Error('You cannot update this User'));
-    if (req.onlyIds && !req.onlyIds.includes(req.targetUser.id)) {
+    if (req.onlyUserIds && !req.onlyUserIds.includes(req.targetUser.id)) {
       req.results = {
         "ideas": [],
         "articles": [],
@@ -274,7 +296,7 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
     if ( !(req.linkedUsers) ) return next();
     try {
       for (const user of req.linkedUsers) {
-        if (!req.onlyIds ||req.onlyIds.includes(user.id)) {
+        if (!req.onlyUserIds || req.onlyUserIds.includes(user.id)) {
           let result;
           if (!(user && user.can && user.can('update', req.user))) return next(new Error('You cannot update this User'));
           if (req.params.willOrDo == 'do') {
@@ -421,6 +443,7 @@ router.route('/:userId(\\d+)')
                     return new Promise((resolve, reject) => {
 
                       let userSiteConfig = merge(true, user.site.config, {id: user.site.id});
+
                       let clonedUserData = merge(true, mergedUserData);
                       let siteUserData = OAuthUser.parseDataForSite(userSiteConfig, clonedUserData);
 
@@ -514,68 +537,5 @@ router.route('/:userId(\\d+)')
       .catch(next);
 
   })
-
-// ----------------------------------------------------------------------------------------------------
-// tmp endpoint to create anonymous users
-
-// only available to admin
-router.route('/anonymous-user-for-stemvan-site')
-  .post(function (req, res, next) {
-    if (!( req.user && req.user.role == 'admin' )) return next(createError(401, 'User is no admin'));
-    return next()
-  })
-  .post(auth.can('User', 'create'))
-  .post(function (req, res, next) {
-    if (!req.site) return next(createError(401, 'Site niet gevonden'));
-    return next();
-  })
-  .post(function (req, res, next) {
-    let which = 'anonymous';
-    let siteConfig = req.site && req.site.config;
-    let userData = { postcode: req.body.postcode };
-    OAuthApi
-      .createUser({ siteConfig, which, userData })
-      .then(json => {
-        req.oAuthUser = json;
-        next()
-      })
-      .catch(next);
-  })
-  .post(function (req, res, next) {
-    const data = {
-      zipCode: req.body.postcode,
-      postcode: req.body.postcode,
-      siteId: req.site.id,
-      role: req.body.role ? req.body.role : 'anonymous',
-      externalUserId: req.oAuthUser.id
-    };
-    db.User
-      .authorizeData(data, 'create', req.user)
-      .create(data)
-      .then(result => {
-        return res.json(result);
-      })
-      .catch(function (error) {
-        // todo: dit komt uit de oude routes; maak het generieker
-        if (typeof error == 'object' && error instanceof Sequelize.ValidationError) {
-          let errors = [];
-
-          error.errors.forEach(function (error) {
-            errors.push(error.message);
-          });
-
-          res.status(422).json(errors);
-        } else {
-          next(error);
-        }
-      });
-  });
-
-// end tmp endpoint
-// ----------------------------------------------------------------------------------------------------
-
-
-
-
 
 module.exports = router;

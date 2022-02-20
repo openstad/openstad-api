@@ -1,3 +1,4 @@
+const Sequelize = require('sequelize');
 const merge = require('merge');
 const moment = require('moment');
 const OAuthApi = require('../services/oauth-api');
@@ -36,7 +37,7 @@ module.exports = function (db, sequelize, DataTypes) {
       set: function (value) {
         var currentconfig = this.getDataValue('config');
         value = value || {};
-        value = merge.recursive(currentconfig, value);
+        value = merge.recursive(true, currentconfig, value);
         this.setDataValue('config', this.parseConfig(value));
       },
       auth: {
@@ -82,10 +83,10 @@ module.exports = function (db, sequelize, DataTypes) {
             if (instance.config.projectHasEnded) {
               config.votes.isActive = false;
               config.ideas.canAddNewIdeas = false;
-              // config.articles.canAddNewArticles = false;
+              config.articles.canAddNewArticles = false;
               config.arguments.isClosed = true;
-              // config.polls.canAddPolls = false;
-              // config.users.canCreateNewUsers = false;
+              config.polls.canAddPolls = false;
+              config.users.canCreateNewUsers = false;
             } else {
               // commented: do not update these params on unsetting
               // config.votes.isActive = true;
@@ -113,6 +114,11 @@ module.exports = function (db, sequelize, DataTypes) {
 
       beforeUpdate: function (instance, options) {
         return beforeUpdateOrCreate(instance, options);
+      },
+
+      beforeDestroy: function (instance, options) {
+        if (!(instance && instance.config && instance.config.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
+        return 
       },
 
     },
@@ -207,6 +213,10 @@ module.exports = function (db, sequelize, DataTypes) {
           'after-login-redirect-uri': {
             type: 'string',
             default: '/oauth/login?jwt=[[jwt]]',
+          },
+          "redirectURI": {
+            type: 'string',
+            default: undefined,
           },
           "widgetDisplaySettings": {
             "type": "object",
@@ -437,7 +447,7 @@ module.exports = function (db, sequelize, DataTypes) {
               },
               showFields: {
                 type: 'arrayOfStrings', // eh...
-                default: ['zipCode', 'nickName'],
+                default: ['zipCode', 'displayName'],
               }
             }
           },
@@ -467,6 +477,10 @@ module.exports = function (db, sequelize, DataTypes) {
           canCreateNewUsers: {
             type: 'boolean',
             default: true,
+          },
+          allowUseOfNicknames: {
+            type: 'boolean',
+            default: false,
           },
         },
       },
@@ -692,6 +706,11 @@ module.exports = function (db, sequelize, DataTypes) {
         default: []
       },
 
+      projectHasEnded: {
+        type: 'boolean',
+        default: false,
+      },
+
     }
   }
 
@@ -814,7 +833,7 @@ module.exports = function (db, sequelize, DataTypes) {
       if (!self.id) throw Error('Site not found');
       if (!self.config.projectHasEnded) throw Error('Cannot anonymize users on an active site - first set the project-has-ended parameter');
 
-      let users = await db.User.findAll({ where: { siteId: self.id } });
+      let users = await db.User.findAll({ where: { siteId: self.id, externalUserId: { [Sequelize.Op.ne]: null } } });
 
       // do not anonymize admins
       result.admins = users.filter( user => userHasRole(user, 'admin') );
@@ -848,6 +867,7 @@ module.exports = function (db, sequelize, DataTypes) {
       for (const user of users) {
         user.site = self;
         let res = await user.doAnonymize();
+        user.site = null;
       }
 
     } catch (err) {

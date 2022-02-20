@@ -1,4 +1,3 @@
-const Promise 				= require('bluebird');
 const express 				= require('express');
 const config 					= require('config');
 const fetch           = require('node-fetch');
@@ -27,7 +26,7 @@ const refreshSiteConfigMw = function (req, res, next) {
 	/*
 		@todo The /modules/openstad-api/refresh is cleaner, doesn't require a restart
 		but needs basichAuth headers in case a site is password protected
-	 */
+	*/
 	return fetch(cmsUrl + '/config-reset')
 		.then(function () { 	next();  })
 		.catch(function (err) { console.log('errrr', err); next();	});
@@ -145,8 +144,8 @@ router.route('/:siteIdOrDomain') //(\\d+)
 			});
 	})
 
-	// update certain parts of config to the oauth client
-	// mainly styling settings are synched so in line with the CMS
+// update certain parts of config to the oauth client
+// mainly styling settings are synched so in line with the CMS
 	.put(function (req, res, next) {
 
     // todo: gebruik de oauth-api service
@@ -161,29 +160,29 @@ router.route('/:siteIdOrDomain') //(\\d+)
       // todo: specifieker selecteren van sync velden (user.canCreateNewUsers)
       // todo: ik denk dat dit in het model moet    
 
-			 oauthClient.config = oauthClient.config ? oauthClient.config : {};
+			oauthClient.config = oauthClient.config ? oauthClient.config : {};
 
-			 configKeysToSync.forEach(field => {
-				 oauthClient.config[field] = req.site.config[field];
-			 });
-       oauthClient.config['users'] = { canCreateNewUsers: req.site.config.users.canCreateNewUsers }
+			configKeysToSync.forEach(field => {
+				oauthClient.config[field] = req.site.config[field];
+			});
+      oauthClient.config['users'] = { canCreateNewUsers: req.site.config.users.canCreateNewUsers }
 
 
       const apiCredentials = {
-				 client_id: oauthClient.clientId,
-				 client_secret: oauthClient.clientSecret,
-			 }
+				client_id: oauthClient.clientId,
+				client_secret: oauthClient.clientSecret,
+			}
 
-			 const options = {
-				 method: 'post',
-				 headers: {
-					 'Content-Type': 'application/json',
-				 },
-				 mode: 'cors',
-				 body: JSON.stringify(Object.assign(apiCredentials, oauthClient))
-			 }
+			const options = {
+				method: 'post',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				mode: 'cors',
+				body: JSON.stringify(Object.assign(apiCredentials, oauthClient))
+			}
 
-			 updates.push(fetch(authUpdateUrl, options));
+			updates.push(fetch(authUpdateUrl, options));
 		});
 
 		Promise.all(updates)
@@ -195,12 +194,17 @@ router.route('/:siteIdOrDomain') //(\\d+)
 				next(e)
 			});
 	})
-  // call the site, to let the site know a refresh of the siteConfig is needed
-	.put(refreshSiteConfigMw)
+// call the site, to let the site know a refresh of the siteConfig is needed
 	.put(function (req, res, next) {
 		// when succesfull return site JSON
 		res.json(req.results);
+    next();
 	})
+	.put(refreshSiteConfigMw) // after response; no need to wait for this
+	.put(function (req, res, next) {
+    // the end
+	})
+
 // delete site
 // ---------
 	.delete(auth.can('Site', 'delete'))

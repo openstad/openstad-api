@@ -16,7 +16,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		parentId: {
 			type         : DataTypes.INTEGER,
       auth: {
-        updateableBy : 'moderator',
+        updateableBy : 'editor',
       },
 			allowNull    : true
 		},
@@ -24,7 +24,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		ideaId: {
 			type         : DataTypes.INTEGER,
       auth: {
-        updateableBy : 'moderator',
+        updateableBy : 'editor',
       },
 			allowNull    : false
 		},
@@ -32,7 +32,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		userId: {
 			type         : DataTypes.INTEGER,
       auth: {
-        updateableBy : 'moderator',
+        updateableBy : 'editor',
       },
 			allowNull    : false,
 			defaultValue: 0,
@@ -166,7 +166,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultScope: {
 				include: [{
 					model      : db.User,
-					attributes : ['id', 'role', 'nickName', 'firstName', 'lastName', 'email']
+					attributes : ['id', 'role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
 				}]
 			},
 
@@ -204,7 +204,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 				return {
 					include: [{
 						model      : db.Idea,
-						attributes : ['id', 'title', 'status', 'viewableByRole']
+						attributes : ['id', 'siteId', 'title', 'status', 'viewableByRole']
 					}]
 				}
 			},

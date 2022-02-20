@@ -34,7 +34,7 @@ let defaultConfig = {
 			"./routes/dev",
 			{ "route": "/api", "router": "./routes/api" },
 			{ "route": "/oauth", "router": "./routes/oauth" },
-            { "route": "/stats", "router": "./routes/stats" },
+      { "route": "/stats", "router": "./routes/stats" },
 			{ "route": "/", "router": "./routes/doc" }
 		]
 	},
@@ -325,6 +325,7 @@ defaultConfig.authorization['jwt-secret'] = process.env.API_AUTHORIZATION_JWTSEC
 defaultConfig.authorization['auth-server-url'] = process.env.AUTH_API_URL || defaultConfig.authorization['auth-server-url'];
 defaultConfig.authorization["auth-client-id"] = process.env.AUTH_FIRST_CLIENT_ID || defaultConfig.authorization["auth-client-id"];
 defaultConfig.authorization["auth-client-secret"] = process.env.AUTH_FIRST_CLIENT_SECRET || defaultConfig.authorization["auth-client-secret"];
+defaultConfig.templateSource = process.env.TEMPLATE_SOURCE || 'https://cdn.jsdelivr.net/gh/Amsterdam/openstad-ecosystem-templates/site/index.json';
 
 try {
   defaultConfig.authorization['fixed-auth-tokens'] = JSON.parse(process.env.API_AUTHORIZATION_FIXEDAUTHTOKENS) || defaultConfig.authorization['fixed-auth-tokens'];

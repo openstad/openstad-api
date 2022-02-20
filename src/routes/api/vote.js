@@ -1,4 +1,3 @@
-const Promise     = require('bluebird');
 const express     = require('express');
 const createError = require('http-errors')
 const db          = require('../../db');
@@ -40,7 +39,7 @@ router.route('*')
 	.all(function(req, res, next) {
 		if (req.method == 'GET') return next(); // nvt
 
-		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');
+		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');  // TODO: er staat een functie bovenin deze file; waarom gerbuik je die niet?
 
 		if (!req.user) {
 			return next(createError(401, 'Geen gebruiker gevonden'));
@@ -78,7 +77,7 @@ router.route('/')
 
 // mag je de stemmen bekijken
 	.get(function(req, res, next) {
-		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');
+		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');  // TODO: er staat een functie bovenin deze file; waarom gerbuik je die niet?
 
 		if (!(req.site.config.votes.isViewable || hasModeratorRights)) {
 			return next(createError(403, 'Stemmen zijn niet zichtbaar'));
@@ -144,7 +143,6 @@ router.route('/')
 			let vote = {
 				id: entry.id,
 				ideaId: entry.ideaId,
-				userId: entry.userId,
 				confirmed: entry.confirmed,
 				opinion: entry.opinion,
 				createdAt: entry.createdAt
@@ -155,6 +153,7 @@ router.route('/')
 				vote.createdAt = entry.createdAt;
 				vote.checked =  entry.checked;
 				vote.user = entry.user;
+				vote.userId = entry.userId;
 			}
       records[i] = vote
 		});
@@ -399,20 +398,24 @@ router.route('/*')
 
 		}
 
-		Promise
-			.map(actions, function(action) {
+    let promises = [];
+    actions.map(action => {
 				switch(action.action) {
 					case 'create':
-						return db.Vote.create( action.vote ) // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
+						promises.push(db.Vote.create( action.vote )); // HACK: `upsert` on paranoid deleted row doesn't unset `deletedAt`.
 						break;
 					case 'update':
-						return db.Vote.update(action.vote, { where: { id: action.vote.id } });
+						promises.push(db.Vote.update(action.vote, { where: { id: action.vote.id } }));
 						break;
 					case 'delete':
-						return db.Vote.destroy({ where: { id: action.vote.id } });
+						promises.push(db.Vote.destroy({ where: { id: action.vote.id } }));
 						break;
 				}
-			}).then(
+    });
+
+		Promise
+			.all(promises)
+      .then(
 				result => {
 					req.result = result;
 					return next();
