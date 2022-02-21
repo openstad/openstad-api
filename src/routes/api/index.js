@@ -41,6 +41,9 @@ router.use( '/site/:siteId(\\d+)/user/:userId(\\d+)/activity', require('./user-a
 // submissions
 router.use( '/site/:siteId(\\d+)/submission', require('./submission') );
 
+// notification
+router.use( '/site/:siteId(\\d+)/notification', require('./notification') );
+
 // vote
 router.use( '/site/:siteId(\\d+)/vote', require('./vote') );
 

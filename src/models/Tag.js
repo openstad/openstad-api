@@ -20,7 +20,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			}
 		},
 
-		tagsExtraData: getExtraDataConfig(DataTypes.JSON, 'tags')
+		extraData: getExtraDataConfig(DataTypes.JSON, 'tags')
 	}, {
 
 		hooks: {
