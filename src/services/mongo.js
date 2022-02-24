@@ -7,21 +7,21 @@ const url = 'mongodb://' + host + ':' + port;
 
 exports.copyMongoDb = (oldDbName, newDbName) => {
   return new Promise((resolve, reject) => {
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(url, function (err, db) {
       if (err) {
         reject(err);
       } else {
         var mongoCommand = {
           copydb: 1,
-          fromhost: "localhost",
+          fromhost: 'localhost',
           fromdb: oldDbName,
-          todb: newDbName
+          todb: newDbName,
         };
         var admin = db.admin();
 
-        admin.command(mongoCommand, function(commandErr, data) {
+        admin.command(mongoCommand, function (commandErr, data) {
           if (!commandErr) {
-            resolve(data)
+            resolve(data);
           } else {
             reject(commandErr.errmsg);
           }
@@ -30,10 +30,9 @@ exports.copyMongoDb = (oldDbName, newDbName) => {
       }
     });
   });
-}
+};
 
-exports.dbExists = (dbName) => {
-
+exports.dbExists = dbName => {
   return new Promise((resolve, reject) => {
     MongoClient.connect(url, (err, db) => {
       if (err) {
@@ -42,21 +41,20 @@ exports.dbExists = (dbName) => {
         var adminDb = db.admin();
 
         // List all the available databases
-        adminDb.listDatabases(function(err, dbs) {
-          const found = dbs.databases.find((dbObject) => {
+        adminDb.listDatabases(function (err, dbs) {
+          const found = dbs.databases.find(dbObject => {
             return dbName === dbObject.name;
           });
 
           db.close();
-          resolve(!!found)
+          resolve(!!found);
         });
       }
     });
   });
-}
+};
 
-exports.deleteDb = (dbName) => {
-
+exports.deleteDb = dbName => {
   return new Promise((resolve, reject) => {
     MongoClient.connect(url, (err, db) => {
       if (err) {
@@ -66,12 +64,12 @@ exports.deleteDb = (dbName) => {
 
         new mongodb.Db(dbName, MongoServer, {}).open(function (error, client) {
           console.log('---> err', error);
-            if(error) callback(error);
-            // drop the database
-            client.dropDatabase(function(err, result) {
-                if(err) callback(err);
-                client.close();
-            });
+          if (error) callback(error);
+          // drop the database
+          client.dropDatabase(function (err, result) {
+            if (err) callback(err);
+            client.close();
+          });
         });
 
         db.close();
@@ -79,4 +77,4 @@ exports.deleteDb = (dbName) => {
       }
     });
   });
-}
+};

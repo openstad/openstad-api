@@ -27,25 +27,25 @@ const fuzzysort = require('fuzzysort');
  * @param next
  * @returns {*}
  */
-module.exports = function( req, res, next ) {
+module.exports = function (req, res, next) {
   let { dbQuery } = req;
   let { search } = dbQuery;
 
   if (search) {
     let list = req.results;
 
-    if ( !Array.isArray(search) ) search = [ search ];
+    if (!Array.isArray(search)) search = [search];
 
     let results = [];
-    search.forEach((searchObject) => {
+    search.forEach(searchObject => {
       let searchResult = fuzzysort.go(searchObject.needle, list, {
         threshold: req.threshold || -300,
         keys: searchObject.haystack,
       });
 
-      searchResult.forEach((result) => {
-        results.push( result.obj );
-      })
+      searchResult.forEach(result => {
+        results.push(result.obj);
+      });
     });
 
     req.results = results.slice(search.offset, search.limit);
@@ -53,7 +53,7 @@ module.exports = function( req, res, next ) {
     return next();
   }
   next();
-}
+};
 // mergen van de resultaten
 // TODO: dit is heel dom en bot en (dus) traag; denk er eens echt over na
 // let merged = [];

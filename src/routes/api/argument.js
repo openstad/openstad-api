@@ -8,7 +8,7 @@ const router = require('express-promise-router')({ mergeParams: true });
 
 // scopes: for all get requests
 router
-  .all('*', function(req, res, next) {
+  .all('*', function (req, res, next) {
     req.scope = ['defaultScope', 'withIdea'];
     req.scope.push({ method: ['forSiteId', req.params.siteId] });
 
@@ -26,22 +26,20 @@ router
     }
 
     return next();
-
   })
-  .all('*', function(req, res, next) {
+  .all('*', function (req, res, next) {
     // zoek het idee
     // todo: ik denk momenteel alleen nog gebruikt door create; dus zet hem daar neer
     let ideaId = parseInt(req.params.ideaId) || 0;
     if (!ideaId) return next();
-    db.Idea.findByPk(ideaId)
-      .then(idea => {
-        if (!idea || idea.siteId != req.params.siteId) return next(createError(400, 'Idea not found'));
-        req.idea = idea;
-        return next();
-      });
+    db.Idea.findByPk(ideaId).then(idea => {
+      if (!idea || idea.siteId != req.params.siteId)
+        return next(createError(400, 'Idea not found'));
+      req.idea = idea;
+      return next();
+    });
   })
-  .all('/:argumentId(\\d+)(/vote)?', function(req, res, next) {
-
+  .all('/:argumentId(\\d+)(/vote)?', function (req, res, next) {
     // with one existing argument
     // --------------------------
 
@@ -54,8 +52,7 @@ router
       where.sentiment = sentiment;
     }
 
-    db.Argument
-      .scope(...req.scope)
+    db.Argument.scope(...req.scope)
       .findOne({
         where,
       })
@@ -65,16 +62,16 @@ router
         return next();
       })
       .catch(next);
-
   });
 
-router.route('/')
+router
+  .route('/')
 
   // list arguments
   // --------------
   .get(auth.can('Argument', 'list'))
   .get(pagination.init)
-  .get(function(req, res, next) {
+  .get(function (req, res, next) {
     let { dbQuery } = req;
 
     let ideaId = parseInt(req.params.ideaId) || 0;
@@ -87,26 +84,22 @@ router.route('/')
       where.sentiment = sentiment;
     }
 
-    return db.Argument
-      .scope(...req.scope)
-      .findAndCountAll(
-        {
-          where,
-          ...dbQuery,
-        },
-      )
-      .then(function(result) {
+    return db.Argument.scope(...req.scope)
+      .findAndCountAll({
+        where,
+        ...dbQuery,
+      })
+      .then(function (result) {
         req.results = result.rows;
         req.dbQuery.count = result.count;
         return next();
       })
       .catch(next);
-
   })
   .get(auth.useReqUser)
   .get(searchResults)
   .get(pagination.paginateResults)
-  .get(function(req, res, next) {
+  .get(function (req, res, next) {
     res.json(req.results);
   })
 
@@ -114,76 +107,74 @@ router.route('/')
   // ---------------
   .post(auth.can('Argument', 'create'))
   .post(auth.useReqUser)
-  .post(function(req, res, next) {
-
+  .post(function (req, res, next) {
     if (!req.idea) return next(createError(400, 'Inzending niet gevonden'));
     // todo: dit moet een can functie worden
-    if (req.user.role != 'admin' && req.idea.status != 'OPEN') return next(createError(400, 'Reactie toevoegen is niet mogelijk bij planen met status: ' + req.idea.status));
+    if (req.user.role != 'admin' && req.idea.status != 'OPEN')
+      return next(
+        createError(
+          400,
+          'Reactie toevoegen is niet mogelijk bij planen met status: ' +
+            req.idea.status
+        )
+      );
     next();
   })
-  .post(function(req, res, next) {
+  .post(function (req, res, next) {
     if (!req.body.parentId) return next();
-    db.Argument
-      .scope(
-        'defaultScope',
-        'withIdea',
-      )
+    db.Argument.scope('defaultScope', 'withIdea')
       .findByPk(req.body.parentId)
-      .then(function(argument) {
-        if (!(argument && argument.can && argument.can('reply', req.user))) return next(new Error('You cannot reply to this argument'));
+      .then(function (argument) {
+        if (!(argument && argument.can && argument.can('reply', req.user)))
+          return next(new Error('You cannot reply to this argument'));
         return next();
       });
   })
-  .post(function(req, res, next) {
-
+  .post(function (req, res, next) {
     let userId = req.user.id;
     if (req.user.role == 'admin' && req.body.userId) userId = req.body.userId;
-    
+
     let data = {
       ...req.body,
       ideaId: req.params.ideaId,
       userId,
     };
 
-
-    db.Argument
-      .authorizeData(data, 'create', req.user)
+    db.Argument.authorizeData(data, 'create', req.user)
       .create(data)
       .then(result => {
-
-        db.Argument
-          .scope(
-            'defaultScope',
-            'withIdea',
-            { method: ['withVoteCount', 'argument'] },
-            { method: ['withUserVote', 'argument', req.user.id] },
-          )
+        db.Argument.scope(
+          'defaultScope',
+          'withIdea',
+          { method: ['withVoteCount', 'argument'] },
+          { method: ['withUserVote', 'argument', req.user.id] }
+        )
           .findByPk(result.id)
-          .then(function(argument) {
+          .then(function (argument) {
             res.json(argument);
           });
-
       })
       .catch(next);
-
   });
 
-router.route('/:argumentId(\\d+)')
+router
+  .route('/:argumentId(\\d+)')
 
   // view argument
   // -------------
   .get(auth.can('Argument', 'view'))
   .get(auth.useReqUser)
-  .get(function(req, res, next) {
+  .get(function (req, res, next) {
     res.json(req.results);
   })
 
   // update argument
   // ---------------
   .put(auth.useReqUser)
-  .put(function(req, res, next) {
+  .put(function (req, res, next) {
     var argument = req.results;
-    if (!(argument && argument.can && argument.can('update'))) return next(new Error('You cannot update this argument'));
+    if (!(argument && argument.can && argument.can('update')))
+      return next(new Error('You cannot update this argument'));
     argument
       .authorizeData(req.body, 'update')
       .update(req.body)
@@ -196,51 +187,52 @@ router.route('/:argumentId(\\d+)')
   // delete argument
   // --------------
   .delete(auth.useReqUser)
-  .delete(function(req, res, next) {
+  .delete(function (req, res, next) {
     const argument = req.results;
-    if (!( argument && argument.can && argument.can('delete') )) return next( new Error('You cannot delete this argument') );
+    if (!(argument && argument.can && argument.can('delete')))
+      return next(new Error('You cannot delete this argument'));
 
     argument
       .destroy()
       .then(() => {
-        res.json({ 'argument': 'deleted' });
+        res.json({ argument: 'deleted' });
       })
       .catch(next);
   });
 
-router.route('/:argumentId(\\d+)/vote')
+router
+  .route('/:argumentId(\\d+)/vote')
 
   // vote for argument
   // -----------------
 
   .post(auth.useReqUser)
-  .post(function(req, res, next) {
+  .post(function (req, res, next) {
     var user = req.user;
     var argument = req.results;
     var opinion = 'yes'; // todo
 
-    if (!(argument && argument.can && argument.can('vote'))) return next(new Error('You cannot vote for this argument'));
+    if (!(argument && argument.can && argument.can('vote')))
+      return next(new Error('You cannot vote for this argument'));
 
-    argument.addUserVote(user, opinion, req.ip)
-      .then(function(voteRemoved) {
-
-        db.Argument
-          .scope(
-            'defaultScope',
-            'withIdea',
-            { method: ['withVoteCount', 'argument'] },
-            { method: ['withUserVote', 'argument', req.user.id] },
-          )
+    argument
+      .addUserVote(user, opinion, req.ip)
+      .then(function (voteRemoved) {
+        db.Argument.scope(
+          'defaultScope',
+          'withIdea',
+          { method: ['withVoteCount', 'argument'] },
+          { method: ['withUserVote', 'argument', req.user.id] }
+        )
           .findByPk(argument.id)
-          .then(function(argument) {
+          .then(function (argument) {
             req.results = argument;
             return next();
           });
-
       })
       .catch(next);
   })
-  .post(function(req, res, next) {
+  .post(function (req, res, next) {
     res.json(req.results);
   });
 

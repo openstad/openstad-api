@@ -1,26 +1,30 @@
 module.exports = (db, sequelize, DataTypes) => {
-  const NotificationRecipient = sequelize.define('notification_recipients', {
-    notificationRulesetId: {
-      type: DataTypes.INTEGER,
-      auth:  {
-        updateableBy: 'editor',
+  const NotificationRecipient = sequelize.define(
+    'notification_recipients',
+    {
+      notificationRulesetId: {
+        type: DataTypes.INTEGER,
+        auth: {
+          updateableBy: 'editor',
+        },
+        allowNull: false,
+        defaultValue: 0,
       },
-      allowNull: false,
-      defaultValue: 0,
+      emailType: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: false,
+      },
+      value: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: false,
+      },
     },
-    emailType: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: false,
-    },
-    value: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: false,
-    },
-  }, {});
+    {}
+  );
 
-  NotificationRecipient.associate = function(models) {
+  NotificationRecipient.associate = function (models) {
     NotificationRecipient.belongsTo(models.NotificationRuleSet);
   };
 

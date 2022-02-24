@@ -19,6 +19,7 @@
     "sonarjs/no-identical-expressions": "warn",
     "sonarjs/no-duplicate-string": "warn",
     "sonarjs/no-identical-functions": "warn",
+    "sonarjs/no-collapsible-if": "warn",
     "sonarjs/prefer-immediate-return": "warn"
   }
 }

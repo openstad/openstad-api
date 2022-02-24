@@ -1,4 +1,4 @@
-var log           = require('debug')('app:cron');
+var log = require('debug')('app:cron');
 var notifications = require('../notifications');
 const db = require('../db');
 
@@ -6,15 +6,15 @@ const db = require('../db');
 // Run actions
 //
 module.exports = {
-    cronTime: '*/1  * * * *',
-    //cronTime: '*/5  * * * *',
-    //cronTime: '*/10 * * * *',
-    runOnInit: false,
-    onTick: async () => {
-        try {
-            await db.Action.run();
-        } catch (e) {
-            console.log('Error in actions crons: ', e)
-        }
+  cronTime: '*/1  * * * *',
+  //cronTime: '*/5  * * * *',
+  //cronTime: '*/10 * * * *',
+  runOnInit: false,
+  onTick: async () => {
+    try {
+      await db.Action.run();
+    } catch (e) {
+      console.log('Error in actions crons: ', e);
     }
+  },
 };

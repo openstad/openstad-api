@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const fs = require('fs'); // Needed for example below
 const mysqldump = require('mysqldump');
-const moment = require('moment')
+const moment = require('moment');
 const log = require('debug')('app:cron');
 const db = require('../db');
 
@@ -11,54 +11,53 @@ const db = require('../db');
 //
 // Runs every night at 1:00.
 const backupMysqlToS3 = async () => {
-  const dbsToBackup = process.env.S3_DBS_TO_BACKUP ? process.env.S3_DBS_TO_BACKUP.split(',') : false;
+  const dbsToBackup = process.env.S3_DBS_TO_BACKUP
+    ? process.env.S3_DBS_TO_BACKUP.split(',')
+    : false;
 
   if (dbsToBackup) {
-    dbsToBackup.forEach(async function(dbName) {
+    dbsToBackup.forEach(async function (dbName) {
       // return the dump from the function and not to a file
 
       const result = await mysqldump({
-          connection: {
-              host: process.env.API_DATABASE_HOST,
-              user: process.env.API_DATABASE_USER,
-              password: process.env.API_DATABASE_PASSWORD,
-              database: dbName.trim(),
-          },
-          // Exclude areas for now
-          // Mysql dump fails on geo polygons field
-          dump : {
-            tables: ['areas'],
-            excludeTables: true
-          }
+        connection: {
+          host: process.env.API_DATABASE_HOST,
+          user: process.env.API_DATABASE_USER,
+          password: process.env.API_DATABASE_PASSWORD,
+          database: dbName.trim(),
+        },
+        // Exclude areas for now
+        // Mysql dump fails on geo polygons field
+        dump: {
+          tables: ['areas'],
+          excludeTables: true,
+        },
       });
 
       const spacesEndpoint = new AWS.Endpoint(process.env.S3_ENDPOINT);
 
-      const created = moment().format('YYYY-MM-DD hh:mm:ss')
+      const created = moment().format('YYYY-MM-DD hh:mm:ss');
 
       const s3 = new AWS.S3({
-          endpoint: spacesEndpoint,
-          accessKeyId: process.env.S3_KEY,
-          secretAccessKey: process.env.S3_SECRET
+        endpoint: spacesEndpoint,
+        accessKeyId: process.env.S3_KEY,
+        secretAccessKey: process.env.S3_SECRET,
       });
 
       var params = {
-          Bucket: process.env.S3_BUCKET,
-          Key: 'mysql/' + dbName + '_' + created + ".sql",
-          Body: result.dump.data,
-          ACL: "private"
+        Bucket: process.env.S3_BUCKET,
+        Key: 'mysql/' + dbName + '_' + created + '.sql',
+        Body: result.dump.data,
+        ACL: 'private',
       };
 
-      s3.putObject(params, function(err, data) {
-          if (err) console.log(err, err.stack);
-          else     console.log(data);
+      s3.putObject(params, function (err, data) {
+        if (err) console.log(err, err.stack);
+        else console.log(data);
       });
-
     });
-
   }
-}
-
+};
 
 /*
   ENV values needed:
@@ -73,9 +72,9 @@ const backupMysqlToS3 = async () => {
   S3_MYSQL_BUCKET
  */
 module.exports = {
-	cronTime: '0 0 1 * * *',
-	runOnInit: false,
-	onTick: async function() {
+  cronTime: '0 0 1 * * *',
+  runOnInit: false,
+  onTick: async function () {
     backupMysqlToS3();
-	}
+  },
 };

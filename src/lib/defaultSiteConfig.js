@@ -1,59 +1,59 @@
 module.exports = {
   title: '',
-  cms:   {
-    url:      '',
+  cms: {
+    url: '',
     hostname: '',
   },
   ideas: {
     feedbackEmail: {
-      from:          '',
-      subject:       '',
+      from: '',
+      subject: '',
       inzendingPath: '',
-      template:      '',
-      attachments:   []
-    }
+      template: '',
+      attachments: [],
+    },
   },
   articles: {
     feedbackEmail: {
-      from:          '',
-      subject:       '',
+      from: '',
+      subject: '',
       inzendingPath: '',
-      template:      '',
-      attachments:   []
-    }
+      template: '',
+      attachments: [],
+    },
   },
-  mail:  {
-    method:    '',
+  mail: {
+    method: '',
     transport: {
       smtp: {
-        pool:       '',
-        direct:     '',
-        port:       '',
-        host:       '',
+        pool: '',
+        direct: '',
+        port: '',
+        host: '',
         requireSSL: true,
-        name:       '',
-        auth:       {
+        name: '',
+        auth: {
           user: '',
-          pass: ''
-        }
-      }
+          pass: '',
+        },
+      },
     },
-    sendgrid:  {
+    sendgrid: {
       auth: {
         api_user: '',
-        api_key:  '',
-      }
-    }
+        api_key: '',
+      },
+    },
   },
   newslettersignup: {
     confirmationEmail: {
       subject: '',
       url: '',
       template: '',
-      attachments: []
-    }
+      attachments: [],
+    },
   },
   styling: {
-    logo: ''
-  }
+    logo: '',
+  },
 };

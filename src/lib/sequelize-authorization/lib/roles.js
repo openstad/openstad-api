@@ -6,8 +6,8 @@ let roles = {
   moderator: ['moderator', 'member', 'anonymous', 'all'],
   member: ['member', 'anonymous', 'all'],
   anonymous: ['anonymous', 'all'],
-  all: ['all'],   // special
+  all: ['all'], // special
   owner: null, // special
-}
+};
 
 module.exports = roles;
