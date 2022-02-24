@@ -1,25 +1,24 @@
 const fs = require('fs');
 const express = require('express');
 const createError = require('http-errors');
-const marked  = require('marked');
+const marked = require('marked');
 
 marked.setOptions({
   renderer: new marked.Renderer(),
   breaks: true,
 });
 
-let router = express.Router({mergeParams: true});
+let router = express.Router({ mergeParams: true });
 
-router.route('^/$|^/doc/:which$')
-	.get(function(req, res, next) {
-		let which = req.params.which || 'index'
-		if (!fs.existsSync(`doc/${which}.md`)) {
-			return next(createError(404, 'File not found'))
-		}
-		let readme = fs.readFileSync(`doc/${which}.md`).toString();
-		let html = marked.parse( readme );
-    res.header('Content-Type', 'text/html');
-		res.send(`<!DOCTYPE html>
+router.route('^/$|^/doc/:which$').get(function (req, res, next) {
+  let which = req.params.which || 'index';
+  if (!fs.existsSync(`doc/${which}.md`)) {
+    return next(createError(404, 'File not found'));
+  }
+  let readme = fs.readFileSync(`doc/${which}.md`).toString();
+  let html = marked.parse(readme);
+  res.header('Content-Type', 'text/html');
+  res.send(`<!DOCTYPE html>
 <html lang="nl">
 	<head>
 		<style>
@@ -729,7 +728,7 @@ router.route('^/$|^/doc/:which$')
 		${html}
 	</body>
 </html>
-`)
-	})
+`);
+});
 
 module.exports = router;

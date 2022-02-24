@@ -1,5 +1,5 @@
 const jsonLogic = require('json-logic-js');
-const notificationService = require('./notificationService')
+const notificationService = require('./notificationService');
 
 /**
  * Publish an event
@@ -11,29 +11,34 @@ const notificationService = require('./notificationService')
  * @returns {Promise<void>}
  */
 const publish = async (notificationRuleSet, siteId, ruleSetData) => {
-
-  console.log('Publish event called: ', ruleSetData.resource, ruleSetData.eventType);
+  console.log(
+    'Publish event called: ',
+    ruleSetData.resource,
+    ruleSetData.eventType
+  );
 
   const ruleSets = await notificationRuleSet
     .scope('includeTemplate', 'includeRecipients')
-    .findAll({where: { siteId, active: 1}})
+    .findAll({ where: { siteId, active: 1 } });
 
-  ruleSets.forEach((ruleset) => {
+  ruleSets.forEach(ruleset => {
     if (jsonLogic.apply(ruleset.body, ruleSetData) === false) {
       console.log('ruleset doesnt match', ruleset.id, ruleset.body);
       return false;
     }
-    console.log('Matched ruleset', ruleSetData.resource, ruleSetData.eventType)
+    console.log('Matched ruleset', ruleSetData.resource, ruleSetData.eventType);
     const { notification_template, notification_recipients } = ruleset;
 
     const recipients = notification_recipients.map(recipient => {
-      const user = {}
+      const user = {};
       if (recipient.emailType === 'field') {
         // get email field from resource instance, can be dot separated (e.g. submittedData.email)
-        user.email = recipient.value.split('.').reduce((o,i)=>o[i], ruleSetData.instance)
+        user.email = recipient.value
+          .split('.')
+          .reduce((o, i) => o[i], ruleSetData.instance);
       }
       if (recipient.emailType === 'fixed') {
-        user.email = recipient.value
+        user.email = recipient.value;
       }
 
       return user;
@@ -47,19 +52,19 @@ const publish = async (notificationRuleSet, siteId, ruleSetData) => {
       subject: notification_template.subject,
       text: notification_template.text,
       template: notification_template.templateFile,
-      ...ruleSetData.instance.get()
-    }
+      ...ruleSetData.instance.get(),
+    };
 
     // Todo: instead of directly notify we should use a decent queue
     recipients
       .filter(recipient => recipient.email)
       .forEach(recipient => {
         console.log('Notify recipient', recipient.email);
-        notificationService.notify(emailData, recipient, siteId)
+        notificationService.notify(emailData, recipient, siteId);
       });
   });
-}
+};
 
 module.exports = {
-  publish
-}
+  publish,
+};

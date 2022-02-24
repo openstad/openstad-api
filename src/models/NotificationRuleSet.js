@@ -1,57 +1,61 @@
 module.exports = (db, sequelize, DataTypes) => {
-  const NotificationRuleSet = sequelize.define('notification_rulesets', {
-    notificationTemplateId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-    },
-    siteId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-    },
-    active: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-    },
-    label: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: false,
-    },
-    body: {
-      type: DataTypes.JSON,
-      allowNull: false,
-      unique: false,
-      defaultValue: '{}',
-      get: function() {
-        const value = this.getDataValue('body');
-        try {
-          if (typeof value === 'string') {
-            return JSON.parse(value);
-          }
-        } catch (err) {
-          console.error('Invalid JSON NotificationRuleSet.body')
-          console.error(err)
-        }
-        return value;
+  const NotificationRuleSet = sequelize.define(
+    'notification_rulesets',
+    {
+      notificationTemplateId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
       },
-      set: function(value) {
-        try {
-          if (typeof value === 'string') {
-            value = JSON.parse(value);
+      siteId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      active: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      label: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: false,
+      },
+      body: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        unique: false,
+        defaultValue: '{}',
+        get: function () {
+          const value = this.getDataValue('body');
+          try {
+            if (typeof value === 'string') {
+              return JSON.parse(value);
+            }
+          } catch (err) {
+            console.error('Invalid JSON NotificationRuleSet.body');
+            console.error(err);
           }
-        } catch (err) {
-          console.error('Invalid JSON NotificationRuleSet.body')
-          console.error(err)
-        }
-        this.setDataValue('body', JSON.stringify(value));
-      }
+          return value;
+        },
+        set: function (value) {
+          try {
+            if (typeof value === 'string') {
+              value = JSON.parse(value);
+            }
+          } catch (err) {
+            console.error('Invalid JSON NotificationRuleSet.body');
+            console.error(err);
+          }
+          this.setDataValue('body', JSON.stringify(value));
+        },
+      },
     },
-  }, {});
+    {}
+  );
 
-  NotificationRuleSet.associate = function(models) {
+  NotificationRuleSet.associate = function (models) {
     NotificationRuleSet.belongsTo(models.NotificationTemplate);
     NotificationRuleSet.hasMany(models.NotificationRecipient);
   };
@@ -60,27 +64,35 @@ module.exports = (db, sequelize, DataTypes) => {
     return {
       // defaults
       default: {
-        include: [{
-          model: db.Site,
-        }]
+        include: [
+          {
+            model: db.Site,
+          },
+        ],
       },
       includeSite: {
-        include : [{
-          model: db.Site,
-        }]
+        include: [
+          {
+            model: db.Site,
+          },
+        ],
       },
       includeTemplate: {
-        include : [{
-          model: db.NotificationTemplate,
-        }]
+        include: [
+          {
+            model: db.NotificationTemplate,
+          },
+        ],
       },
       includeRecipients: {
-        include : [{
-          model: db.NotificationRecipient,
-        }]
+        include: [
+          {
+            model: db.NotificationRecipient,
+          },
+        ],
       },
-    }
-  }
+    };
+  };
 
   NotificationRuleSet.auth = NotificationRuleSet.prototype.auth = {
     listableBy: 'admin',

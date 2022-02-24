@@ -1,20 +1,20 @@
-const config     = require('config');
+const config = require('config');
 const nodemailer = require('nodemailer');
 const merge = require('merge');
-const htmlToText   = require('html-to-text');
+const htmlToText = require('html-to-text');
 const MailConfig = require('./mail-config');
 const mailTransporter = require('./mailTransporter');
 
-const debug      = require('debug');
-const log        = debug('app:mail:sent');
-const logError   = debug('app:mail:error');
+const debug = require('debug');
+const log = debug('app:mail:sent');
+const logError = debug('app:mail:error');
 
 // nunjucks is used when sending emails
 var nunjucks = require('nunjucks');
-var moment       = require('moment-timezone');
+var moment = require('moment-timezone');
 var env = nunjucks.configure('email');
 
-var dateFilter   = require('../lib/nunjucks-date-filter');
+var dateFilter = require('../lib/nunjucks-date-filter');
 dateFilter.setDefaultFormat('DD-MM-YYYY HH:mm');
 env.addFilter('date', dateFilter);
 
@@ -26,199 +26,214 @@ env.addGlobal('EMAIL', config.get('emailAddress'));
 
 env.addGlobal('GLOBALS', config.get('express.rendering.globals'));
 
-env.addGlobal('config', config)
+env.addGlobal('config', config);
 
 // Default options for a single email.
 let defaultSendMailOptions = {
   from: config.get('mail.from'),
   subject: 'No title',
-  text: 'No message'
+  text: 'No message',
 };
 
 // generic send mail function
-function sendMail( site, options ) {
-
-  if ( options.attachments ) {
+function sendMail(site, options) {
+  if (options.attachments) {
     options.attachments.forEach((entry, index) => {
       options.attachments[index] = {
-		    filename : entry,
-		    path     : 'email/uploads/' + entry,
-		    cid      : entry
-      }
+        filename: entry,
+        path: 'email/uploads/' + entry,
+        cid: entry,
+      };
     });
   }
 
-  mailTransporter.getTransporter(site).sendMail(
-    merge(defaultSendMailOptions, options),
-    function( error, info ) {
-      if ( error ) {
+  mailTransporter
+    .getTransporter(site)
+    .sendMail(merge(defaultSendMailOptions, options), function (error, info) {
+      if (error) {
         logError(error.message);
       } else {
         log(info.response);
       }
-    }
-  );
+    });
 }
 
-function sendNotificationMail( data, site ) {
-
-  let siteConfig = new MailConfig(site)
+function sendNotificationMail(data, site) {
+  let siteConfig = new MailConfig(site);
   data.logo = siteConfig.getLogo();
 
-	let html;
+  let html;
 
-	if (data.html) {
-	  html = data.html
+  if (data.html) {
+    html = data.html;
   } else if (data.template) {
-	  html = nunjucks.renderString(data.template, data)
-	} else {
-	  html = nunjucks.render('notifications_admin.njk', data)
-	}
+    html = nunjucks.renderString(data.template, data);
+  } else {
+    html = nunjucks.render('notifications_admin.njk', data);
+  }
 
-	sendMail(site, {
-		to          : data.to,
-		from        : data.from,
-		subject     : data.subject,
-		html        : html,
-		text        : `Er hebben recent activiteiten plaatsgevonden op ${data.SITENAME} die mogelijk voor jou interessant zijn!`,
-		attachments : siteConfig.getDefaultEmailAttachments(),
-	});
-
-};
+  sendMail(site, {
+    to: data.to,
+    from: data.from,
+    subject: data.subject,
+    html: html,
+    text: `Er hebben recent activiteiten plaatsgevonden op ${data.SITENAME} die mogelijk voor jou interessant zijn!`,
+    attachments: siteConfig.getDefaultEmailAttachments(),
+  });
+}
 
 // send email to user that submitted a resource
 function sendThankYouMail(resource, resourceType, site, user) {
+  let siteConfig = new MailConfig(site);
 
-  let siteConfig = new MailConfig(site)
+  if (!resourceType)
+    return console.error('sendThankYouMail error: resourceType not provided');
 
-  if (!resourceType) return console.error('sendThankYouMail error: resourceType not provided');
-
-  const url         = siteConfig.getCmsUrl();
-  const hostname    = siteConfig.getCmsHostname();
-  const sitename    = siteConfig.getTitle();
-  let fromAddress   = siteConfig.getFeedbackEmailFrom(resourceType) || config.email;
-  if (!fromAddress) return console.error('Email error: fromAddress not provided');
-  if (fromAddress.match(/^.+<(.+)>$/, '$1')) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
+  const url = siteConfig.getCmsUrl();
+  const hostname = siteConfig.getCmsHostname();
+  const sitename = siteConfig.getTitle();
+  let fromAddress =
+    siteConfig.getFeedbackEmailFrom(resourceType) || config.email;
+  if (!fromAddress)
+    return console.error('Email error: fromAddress not provided');
+  if (fromAddress.match(/^.+<(.+)>$/, '$1'))
+    fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
 
   // todo: als je dan toch met een siteConfig.get werkt, moet deze search-and-replace dan niet ook daar?
   let idRegex = new RegExp(`\\[\\[(?:${resourceType}|idea)?Id\\]\\]`, 'g'); // 'idea' wegens backward compatible
-  const inzendingPath = (siteConfig.getFeedbackEmailInzendingPath(resourceType) && siteConfig.getFeedbackEmailInzendingPath(resourceType).replace(idRegex, resource.id).replace(/\[\[resourceType\]\]/, resourceType)) || "/";
-  const inzendingURL  = url + inzendingPath;
-  const logo =  siteConfig.getLogo();
+  const inzendingPath =
+    (siteConfig.getFeedbackEmailInzendingPath(resourceType) &&
+      siteConfig
+        .getFeedbackEmailInzendingPath(resourceType)
+        .replace(idRegex, resource.id)
+        .replace(/\[\[resourceType\]\]/, resourceType)) ||
+    '/';
+  const inzendingURL = url + inzendingPath;
+  const logo = siteConfig.getLogo();
 
-  let data    = {
+  let data = {
     date: new Date(),
     user: user,
     idea: resource,
     article: resource,
     HOSTNAME: hostname,
     SITENAME: sitename,
-		inzendingURL,
+    inzendingURL,
     URL: url,
     EMAIL: fromAddress,
-    logo: logo
+    logo: logo,
   };
 
-	let html;
-	let template = siteConfig.getResourceFeedbackEmailTemplate(resourceType);
+  let html;
+  let template = siteConfig.getResourceFeedbackEmailTemplate(resourceType);
 
-	if (template) {
+  if (template) {
     /**
      * This is for legacy reasons
      * if contains <html> we assume it doesn't need a layout wrapper then render as a string
      * if not included then include by rendering the string and then rendering a blanco
      * the layout by calling the blanco template
      */
-    if (template.includes("<html>")) {
-      html  = nunjucks.renderString(template, data)
+    if (template.includes('<html>')) {
+      html = nunjucks.renderString(template, data);
     } else {
-      html = nunjucks.render('blanco.njk', Object.assign(data, {
-        message: nunjucks.renderString(template, data)
-      }));
+      html = nunjucks.render(
+        'blanco.njk',
+        Object.assign(data, {
+          message: nunjucks.renderString(template, data),
+        })
+      );
     }
-	} else {
-		html = nunjucks.render(`${resourceType}_created.njk`, data);
-	}
+  } else {
+    html = nunjucks.render(`${resourceType}_created.njk`, data);
+  }
 
   let text = htmlToText.fromString(html, {
     ignoreImage: true,
     hideLinkHrefIfSameAsText: true,
-    uppercaseHeadings: false
+    uppercaseHeadings: false,
   });
 
-  let attachments = siteConfig.getResourceFeedbackEmailAttachments(resourceType) || siteConfig.getDefaultEmailAttachments();
+  let attachments =
+    siteConfig.getResourceFeedbackEmailAttachments(resourceType) ||
+    siteConfig.getDefaultEmailAttachments();
 
   try {
-  sendMail(site, {
-    // in some cases the resource, like order or account has a different email from the submitted user, default to resource, otherwise send to owner of resource
-    to: resource.email ?  resource.email : user.email,
-    from: fromAddress,
-    subject: siteConfig.getResourceFeedbackEmailSubject(resourceType) || 'Bedankt voor je inzending',
-    html: html,
-    text: text,
-    attachments,
-  });
-  } catch(err) {
+    sendMail(site, {
+      // in some cases the resource, like order or account has a different email from the submitted user, default to resource, otherwise send to owner of resource
+      to: resource.email ? resource.email : user.email,
+      from: fromAddress,
+      subject:
+        siteConfig.getResourceFeedbackEmailSubject(resourceType) ||
+        'Bedankt voor je inzending',
+      html: html,
+      text: text,
+      attachments,
+    });
+  } catch (err) {
     console.log(err);
   }
-
 }
 
 // send email to user that submitted a NewsletterSignup
-function sendNewsletterSignupConfirmationMail( newslettersignup, site, user ) {
+function sendNewsletterSignupConfirmationMail(newslettersignup, site, user) {
+  let siteConfig = new MailConfig(site);
 
-  let siteConfig = new MailConfig(site)
-
-  const url         = siteConfig.getCmsUrl();
-  const hostname    = siteConfig.getCmsHostname();
-  const sitename    = siteConfig.getTitle();
+  const url = siteConfig.getCmsUrl();
+  const hostname = siteConfig.getCmsHostname();
+  const sitename = siteConfig.getTitle();
   let fromAddress = siteConfig.getFeedbackEmailFrom() || config.email;
-  if ( fromAddress.match(/^.+<(.+)>$/, '$1') ) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
+  if (fromAddress.match(/^.+<(.+)>$/, '$1'))
+    fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
 
-	const confirmationUrl = siteConfig.getNewsletterSignupConfirmationEmailUrl().replace(/\[\[token\]\]/, newslettersignup.confirmToken)
+  const confirmationUrl = siteConfig
+    .getNewsletterSignupConfirmationEmailUrl()
+    .replace(/\[\[token\]\]/, newslettersignup.confirmToken);
   const logo = siteConfig.getLogo();
 
-  const data    = {
+  const data = {
     date: new Date(),
     user: user,
     HOSTNAME: hostname,
     SITENAME: sitename,
-		confirmationUrl,
+    confirmationUrl,
     URL: url,
     EMAIL: fromAddress,
-    logo: logo
+    logo: logo,
   };
 
-	let html;
-	let template = siteConfig.getNewsletterSignupConfirmationEmailTemplate();
-	if (template) {
-		html = nunjucks.renderString(template, data);
-	} else {
-		html = nunjucks.render('confirm_newsletter_signup.njk', data);
-	}
+  let html;
+  let template = siteConfig.getNewsletterSignupConfirmationEmailTemplate();
+  if (template) {
+    html = nunjucks.renderString(template, data);
+  } else {
+    html = nunjucks.render('confirm_newsletter_signup.njk', data);
+  }
 
   const text = htmlToText.fromString(html, {
     ignoreImage: true,
     hideLinkHrefIfSameAsText: true,
-    uppercaseHeadings: false
+    uppercaseHeadings: false,
   });
 
-  const attachments = siteConfig.getNewsletterSignupConfirmationEmailAttachments();
+  const attachments =
+    siteConfig.getNewsletterSignupConfirmationEmailAttachments();
 
   sendMail(site, {
     to: newslettersignup.email,
     from: fromAddress,
-    subject: siteConfig.getNewsletterSignupConfirmationEmailSubject() || 'Bedankt voor je aanmelding',
+    subject:
+      siteConfig.getNewsletterSignupConfirmationEmailSubject() ||
+      'Bedankt voor je aanmelding',
     html: html,
     text: text,
     attachments,
   });
-
 }
 
 module.exports = {
   sendMail,
-	sendNotificationMail,
+  sendNotificationMail,
   sendThankYouMail,
-	sendNewsletterSignupConfirmationMail,
+  sendNewsletterSignupConfirmationMail,
 };

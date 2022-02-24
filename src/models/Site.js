@@ -5,47 +5,47 @@ const OAuthApi = require('../services/oauth-api');
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 
 module.exports = function (db, sequelize, DataTypes) {
-
-  var Site = sequelize.define('site', {
-
-    name: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      defaultValue: 'Nieuwe site',
-    },
-
-    title: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      defaultValue: 'Nieuwe site',
-    },
-
-    domain: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-      defaultValue: 'demo.openstad.nl',
-    },
-
-    config: {
-      type: DataTypes.JSON,
-      allowNull: false,
-      defaultValue: {},
-      get: function () {
-        let value = this.getDataValue('config');
-        return this.parseConfig(value);
+  var Site = sequelize.define(
+    'site',
+    {
+      name: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue: 'Nieuwe site',
       },
-      set: function (value) {
-        var currentconfig = this.getDataValue('config');
-        value = value || {};
-        value = merge.recursive(true, currentconfig, value);
-        this.setDataValue('config', this.parseConfig(value));
-      },
-      auth: {
-        viewableBy: 'admin',
-      },
-    },
 
-    /*
+      title: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue: 'Nieuwe site',
+      },
+
+      domain: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+        defaultValue: 'demo.openstad.nl',
+      },
+
+      config: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: {},
+        get: function () {
+          let value = this.getDataValue('config');
+          return this.parseConfig(value);
+        },
+        set: function (value) {
+          var currentconfig = this.getDataValue('config');
+          value = value || {};
+          value = merge.recursive(true, currentconfig, value);
+          this.setDataValue('config', this.parseConfig(value));
+        },
+        auth: {
+          viewableBy: 'admin',
+        },
+      },
+
+      /*
       HostStatus is used for tracking domain status
       For instance, mostly managed by checkHostStatus service
       {
@@ -53,91 +53,87 @@ module.exports = function (db, sequelize, DataTypes) {
       "ingress": false // if on k8s cluster will try to make a ingress host file if IP address is set properly, k8s cert manager will then try get a let's encrypt cert
       } if
     */
-    hostStatus: {
-      type: DataTypes.JSON,
-      allowNull: false,
-      defaultValue: {},
-      auth: {
-        viewableBy: 'admin',
+      hostStatus: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: {},
+        auth: {
+          viewableBy: 'admin',
+        },
+      },
+
+      areaId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
       },
     },
+    {
+      hooks: {
+        beforeValidate: async function (instance, options) {
+          try {
+            // ik zou verwachten dat je dit met _previousDataValues kunt doen, maar die bevat al de nieuwe waarde
+            let current = await db.Site.findOne({ where: { id: instance.id } });
 
-    areaId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    }
-
-  }, {
-
-    hooks: {
-
-      beforeValidate: async function (instance, options) {
-
-        try {
-          // ik zou verwachten dat je dit met _previousDataValues kunt doen, maar die bevat al de nieuwe waarde
-          let current = await db.Site.findOne({ where: { id: instance.id } });
-
-          // on update of projectHasEnded also update isActive of all the parts
-          if (current && typeof instance.config.projectHasEnded != 'undefined' && current.config.projectHasEnded !== instance.config.projectHasEnded) {
-            let config = merge.recursive(true, instance.config);
-            if (instance.config.projectHasEnded) {
-              config.votes.isActive = false;
-              config.ideas.canAddNewIdeas = false;
-              config.articles.canAddNewArticles = false;
-              config.arguments.isClosed = true;
-              config.polls.canAddPolls = false;
-              config.users.canCreateNewUsers = false;
-            } else {
-              // commented: do not update these params on unsetting
-              // config.votes.isActive = true;
-              // config.ideas.canAddNewIdeas = true;
-              // config.articles.canAddNewArticles = true;
-              // config.arguments.isClosed = false;
-              // config.polls.canAddPolls = true;
-              // config.users.canCreateNewUsers = true;
+            // on update of projectHasEnded also update isActive of all the parts
+            if (
+              current &&
+              typeof instance.config.projectHasEnded != 'undefined' &&
+              current.config.projectHasEnded !== instance.config.projectHasEnded
+            ) {
+              let config = merge.recursive(true, instance.config);
+              if (instance.config.projectHasEnded) {
+                config.votes.isActive = false;
+                config.ideas.canAddNewIdeas = false;
+                config.articles.canAddNewArticles = false;
+                config.arguments.isClosed = true;
+                config.polls.canAddPolls = false;
+                config.users.canCreateNewUsers = false;
+              } else {
+                // commented: do not update these params on unsetting
+                // config.votes.isActive = true;
+                // config.ideas.canAddNewIdeas = true;
+                // config.articles.canAddNewArticles = true;
+                // config.arguments.isClosed = false;
+                // config.polls.canAddPolls = true;
+                // config.users.canCreateNewUsers = true;
+              }
+              instance.set('config', config);
             }
-            instance.set('config', config);
+          } catch (err) {
+            console.log(err);
+            throw err;
           }
-          
-        } catch (err) {
-          console.log(err);
-          throw err;
-        }
+        },
 
+        beforeCreate: function (instance, options) {
+          return beforeUpdateOrCreate(instance, options);
+        },
 
+        beforeUpdate: function (instance, options) {
+          return beforeUpdateOrCreate(instance, options);
+        },
 
+        beforeDestroy: function (instance, options) {
+          if (!(instance && instance.config && instance.config.projectHasEnded))
+            throw Error(
+              'Cannot delete an active site - first set the project-has-ended parameter'
+            );
+        },
       },
-
-      beforeCreate: function (instance, options) {
-        return beforeUpdateOrCreate(instance, options);
-      },
-
-      beforeUpdate: function (instance, options) {
-        return beforeUpdateOrCreate(instance, options);
-      },
-
-      beforeDestroy: function (instance, options) {
-        if (!(instance && instance.config && instance.config.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
-        return 
-      },
-
-    },
-
-  });
+    }
+  );
 
   async function beforeUpdateOrCreate(instance, options) {
     try {
-
       // TODO: dit gebeurd nu in de route maar moet denk ik naar hier
-//      // canCreateNewUsers must be updated on the clients
-//      if (instance.config.users && typeof instance.config.users.canCreateNewUsers != 'undefined' ) {
-//        let config = { users: { canCreateNewUsers: instance.config.users.canCreateNewUsers } }
-//        //        for ( let which of Object.keys(instance.config.oauth) ) { // TODO: moet deze loop naar dde OAuthApi?
-//        let which = 'anonymous';
-//          await OAuthApi.updateClient({ siteConfig: instance.config, which, clientData: { config } })
-////        }
-//      }
-
+      //      // canCreateNewUsers must be updated on the clients
+      //      if (instance.config.users && typeof instance.config.users.canCreateNewUsers != 'undefined' ) {
+      //        let config = { users: { canCreateNewUsers: instance.config.users.canCreateNewUsers } }
+      //        //        for ( let which of Object.keys(instance.config.oauth) ) { // TODO: moet deze loop naar dde OAuthApi?
+      //        let which = 'anonymous';
+      //          await OAuthApi.updateClient({ siteConfig: instance.config, which, clientData: { config } })
+      ////        }
+      //      }
     } catch (err) {
       console.log(err);
       throw err;
@@ -149,17 +145,19 @@ module.exports = function (db, sequelize, DataTypes) {
       defaultScope: {},
 
       withArea: {
-        include: [{
-          model: db.Area
-        }]
-      }
+        include: [
+          {
+            model: db.Area,
+          },
+        ],
+      },
     };
-  }
+  };
 
   Site.associate = function (models) {
     this.hasMany(models.Idea);
     this.belongsTo(models.Area);
-  }
+  };
 
   Site.configOptions = function () {
     // definition of possible config values
@@ -168,15 +166,11 @@ module.exports = function (db, sequelize, DataTypes) {
     return {
       allowedDomains: {
         type: 'arrayOfStrings',
-        default: [
-          'openstad-api.amsterdam.nl'
-        ]
+        default: ['openstad-api.amsterdam.nl'],
       },
       allowedDomains: {
         type: 'arrayOfStrings',
-        default: [
-          'openstad-api.amsterdam.nl'
-        ]
+        default: ['openstad-api.amsterdam.nl'],
       },
       basicAuth: {
         type: 'object',
@@ -193,7 +187,7 @@ module.exports = function (db, sequelize, DataTypes) {
             type: 'string',
             default: 'LqKNcKC7',
           },
-        }
+        },
       },
       cms: {
         type: 'object',
@@ -214,28 +208,28 @@ module.exports = function (db, sequelize, DataTypes) {
             type: 'string',
             default: '/oauth/login?jwt=[[jwt]]',
           },
-          "redirectURI": {
+          redirectURI: {
             type: 'string',
             default: undefined,
           },
-          "widgetDisplaySettings": {
-            "type": "object",
-            "subset": {
-              "beta": {
-                "type": "boolean",
-                "default": false
+          widgetDisplaySettings: {
+            type: 'object',
+            subset: {
+              beta: {
+                type: 'boolean',
+                default: false,
               },
-              "deprecated": {
-                "type": "boolean",
-                "default": false
+              deprecated: {
+                type: 'boolean',
+                default: false,
               },
-              "visibleWidgets": {
-                "type": "arrayOfStrings",
-                "default": []
-              }
-            }
-          }
-        }
+              visibleWidgets: {
+                type: 'arrayOfStrings',
+                default: [],
+              },
+            },
+          },
+        },
       },
       notifications: {
         type: 'object',
@@ -248,7 +242,7 @@ module.exports = function (db, sequelize, DataTypes) {
             type: 'string', // todo: add type email/list of emails
             default: 'EMAIL@NOT.DEFINED',
           },
-        }
+        },
       },
       email: {
         type: 'object',
@@ -264,38 +258,38 @@ module.exports = function (db, sequelize, DataTypes) {
                 type: 'string', // todo: add type email/list of emails
                 default: 'EMAIL@NOT.DEFINED',
               },
-            }
-          }
-        }
+            },
+          },
+        },
       },
-      'oauth': {
+      oauth: {
         type: 'objectsInObject',
         subset: {
-          "auth-server-url": {
+          'auth-server-url': {
             type: 'string',
           },
-          "auth-client-id": {
+          'auth-client-id': {
             type: 'string',
           },
-          "auth-client-secret": {
+          'auth-client-secret': {
             type: 'string',
           },
-          "auth-server-login-path": {
+          'auth-server-login-path': {
             type: 'string',
           },
-          "auth-server-exchange-code-path": {
+          'auth-server-exchange-code-path': {
             type: 'string',
           },
-          "auth-server-get-user-path": {
+          'auth-server-get-user-path': {
             type: 'string',
           },
-          "auth-server-logout-path": {
+          'auth-server-logout-path': {
             type: 'string',
           },
-          "after-login-redirect-uri": {
+          'after-login-redirect-uri': {
             type: 'string',
-          }
-        }
+          },
+        },
       },
       ideas: {
         type: 'object',
@@ -352,7 +346,7 @@ module.exports = function (db, sequelize, DataTypes) {
             },
             inzendingPath: {
               type: 'string',
-              default: "/PATH/TO/PLAN/[[ideaId]]",
+              default: '/PATH/TO/PLAN/[[ideaId]]',
             },
             template: {
               type: 'string',
@@ -406,13 +400,13 @@ module.exports = function (db, sequelize, DataTypes) {
                 default: 'white',
               },
               // TODO: deze komen uit cms thema; werk dat verder uit
-              "flag": {type: 'string', default: ''},
-              "mapUploadedFlag": {type: 'string', default: ''},
-              "mapFlagWidth": {type: 'string', default: ''},
-              "mapFlagHeight": {type: 'string', default: ''},
-              "Initialavailablebudget": {type: 'int', default: 0},
-              "minimalBudgetSpent": {type: 'int', default: 0},
-            }
+              flag: { type: 'string', default: '' },
+              mapUploadedFlag: { type: 'string', default: '' },
+              mapFlagWidth: { type: 'string', default: '' },
+              mapFlagHeight: { type: 'string', default: '' },
+              Initialavailablebudget: { type: 'int', default: 0 },
+              minimalBudgetSpent: { type: 'int', default: 0 },
+            },
           },
           automaticallyUpdateStatus: {
             isActive: {
@@ -424,7 +418,7 @@ module.exports = function (db, sequelize, DataTypes) {
               default: 90,
             },
           },
-        }
+        },
       },
       arguments: {
         type: 'object',
@@ -442,14 +436,14 @@ module.exports = function (db, sequelize, DataTypes) {
                   notAllowedMessage: {
                     type: 'string',
                     default: null,
-                  }
-                }
+                  },
+                },
               },
               showFields: {
                 type: 'arrayOfStrings', // eh...
                 default: ['zipCode', 'displayName'],
-              }
-            }
+              },
+            },
           },
 
           isClosed: {
@@ -459,10 +453,10 @@ module.exports = function (db, sequelize, DataTypes) {
 
           closedText: {
             type: 'string',
-            default: 'De reactiemogelijkheid is gesloten, u kunt niet meer reageren',
+            default:
+              'De reactiemogelijkheid is gesloten, u kunt niet meer reageren',
           },
-
-        }
+        },
       },
       users: {
         type: 'object',
@@ -487,7 +481,6 @@ module.exports = function (db, sequelize, DataTypes) {
       votes: {
         type: 'object',
         subset: {
-
           isViewable: {
             type: 'boolean',
             default: false,
@@ -526,7 +519,13 @@ module.exports = function (db, sequelize, DataTypes) {
 
           voteType: {
             type: 'enum',
-            values: ['likes', 'count', 'budgeting', 'count-per-theme', 'budgeting-per-theme'],
+            values: [
+              'likes',
+              'count',
+              'budgeting',
+              'count-per-theme',
+              'budgeting-per-theme',
+            ],
             default: 'likes',
           },
 
@@ -535,11 +534,11 @@ module.exports = function (db, sequelize, DataTypes) {
             default: [
               {
                 label: 'voor',
-                value: 'yes'
+                value: 'yes',
               },
               {
                 label: 'tegen',
-                value: 'no'
+                value: 'no',
               },
             ],
           },
@@ -575,9 +574,8 @@ module.exports = function (db, sequelize, DataTypes) {
                 type: 'int',
                 default: undefined,
               },
-            }
+            },
           },
-
         },
       },
 
@@ -631,7 +629,7 @@ module.exports = function (db, sequelize, DataTypes) {
             },
             inzendingPath: {
               type: 'string',
-              default: "/PATH/TO/ARTICLE/[[articleId]]",
+              default: '/PATH/TO/ARTICLE/[[articleId]]',
             },
             template: {
               type: 'string',
@@ -644,8 +642,8 @@ module.exports = function (db, sequelize, DataTypes) {
           },
           extraData: {
             type: 'object',
-          }
-        }
+          },
+        },
       },
 
       polls: {
@@ -673,7 +671,7 @@ module.exports = function (db, sequelize, DataTypes) {
             type: 'boolean',
             default: false,
           },
-          "confirmationEmail": {
+          confirmationEmail: {
             type: 'object',
             subset: {
               from: {
@@ -686,7 +684,7 @@ module.exports = function (db, sequelize, DataTypes) {
               },
               url: {
                 type: 'string',
-                default: "/PATH/TO/CONFIRMATION/[[token]]",
+                default: '/PATH/TO/CONFIRMATION/[[token]]',
               },
               template: {
                 type: 'string',
@@ -701,22 +699,19 @@ module.exports = function (db, sequelize, DataTypes) {
         status: null,
       },
 
-      "ignoreBruteForce": {
+      ignoreBruteForce: {
         type: 'arrayOfStrings',
-        default: []
+        default: [],
       },
 
       projectHasEnded: {
         type: 'boolean',
         default: false,
       },
-
-    }
-  }
+    };
+  };
 
   Site.prototype.parseConfig = function (config) {
-
-
     try {
       if (typeof config == 'string') {
         config = JSON.parse(config);
@@ -727,20 +722,29 @@ module.exports = function (db, sequelize, DataTypes) {
 
     let options = Site.configOptions();
 
-
-    config = checkValues(config, options)
+    config = checkValues(config, options);
 
     return config;
 
     function checkValues(value, options) {
-
       let newValue = {};
       Object.keys(options).forEach(key => {
-
         // backwards compatibility op oauth settings
-        if (key == 'oauth' && value[key] && !value[key].default && (value[key]['auth-server-url'] || value[key]['auth-client-id'] || value[key]['auth-client-secret'] || value[key]['auth-server-login-path'] || value[key]['auth-server-exchange-code-path'] || value[key]['auth-server-get-user-path'] || value[key]['auth-server-logout-path'] || value[key]['after-login-redirect-uri'])) {
+        if (
+          key == 'oauth' &&
+          value[key] &&
+          !value[key].default &&
+          (value[key]['auth-server-url'] ||
+            value[key]['auth-client-id'] ||
+            value[key]['auth-client-secret'] ||
+            value[key]['auth-server-login-path'] ||
+            value[key]['auth-server-exchange-code-path'] ||
+            value[key]['auth-server-get-user-path'] ||
+            value[key]['auth-server-logout-path'] ||
+            value[key]['after-login-redirect-uri'])
+        ) {
           // dit is een oude
-          value[key] = {default: value[key]};
+          value[key] = { default: value[key] };
         }
 
         // TODO: 'arrayOfObjects' met een subset
@@ -748,18 +752,25 @@ module.exports = function (db, sequelize, DataTypes) {
         // objects in objects
         if (options[key].type == 'object' && options[key].subset) {
           let temp = checkValues(value[key] || {}, options[key].subset); // recusion
-          return newValue[key] = Object.keys(temp) ? temp : undefined;
+          return (newValue[key] = Object.keys(temp) ? temp : undefined);
         }
 
         // objects in objects
-        if (options[key].type == 'objectsInObject' && options[key].subset && value[key]) {
+        if (
+          options[key].type == 'objectsInObject' &&
+          options[key].subset &&
+          value[key]
+        ) {
           newValue[key] = {};
           let elementkeys = Object.keys(value[key]);
           for (let i = 0; i < elementkeys.length; i++) {
             let elementkey = elementkeys[i];
             if (value[key][elementkey] == null) {
             } else {
-              let temp = checkValues(value[key][elementkey] || {}, options[key].subset); // recusion
+              let temp = checkValues(
+                value[key][elementkey] || {},
+                options[key].subset
+              ); // recusion
               newValue[key][elementkey] = Object.keys(temp) ? temp : undefined;
             }
           }
@@ -768,33 +779,74 @@ module.exports = function (db, sequelize, DataTypes) {
 
         // TODO: in progress
         if (typeof value[key] != 'undefined' && value[key] != null) {
-          if (options[key].type && options[key].type === 'int' && parseInt(value[key]) !== value[key]) {
+          if (
+            options[key].type &&
+            options[key].type === 'int' &&
+            parseInt(value[key]) !== value[key]
+          ) {
             throw new Error(`site.config: ${key} must be an int`);
           }
-          if (options[key].type && options[key].type === 'string' && typeof value[key] !== 'string') {
+          if (
+            options[key].type &&
+            options[key].type === 'string' &&
+            typeof value[key] !== 'string'
+          ) {
             throw new Error(`site.config: ${key} must be an string`);
           }
-          if (options[key].type && options[key].type === 'boolean' && typeof value[key] !== 'boolean') {
-            throw new Error(`site.config: ${key} must be an boolean ${value[key]}, ${options}, ${typeof value[key]}`);
+          if (
+            options[key].type &&
+            options[key].type === 'boolean' &&
+            typeof value[key] !== 'boolean'
+          ) {
+            throw new Error(
+              `site.config: ${key} must be an boolean ${
+                value[key]
+              }, ${options}, ${typeof value[key]}`
+            );
           }
-          if (options[key].type && options[key].type === 'object' && typeof value[key] !== 'object') {
+          if (
+            options[key].type &&
+            options[key].type === 'object' &&
+            typeof value[key] !== 'object'
+          ) {
             throw new Error(`site.config: ${key} must be an object`);
           }
-          if (options[key].type && options[key].type === 'arrayOfStrings' && !(typeof value[key] === 'object' && Array.isArray(value[key]) && !value[key].find(val => typeof val !== 'string'))) {
+          if (
+            options[key].type &&
+            options[key].type === 'arrayOfStrings' &&
+            !(
+              typeof value[key] === 'object' &&
+              Array.isArray(value[key]) &&
+              !value[key].find(val => typeof val !== 'string')
+            )
+          ) {
             throw new Error(`site.config: ${key} must be an array of strings`);
           }
-          if (options[key].type && options[key].type === 'arrayOfObjects' && !(typeof value[key] === 'object' && Array.isArray(value[key]) && !value[key].find(val => typeof val !== 'object'))) {
+          if (
+            options[key].type &&
+            options[key].type === 'arrayOfObjects' &&
+            !(
+              typeof value[key] === 'object' &&
+              Array.isArray(value[key]) &&
+              !value[key].find(val => typeof val !== 'object')
+            )
+          ) {
             throw new Error(`site.config: ${key} must be an array of objects`);
           }
-          if (options[key].type && options[key].type === 'enum' && options[key].values && options[key].values.indexOf(value[key]) == -1) {
+          if (
+            options[key].type &&
+            options[key].type === 'enum' &&
+            options[key].values &&
+            options[key].values.indexOf(value[key]) == -1
+          ) {
             throw new Error(`site.config: ${key} has an invalid value`);
           }
-          return newValue[key] = value[key];
+          return (newValue[key] = value[key]);
         }
 
         // default?
         if (typeof options[key].default != 'undefined') {
-          return newValue[key] = options[key].default
+          return (newValue[key] = options[key].default);
         }
 
         // set to null
@@ -808,7 +860,6 @@ module.exports = function (db, sequelize, DataTypes) {
         }
 
         return newValue[key];
-
       });
 
       // voor nu mag je er in stoppen wat je wilt; uiteindelijk moet dat zo gaan werken dat je alleen bestaande opties mag gebruiken
@@ -820,48 +871,48 @@ module.exports = function (db, sequelize, DataTypes) {
       });
       return newValue;
     }
-
-  }
+  };
 
   Site.prototype.willAnonymizeAllUsers = async function () {
-
     let self = this;
     let result = {};
 
     try {
-
       if (!self.id) throw Error('Site not found');
-      if (!self.config.projectHasEnded) throw Error('Cannot anonymize users on an active site - first set the project-has-ended parameter');
+      if (!self.config.projectHasEnded)
+        throw Error(
+          'Cannot anonymize users on an active site - first set the project-has-ended parameter'
+        );
 
-      let users = await db.User.findAll({ where: { siteId: self.id, externalUserId: { [Sequelize.Op.ne]: null } } });
+      let users = await db.User.findAll({
+        where: { siteId: self.id, externalUserId: { [Sequelize.Op.ne]: null } },
+      });
 
       // do not anonymize admins
-      result.admins = users.filter( user => userHasRole(user, 'admin') );
-      result.users  = users.filter( user => !userHasRole(user, 'admin') );
+      result.admins = users.filter(user => userHasRole(user, 'admin'));
+      result.users = users.filter(user => !userHasRole(user, 'admin'));
 
       // extract externalUserIds
-      result.externalUserIds = result.users.filter( user => user.externalUserId ).map( user => user.externalUserId );
-
+      result.externalUserIds = result.users
+        .filter(user => user.externalUserId)
+        .map(user => user.externalUserId);
     } catch (err) {
       console.log(err);
       throw err;
     }
 
     return result;
-    
-  }
+  };
 
   Site.prototype.doAnonymizeAllUsers = async function () {
-
     // anonymize all users for this site
     let self = this;
     let result;
 
     try {
-
       result = await self.willAnonymizeAllUsers();
 
-      let users = [ ...result.users ]
+      let users = [...result.users];
 
       // anonymize users
       for (const user of users) {
@@ -869,7 +920,6 @@ module.exports = function (db, sequelize, DataTypes) {
         let res = await user.doAnonymize();
         user.site = null;
       }
-
     } catch (err) {
       console.log(err);
       throw err;
@@ -877,17 +927,22 @@ module.exports = function (db, sequelize, DataTypes) {
 
     result.message = 'Ok';
     return result;
-
-  }
+  };
 
   Site.prototype.isVoteActive = function () {
     let self = this;
     let voteIsActive = self.config.votes.isActive;
-    if ( ( voteIsActive == null || typeof voteIsActive == 'undefined' ) && self.config.votes.isActiveFrom && self.config.votes.isActiveTo ) {
-      voteIsActive = moment().isAfter(self.config.votes.isActiveFrom) && moment().isBefore(self.config.votes.isActiveTo)
+    if (
+      (voteIsActive == null || typeof voteIsActive == 'undefined') &&
+      self.config.votes.isActiveFrom &&
+      self.config.votes.isActiveTo
+    ) {
+      voteIsActive =
+        moment().isAfter(self.config.votes.isActiveFrom) &&
+        moment().isBefore(self.config.votes.isActiveTo);
     }
     return voteIsActive;
-  }
+  };
 
   Site.auth = Site.prototype.auth = {
     listableBy: 'all',
@@ -895,16 +950,13 @@ module.exports = function (db, sequelize, DataTypes) {
     createableBy: 'admin',
     updateableBy: 'admin',
     deleteableBy: 'admin',
-    canAnonimizeAllUsers : function(user, self) {
+    canAnonimizeAllUsers: function (user, self) {
       self = self || this;
       if (!user) user = self.auth && self.auth.user;
       if (!user || !user.role) user = { role: 'all' };
-      let isValid = userHasRole(user, 'admin', self.id);
-      return isValid;
-    }
-
-  }
+      return userHasRole(user, 'admin', self.id);
+    },
+  };
 
   return Site;
-
 };

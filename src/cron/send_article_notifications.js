@@ -1,4 +1,4 @@
-var log           = require('debug')('app:cron');
+var log = require('debug')('app:cron');
 var notifications = require('../notifications');
 
 // Purpose
@@ -6,10 +6,10 @@ var notifications = require('../notifications');
 // Send notifications emails.
 
 module.exports = {
-	//cronTime: '*/5 * * * * *',
-	cronTime: '20 */5 * * * *',
-	runOnInit: false,
-	onTick: function() {
-		notifications.processQueue('article');
-	}
+  //cronTime: '*/5 * * * * *',
+  cronTime: '20 */5 * * * *',
+  runOnInit: false,
+  onTick: function () {
+    notifications.processQueue('article');
+  },
 };
