@@ -1,9 +1,16 @@
 # Changelog
 
+<<<<<<< Updated upstream
 ## v0.40.0
 Update version number
 
 ## v0.21.0
+=======
+## Unreleased
+
+## v0.40.0
+* Equelize version numbers over repos
+>>>>>>> Stashed changes
 * Update Action cron to once every minute
 * Add linter/prettier
 * Unknown fixed-auth-token is no longer an error but is now a not-logged-in
