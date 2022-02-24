@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## v0.40.0
+Update version number
+
+## v0.21.0
 * Update Action cron to once every minute
 * Add linter/prettier
 * Unknown fixed-auth-token is no longer an error but is now a not-logged-in
