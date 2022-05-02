@@ -6,7 +6,8 @@ const db = require('../db');
 // Run actions
 //
 module.exports = {
-    cronTime: '*/5  * * * *',
+    cronTime: '*/1  * * * *',
+    //cronTime: '*/5  * * * *',
     //cronTime: '*/10 * * * *',
     runOnInit: false,
     onTick: async () => {

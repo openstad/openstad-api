@@ -10,6 +10,49 @@ const merge = require('merge');
 
 const router = express.Router({mergeParams: true});
 
+const activityKeys = ['ideas', 'articles', 'arguments', 'votes', 'sites'];
+
+const activityConfig = {
+  'ideas' : {
+      descriptionKey: 'description',
+      type: {
+        slug: 'idea',
+        label: 'inzending'
+      }
+  },
+  'articles': {
+    descriptionKey: 'description',
+    type: {
+      slug: 'article',
+      label: 'artikel'
+    }
+  },
+  'arguments': {
+    descriptionKey: 'description',
+    type: {
+      slug: 'argument',
+      label: 'reactie'
+    }
+  },
+  'votes': {
+    descriptionKey: '',
+    type: {
+      slug: 'vote',
+      label: 'stem'
+    }
+  },
+  /*
+  'sites': {
+    descriptionKey: '',
+    type: {
+      slug: 'site',
+      label: 'Site'
+    }
+  },
+
+   */
+}
+
 router
   .all('*', function (req, res, next) {
     // req.scope = ['includeSite'];
@@ -29,7 +72,7 @@ router.route('/')
         req.activities.push(key)
       }
     });
-    if ( req.activities.length == 0 ) req.activities = ['ideas', 'articles', 'arguments', 'votes', 'sites'];
+    if ( req.activities.length == 0 ) req.activities = activityKeys;
 
     if (req.query.includeOtherSites == 'false' || req.query.includeOtherSites == '0') req.query.includeOtherSites = false;
     req.includeOtherSites = typeof req.query.includeOtherSites != 'undefined' ? !!req.query.includeOtherSites : true;
@@ -49,8 +92,20 @@ router.route('/')
       })
       .then(function (user) {
         if (!user.externalUserId) return next();
-        return user
-          .getThisUserOnOtherSites()
+
+        return db.User
+          .scope(['includeSite'])
+          .findAll({
+            where: {
+              externalUserId: user.externalUserId,
+              // old users have no siteId, this will break the update
+              // skip them
+              // probably should clean up these users
+              siteId: {
+                [Op.not]: 0
+              }
+            }
+          })
           .then(users => {
             users.forEach((user) => {
               req.userIds.push(user.id);
@@ -58,13 +113,14 @@ router.route('/')
 
             req.users =  users;
 
-
-
             return next()
           })
       });
   })
   // sites
+  .get(function(req, res, next) {
+    next()
+  })
   .get(function(req, res, next) {
 
     if (!req.activities.includes('sites')) return next();
@@ -103,6 +159,7 @@ router.route('/')
     if (!req.activities.includes('ideas')) return next();
     let where = { userId: req.userIds };
     return db.Idea
+      .scope(['includeSite'])
       .findAll({ where })
       .then(function(rows) {
         req.results.ideas = rows;
@@ -135,9 +192,10 @@ router.route('/')
     if (!req.activities.includes('arguments')) return next();
     let where = { userId: req.userIds };
     return db.Argument
+      .scope(['withIdea'])
       .findAll({ where })
       .then(function(rows) {
-        req.results.arguments = rows;
+        req.results.arguments = rows.filter(row => !!row.idea);
         return next();
       })
   })
@@ -151,21 +209,61 @@ router.route('/')
     if (!req.activities.includes('votes')) return next();
     let where = { userId: req.userIds };
     return db.Vote
+      .scope(['withIdea'])
       .findAll({ where })
       .then(function(rows) {
-        req.results.votes = rows;
+        req.results.votes = rows.filter(row => !!row.idea);;
         return next();
       })
   })
 
   .get(function (req, res, next) {
     // customized version of auth.useReqUser
+
+    let activity = [];
+
     req.activities.forEach(which => {
+
       req.results[which] && req.results[which].forEach( result => {
         result.auth = result.auth || {};
         result.auth.user = req.user;
       });
+
+      if (activityConfig[which]) {
+        const formattedAsActivities = req.results[which] && Array.isArray(req.results[which]) ? req.results[which].map((resource) => {
+          const config = activityConfig[which];
+          const idea = which === 'ideas' ? resource : resource.idea;
+
+          const site =  req.results.sites.find((site) => {
+            return site.id === idea.siteId;
+          })
+
+          return {
+             //strip html tags
+            description: resource[config.descriptionKey] ? resource[config.descriptionKey].replace(/<[^>]+>/g, '') : '',
+            type: config.type,
+            idea: idea,
+            site: site ? site : false,
+            createdAt: resource.createdAt
+          }
+        }) : [];
+
+        // we merge activities
+        activity = activity.concat(formattedAsActivities)
+      }
     });
+
+
+
+    // sort activities on createdAt
+
+    activity.sort((a, b) => {
+      var dateA = new Date(a.createdAt), dateB = new Date(b.createdAt)
+      return dateB- dateA;
+    })
+
+    req.results.activity = activity;
+
     return next();
   })
   .get(function (req, res, next) {

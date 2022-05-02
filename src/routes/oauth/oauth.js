@@ -156,6 +156,7 @@ router
             siteId: req.site.id,
             extraData: req.userData.extraData,
             zipCode: req.userData.postcode ? req.userData.postcode : null,
+            postcode: req.userData.postcode ? req.userData.postcode : null,
             lastName: req.userData.lastName,
             // xxx
             role: req.userData.role || ((req.userData.email || req.userData.phoneNumber || req.userData.hashedPhoneNumber) ? 'member' : 'anonymous'),
@@ -230,7 +231,7 @@ router
         //check if redirect domain is allowed
         if (isAllowedRedirectDomain(redirectUrl, req.site && req.site.config && req.site.config.allowedDomains)) {
             if (redirectUrl.match('[[jwt]]')) {
-                jwt.sign({userId: req.userData.id}, config.authorization['jwt-secret'], {expiresIn: 182 * 24 * 60 * 60}, (err, token) => {
+                jwt.sign({userId: req.userData.id, client: which}, config.authorization['jwt-secret'], {expiresIn: 182 * 24 * 60 * 60}, (err, token) => {
                     if (err) return next(err)
                     req.redirectUrl = redirectUrl.replace('[[jwt]]', token);
                     return next();
@@ -294,6 +295,7 @@ router
             "lastName": req.user.lastName,
             "fullName": req.user.fullName,
             "nickName": req.user.nickName,
+            "displayName": req.user.displayName,
             "initials": req.user.initials,
             "gender": req.user.gender,
             "extraData": req.user.extraData ? req.user.extraData : {},

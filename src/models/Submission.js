@@ -1,4 +1,6 @@
 const config = require('config');
+const Sequelize = require('sequelize');
+const getSequelizeConditionsForFilters = require('./../util/getSequelizeConditionsForFilters');
 
 module.exports = function( db, sequelize, DataTypes ) {
 	var Submission = sequelize.define('submission', {
@@ -10,6 +12,11 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 		userId: {
 			type         : DataTypes.INTEGER,
+			allowNull    : true
+		},
+		
+		formId: {
+			type         : DataTypes.TEXT,
 			allowNull    : true
 		},
 
@@ -39,24 +46,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 						value = JSON.parse(value);
 					}
 				} catch(err) {}
-				let newValue = {};
-
-				value = value;
-
-				/*
-				const configExtraData = [];
-				if (configExtraData) {
-					Object.keys(configExtraData).forEach((key) => {
-						if (configExtraData[key].allowNull === false && (typeof value[key] === 'undefined' || value[key] === '')) { // TODO: dit wordt niet gechecked als je het veld helemaal niet meestuurt
-							// zie validExtraData hieronder
-							// throw db.sequelize.ValidationError(`${key} is niet ingevuld`);
-						}
-						if (value[key] && configExtraData[key].values.indexOf(value[key]) != -1) { // TODO: alles is nu enum, maar dit is natuurlijk veel te simpel
-							newValue[key] = value[key];
-						}
-					});
-				}
-				*/
 
 				this.setDataValue('submittedData', JSON.stringify(value));
 			}
@@ -69,15 +58,37 @@ module.exports = function( db, sequelize, DataTypes ) {
 			defaultScope: {
 				/*include: [{
 					model      : db.User,
-					attributes : ['role', 'nickName', 'firstName', 'lastName', 'email']
+ 					attributes : ['role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
 					}]*/
 			},
 			withUser: {
 				include: [{
 					model      : db.User,
-					attributes : ['role', 'nickName', 'firstName', 'lastName', 'email']
+					attributes : ['role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
 				}]
 			},
+            forSiteId: function (siteId) {
+                return {
+                    where: {
+                        siteId: siteId,
+                    }
+                };
+            },
+            filter:    function (filtersInclude, filtersExclude) {
+                const filterKeys = [
+                    {
+                        'key': 'id'
+                    },
+                    {
+                        'key': 'status'
+                    },
+                    {
+                        'key': 'formId'
+                    },
+                ];
+    
+                return getSequelizeConditionsForFilters(filterKeys, filtersInclude, sequelize, filtersExclude);
+            },
 		};
 	}
 

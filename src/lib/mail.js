@@ -1,6 +1,5 @@
 const config     = require('config');
 const nodemailer = require('nodemailer');
-const Promise    = require('bluebird');
 const merge = require('merge');
 const htmlToText   = require('html-to-text');
 const MailConfig = require('./mail-config');
@@ -18,7 +17,6 @@ var env = nunjucks.configure('email');
 var dateFilter   = require('../lib/nunjucks-date-filter');
 dateFilter.setDefaultFormat('DD-MM-YYYY HH:mm');
 env.addFilter('date', dateFilter);
-//env.addFilter('duration', duration);
 
 // Global variables.
 env.addGlobal('HOSTNAME', config.get('hostname'));
@@ -96,6 +94,7 @@ function sendThankYouMail(resource, resourceType, site, user) {
   const hostname    = siteConfig.getCmsHostname();
   const sitename    = siteConfig.getTitle();
   let fromAddress   = siteConfig.getFeedbackEmailFrom(resourceType) || config.email;
+  if (!fromAddress) return console.error('Email error: fromAddress not provided');
   if (fromAddress.match(/^.+<(.+)>$/, '$1')) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
 
   // todo: als je dan toch met een siteConfig.get werkt, moet deze search-and-replace dan niet ook daar?

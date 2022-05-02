@@ -4,11 +4,8 @@ const moment = require('moment')
 const os = require('os');
 //const BACKUP_PATH = (ZIP_NAME) => path.resolve(os.tmpdir(), ZIP_NAME);
 const { exec } = require('child_process');
-
-var Promise = require('bluebird');
-
-var log     = require('debug')('app:cron');
-var db      = require('../db');
+const log = require('debug')('app:cron');
+const db = require('../db');
 
 // Purpose
 // -------

@@ -45,9 +45,9 @@ module.exports = function( db, sequelize, DataTypes ) {
   Area.auth = Area.prototype.auth = {
     listableBy: 'all',
     viewableBy: 'all',
-    createableBy: ['admin'],
-    updateableBy: ['admin'],
-    deleteableBy: ['admin'],
+    createableBy: ['admin', 'editor'],
+    updateableBy: ['admin', 'editor'],
+    deleteableBy: ['admin', 'editor'],
     toAuthorizedJSON: function(user, data) {
       data.geoJSON = formatPolygonToGeoJson(data.polygon);
       return data;

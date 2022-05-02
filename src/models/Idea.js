@@ -1,23 +1,19 @@
-var Sequelize = require('sequelize');
-var co = require('co')
+const Sequelize = require('sequelize');
+const getSequelizeConditionsForFilters = require('./../util/getSequelizeConditionsForFilters');
+const co = require('co')
 , config = require('config')
 , moment = require('moment-timezone')
-, pick = require('lodash/pick')
-, Promise = require('bluebird');
+, pick = require('lodash/pick');
 
-var sanitize = require('../util/sanitize');
-// var ImageOptim    = require('../ImageOptim');
-var notifications = require('../notifications');
+const sanitize = require('../util/sanitize');
+const notifications = require('../notifications');
 
 const merge = require('merge');
 
-var argVoteThreshold = config.ideas && config.ideas.argumentVoteThreshold;
+const argVoteThreshold = config.ideas && config.ideas.argumentVoteThreshold;
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 const roles = require('../lib/sequelize-authorization/lib/roles');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
-const hasModeratorRights = (user) => {
-  return userHasRole(user, 'editor', self.userId) || userHasRole(user, 'admin', self.userId) || userHasRole(user, 'moderator', self.userId);
-}
 
 function hideEmailsForNormalUsers(args) {
   return args.map((argument) => {
@@ -45,23 +41,10 @@ module.exports = function (db, sequelize, DataTypes) {
       defaultValue: config.siteId && typeof config.siteId == 'number' ? config.siteId : 0,
     },
 
-    meetingId: {
-      type: DataTypes.INTEGER,
-      auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
-      },
-      allowNull: true,
-      set: function (meetingId) {
-        meetingId = meetingId ? meetingId : null
-        this.setDataValue('meetingId', meetingId);
-      }
-    },
-
     userId: {
       type: DataTypes.INTEGER,
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
       },
       allowNull: false,
       defaultValue: 0,
@@ -69,7 +52,7 @@ module.exports = function (db, sequelize, DataTypes) {
 
     startDate: {
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
       },
       type: DataTypes.DATE,
       allowNull: false
@@ -89,49 +72,6 @@ module.exports = function (db, sequelize, DataTypes) {
       }
     },
 
-    endDate: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      get: function () {
-        var date = this.getDataValue('endDate');
-        if (this.site && this.site.config && this.site.config.votes && this.site.config.votes.isActiveTo) {
-          return this.site.config.votes.isActiveTo;
-        } else if (this.site && this.site.config && this.site.config.ideas && this.site.config.ideas.automaticallyUpdateStatus && this.site.config.ideas.automaticallyUpdateStatus.isActive) {
-          let days = this.site.config.ideas.automaticallyUpdateStatus.afterXDays || 0;
-          return moment(this.createdAt).add(days, 'days');
-        } else {
-          return date;
-        }
-      },
-    },
-
-    endDateHumanized: {
-      type: DataTypes.VIRTUAL,
-      get: function () {
-        var date = this.getDataValue('endDate');
-        try {
-          if (!date)
-            return 'Onbekende datum';
-          return moment(date).format('LLL');
-        } catch (error) {
-          return (error.message || 'dateFilter error').toString()
-        }
-      }
-    },
-
-    duration: {
-      type: DataTypes.VIRTUAL,
-      get: function () {
-        if (this.getDataValue('status') != 'OPEN') {
-          return 0;
-        }
-
-        var now = moment();
-        var endDate = this.getDataValue('endDate');
-        return Math.max(0, moment(endDate).diff(Date.now()));
-      }
-    },
-
     sort: {
       type: DataTypes.INTEGER,
       auth:  {
@@ -145,7 +85,7 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.STRING(255),
       allowNull: true,
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
         authorizeData: function(data, action, user, self, site) {
           if (!self) return;
           site = site || self.site;
@@ -169,14 +109,14 @@ module.exports = function (db, sequelize, DataTypes) {
     status: {
       type: DataTypes.ENUM('OPEN', 'CLOSED', 'ACCEPTED', 'DENIED', 'BUSY', 'DONE'),
       auth:  {
-        updateableBy: 'editor',
+        updateableBy: 'moderator',
       },
       defaultValue: 'OPEN',
       allowNull: false
     },
 
     viewableByRole: {
-      type: DataTypes.ENUM('admin', 'moderator', 'editor', 'member', 'anonymous', 'all'),
+      type: DataTypes.ENUM('admin', 'editor', 'moderator', 'member', 'anonymous', 'all'),
       defaultValue: 'all',
       auth:  {
         updateableBy: ['editor', 'owner'],
@@ -310,8 +250,8 @@ module.exports = function (db, sequelize, DataTypes) {
     modBreak: {
       type: DataTypes.TEXT,
       auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
+        createableBy: 'moderator',
+        updateableBy: 'moderator',
       },
       allowNull: true,
       set: function (text) {
@@ -323,8 +263,8 @@ module.exports = function (db, sequelize, DataTypes) {
     modBreakUserId: {
       type: DataTypes.INTEGER,
       auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
+        createableBy: 'moderator',
+        updateableBy: 'moderator',
       },
       allowNull: true
     },
@@ -332,8 +272,8 @@ module.exports = function (db, sequelize, DataTypes) {
     modBreakDate: {
       type: DataTypes.DATE,
       auth:  {
-        createableBy: 'editor',
-        updateableBy: 'editor',
+        createableBy: 'moderator',
+        updateableBy: 'moderator',
       },
       allowNull: true
     },
@@ -433,11 +373,6 @@ module.exports = function (db, sequelize, DataTypes) {
     individualHooks: true,
 
     validate: {
-      validDeadline: function () {
-        if (this.endDate - this.startDate < 43200000) {
-          throw Error('An idea must run at least 1 day');
-        }
-      },
       validModBreak: function () {
         return true;
         /*
@@ -661,10 +596,6 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
       filter: function (filtersInclude, filtersExclude) {
-        let conditions = {
-          [Sequelize.Op.and]:[]
-        };
-
         const filterKeys = [
           {
             'key': 'id'
@@ -685,67 +616,8 @@ module.exports = function (db, sequelize, DataTypes) {
             'extraData': true
           },
         ];
-
-        filterKeys.forEach((filter, i) => {
-          //first add include filters
-          if (filtersInclude) {
-            let filterValue = filtersInclude[filter.key];
-
-            if (filtersInclude[filter.key]) {
-              if (filter.extraData) {
-                filterValue = Array.isArray(filterValue) ? filterValue : [filterValue];
-
-                const escapedKey = sequelize.escape(`$.${filter.key}`);
-                filterValue.forEach((value, key)=>{
-                  const escapedValue = sequelize.escape(value);
-                  conditions[Sequelize.Op.and].push({
-                    [Sequelize.Op.and] : sequelize.literal(`extraData->${escapedKey}=${escapedValue}`)
-                  });
-                });
-
-              } else {
-                conditions[Sequelize.Op.and].push({
-                  [filter.key] : filterValue
-                });
-              }
-            }
-          }
-
-          //add exclude filters
-          if (filtersExclude) {
-            let excludeFilterValue = filtersExclude[filter.key];
-
-            if (excludeFilterValue) {
-              if (filter.extraData) {
-                excludeFilterValue = Array.isArray(excludeFilterValue) ? excludeFilterValue : [excludeFilterValue];
-
-                //filter out multiple conditions
-                const escapedKey = sequelize.escape(`$.${filter.key}`);
-                excludeFilterValue.forEach((value, key)=>{
-                  const escapedValue = sequelize.escape(value);
-                  conditions[Sequelize.Op.and].push({
-                    [Sequelize.Op.and] : sequelize.literal(`extraData->${escapedKey}!=${escapedValue}`)
-                  });
-
-
-                })
-
-              } else {
-                /*
-                TODO
-                conditions[Sequelize.Op.and].push({
-                  [filter.key] : filterValue
-                });
-                */
-              }
-            }
-          }
-        });
-
-        return {
-          where: sequelize.and(conditions)
-          //where: sequelize.and(conditions)
-        }
+        
+        return getSequelizeConditionsForFilters(filterKeys, filtersInclude, sequelize, filtersExclude);
       },
 
       // vergelijk getRunning()
@@ -802,19 +674,14 @@ module.exports = function (db, sequelize, DataTypes) {
         };
       },
 
-      includeMeeting: {
-        include: [{
-          model: db.Meeting,
-        }]
-      },
-
       includeTags: {
-        include: [{
-          model: db.Tag,
+        include: [{model: db.Tag,
           attributes: ['id', 'name'],
           through: {attributes: []},
         }]
       },
+
+
 
       selectTags: function (tags) {
         return {
@@ -883,7 +750,7 @@ module.exports = function (db, sequelize, DataTypes) {
       includeUser: {
         include: [{
           model: db.User,
-          attributes: ['id','role', 'nickName', 'firstName', 'lastName', 'email', 'extraData']
+          attributes: ['id','role', 'displayName', 'nickName', 'firstName', 'lastName', 'email', 'extraData']
         }]
       },
 
@@ -1007,7 +874,7 @@ module.exports = function (db, sequelize, DataTypes) {
             break;
 
           case 'date_asc':
-            order = [['endDate', 'ASC']];
+            order = [['startDate', 'ASC']];
             break;
           case 'date_desc':
           default:
@@ -1019,7 +886,7 @@ module.exports = function (db, sequelize, DataTypes) {
 								WHEN 'DENIED'   THEN 0
 								                ELSE 1
 							END DESC,
-							endDate DESC
+							startDate DESC
 						`);
 
         }
@@ -1047,7 +914,7 @@ module.exports = function (db, sequelize, DataTypes) {
       withUser: {
         include: [{
           model: db.User,
-          attributes: ['role', 'nickName', 'firstName', 'lastName', 'email']
+          attributes: ['role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
         }]
       },
       withVoteCount: {
@@ -1173,7 +1040,6 @@ module.exports = function (db, sequelize, DataTypes) {
   }
 
   Idea.associate = function (models) {
-    this.belongsTo(models.Meeting);
     this.belongsTo(models.User);
     this.hasMany(models.Vote);
     this.hasMany(models.Argument, {as: 'argumentsAgainst'});
@@ -1209,7 +1075,7 @@ module.exports = function (db, sequelize, DataTypes) {
         order = [['createdAt', 'DESC']];
         break;
       case 'date_asc':
-        order = [['endDate', 'ASC']];
+        order = [['startDate', 'ASC']];
         break;
       case 'date_desc':
       default:
@@ -1221,7 +1087,7 @@ module.exports = function (db, sequelize, DataTypes) {
 								WHEN 'DENIED'   THEN 0
 								                ELSE 1
 							END DESC,
-							endDate DESC
+							startDate DESC
 						`);
     }
 
@@ -1237,10 +1103,6 @@ module.exports = function (db, sequelize, DataTypes) {
       {
         status: ['OPEN', 'CLOSED', 'ACCEPTED', 'BUSY', 'DONE']
       },
-      sequelize.and(
-        {status: {[Sequelize.Op.not]: 'DENIED'}},
-        sequelize.where(db.Meeting.rawAttributes.date, '>=', new Date())
-      ),
       sequelize.and(
         {status: 'DENIED'},
         sequelize.literal(`DATEDIFF(NOW(), idea.updatedAt) <= 7`)
@@ -1260,10 +1122,6 @@ module.exports = function (db, sequelize, DataTypes) {
     return this.scope(...scopes).findAll({
       where,
       order: order,
-      include: [{
-        model: db.Meeting,
-        attributes: []
-      }]
     }).then((ideas) => {
       // add ranking
       let ranked = ideas.slice();
@@ -1415,27 +1273,6 @@ module.exports = function (db, sequelize, DataTypes) {
     return this.update({status: status});
   }
 
-  Idea.prototype.setMeetingId = function (meetingId) {
-    meetingId = ~~meetingId || null;
-
-    return db.Meeting.findByPk(meetingId)
-      .bind(this)
-      .tap(function (meeting) {
-        if (!meetingId) {
-          return;
-        } else if (!meeting) {
-          throw Error('Vergadering niet gevonden');
-        } else if (meeting.finished) {
-          throw Error('Vergadering ligt in het verleden');
-        } else if (meeting.type == 'selection') {
-          throw Error('Agenderen op een peildatum is niet mogelijk');
-        }
-      })
-      .then(function () {
-        return this.update({meetingId});
-      });
-  }
-
   Idea.prototype.updateImages = function (imageKeys, extraData) {
     var self = this;
     if (!imageKeys || !imageKeys.length) {
@@ -1571,19 +1408,7 @@ module.exports = function (db, sequelize, DataTypes) {
             return site;
           })
           .then(site => {
-
-            // Automatically determine `endDate`
-            if (instance.changed('startDate')) {
-              var duration = (instance.config && instance.config.ideas && instance.config.ideas.duration) || 90;
-              if (this.site && this.site.config && this.site.config.ideas && this.site.config.ideas.automaticallyUpdateStatus && this.site.config.ideas.automaticallyUpdateStatus.isActive) {
-                duration = this.site.config.ideas.automaticallyUpdateStatus.afterXDays || 0;
-              }
-              var endDate = moment(instance.startDate).add(duration, 'days').toDate();
-              instance.setDataValue('endDate', endDate);
-            }
-
             return resolve();
-
           }).catch(err => {
             throw err;
           })

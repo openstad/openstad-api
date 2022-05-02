@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.40.0
+Update version number
+
+## v0.21.0
+* Update Action cron to once every minute
+* Add linter/prettier
+* Unknown fixed-auth-token is no longer an error but is now a not-logged-in
+* Better handling of database connections
+* New template distribution system
+* Do not wait for cms when updating site config
+* Move docker builds from travis to github actions
+
+## v0.20.0 (2021-12-20)
+* Fix responding to not existing routes with to much information
+* Make submissions listable & viewable, and allow them to be filtered by formId
+* Add choices guide stats endpoint
+
+## v0.19.0 (2021-12-02)
+* Removed enddate and duration from articles and ideas. Removed meetings.
+* Updated the use of charset and collation in the database connector
+* Add siteIds as filter to User.anonymizeAll
+
+## v0.18.0
+* Remove userId from votes endpoint when user does not have moderator rights
+* Check if extraData of oauth user is null to prevent error while merging api and oauth extraData.
+* Fix site middleware unit tests
+* Remove endDate and duration from Articles and Ideas. Remove Meetings.
+
 ## v0.17.0
 * Add option to anonymize only selected users at /api/site/:SITE_ID/user/:USER_ID/do-anonymizeall
 * Add automatic update of idea status after a given number of days
@@ -21,7 +49,6 @@
 ## v0.15.0 (2020-06-08)
 * Add create/update date to choices-guide results
 * Allow moderators to update role of users to member (but not to moderator or admin role)
-
 
 ## v0.14.0 (2020-03-17)
 * Add stats overview route for displaying statistics, currently used in react admin on CMS and Admin panel

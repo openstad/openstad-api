@@ -1,4 +1,3 @@
-var Promise = require('bluebird');
 
 var log     = require('debug')('app:cron');
 var db      = require('../db');
@@ -16,7 +15,7 @@ module.exports = {
 			db.Vote.anonimizeOldVotes(),
 			db.ArgumentVote.anonimizeOldVotes()
 		])
-		.spread(function( voteResult, argVoteResult ) {
+		.then(function([ voteResult, argVoteResult ]) {
 			if( voteResult && voteResult.affectedRows ) {
 				log(`anonimized votes: ${voteResult.affectedRows}`);
 			}

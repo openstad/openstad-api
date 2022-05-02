@@ -38,8 +38,11 @@ router.use('/site/:siteId(\\d+)(/idea/:ideaId(\\d+))?/poll', require('./poll'));
 router.use('/site/:siteId(\\d+)/tag', require('./tag'));
 
 // users
-router.use( '/site/:siteId(\\d+)/user', require('./user') );
-router.use( '/site/:siteId(\\d+)/user/:userId(\\d+)/activity', require('./user-activity') );
+router.use('/site/:siteId(\\d+)/user', require('./user'));
+router.use(
+  '/site/:siteId(\\d+)/user/:userId(\\d+)/activity',
+  require('./user-activity')
+);
 
 // submissions
 router.use('/site/:siteId(\\d+)/submission', require('./submission'));
@@ -56,7 +59,7 @@ router.use(
 // choices-guide
 router.use('/site/:siteId(\\d+)/choicesguide', require('./choicesguide'));
 
-router.use( '/site/:siteId(\\d+)/action', require('./action') );
+router.use('/site/:siteId(\\d+)/action', require('./action'));
 
 // To do test and fix log API
 //router.use( '/site/:siteId(\\d+)/log', require('./log') );
@@ -70,11 +73,16 @@ router.use('/area', require('./area'));
 
 // organisations for event-planner module
 router.use('/site/:siteId(\\d+)/organisation', require('./organisation'));
-router.use('/site/:siteId(\\d+)/event', require('./event'), require('./event/event-favorite'));
+router.use(
+  '/site/:siteId(\\d+)/event',
+  require('./event'),
+  require('./event/event-favorite')
+);
 router.use('/site/:siteId(\\d+)/target-audience', require('./target-audience'));
 router.use('/site/:siteId(\\d+)/grant', require('./grants'));
 
-router.use('/repo', require('./externalSite'));
+router.use('/repo', require('./template')); // backwards conpatibility
+router.use('/template', require('./template'));
 
 // output error as JSON only use this error handler middleware in "/api" based routes
 router.use('/site', function (err, req, res, next) {

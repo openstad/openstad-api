@@ -663,10 +663,10 @@ router.route('/:choicesGuideId(\\d+)(/questiongroup/:questionGroupId(\\d+))?/res
 		if (req.choicesguide.config.requiredUserRole == 'member' && ( req.user.role == 'member' || req.user.role === 'editor' || req.user.role === 'moderator' || req.user.role === 'admin' )) {
 			return next();
 		}
-		if (req.choicesguide.config.requiredUserRole == 'editor' && ( req.user.role === 'editor' || req.user.role === 'moderator' || req.user.role === 'admin'  )) {
+		if (req.choicesguide.config.requiredUserRole == 'moderator' && ( req.user.role === 'editor' || req.user.role === 'moderator' || req.user.role === 'admin' )) {
 			return next();
 		}
-		if (req.choicesguide.config.requiredUserRole == 'moderator' && ( req.user.role === 'moderator' || req.user.role === 'admin' )) {
+		if (req.choicesguide.config.requiredUserRole == 'editor' && ( req.user.role === 'editor' || req.user.role === 'admin'  )) {
 			return next();
 		}
 		if (req.choicesguide.config.requiredUserRole == 'admin' && ( req.user.role === 'admin' )) {

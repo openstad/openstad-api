@@ -52,11 +52,6 @@ jest.mock('../src/models/Image', () => () => {
     return new SequelizeMock();
 });
 
-jest.mock('../src/models/Meeting', () => () => {
-    const SequelizeMock = require("sequelize-mock");
-    return new SequelizeMock();
-});
-
 jest.mock('../src/models/User', () => () => {
     const SequelizeMock = require("sequelize-mock");
     return new SequelizeMock();

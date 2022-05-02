@@ -1,4 +1,3 @@
-var Promise = require('bluebird');
 var Umzug   = require('umzug');
 var db      = require('./src/db');
 

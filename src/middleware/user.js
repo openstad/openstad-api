@@ -19,19 +19,20 @@ module.exports = async function getUser( req, res, next ) {
       return nextWithEmptyUser(req, res, next);
     }
 
-    const userId = getUserId(req.headers['x-authorization']);
+    const { userId, client } = parseAuthHeader(req.headers['x-authorization']);
 
-    const which = req.query.useOauth || 'default';
+    const which = client || req.query.useOauth || 'default';
     let siteConfig = req.site && merge({}, req.site.config, { id: req.site.id });
 
-    if(userId === null) {
+    if(userId === null || typeof userId === 'undefined') {
       return nextWithEmptyUser(req, res, next);
     }
 
-    const userEntity = await getUserInstance({ siteConfig, which, userId });
+    const userEntity = await getUserInstance({ siteConfig, which, userId, siteId: ( req.site && req.site.id ) }) || {};
     req.user = userEntity
     // Pass user entity to template view.
     res.locals.user = userEntity;
+    
     next();
   } catch(error) {
     console.error(error);
@@ -64,21 +65,21 @@ function UserId(id, fixed) {
   this.fixed = fixed;
 }
 
-function getUserId(authorizationHeader) {
+function parseAuthHeader(authorizationHeader) {
   const tokens = config && config.authorization && config.authorization['fixed-auth-tokens'];
 
   if (authorizationHeader.match(/^bearer /i)) {
     const jwt = parseJwt(authorizationHeader);
-    return (jwt && jwt.userId) ? new UserId(jwt.userId, false) : null;
+    return (jwt && jwt.userId) ? { userId: new UserId(jwt.userId, false), client: jwt.client } : null;
   }
   if (tokens) {
     const token = tokens.find(token => token.token === authorizationHeader);
     if (token) {
-      return new UserId(token.userId, true);
+      return { userId: new UserId(token.userId, true), client: token.client }
     }
   }
 
-  return null;
+  return {};
 }
 
 /**
@@ -97,13 +98,16 @@ function parseJwt(authorizationHeader) {
  * @param siteConfig
  * @returns {Promise<{}|{externalUserId}|*>}
  */
-async function getUserInstance({ siteConfig, which = 'default', userId }) {
+async function getUserInstance({ siteConfig, which = 'default', userId, siteId }) {
 
   let dbUser;
   
   try {
 
-    dbUser = await db.User.findByPk(userId.id);
+    let where = { id: userId.id };
+    if (siteId && !userId.fixed) where.siteId = siteId;
+
+    dbUser = await db.User.findOne({ where });
 
     if (!dbUser || !dbUser.externalUserId || !dbUser.externalAccessToken) {
       return userId.fixed ? dbUser : {};
@@ -117,6 +121,7 @@ async function getUserInstance({ siteConfig, which = 'default', userId }) {
   try {
 
     let oauthUser = await OAuthApi.fetchUser({ siteConfig, which, token: dbUser.externalAccessToken });
+    if (!oauthUser) return await resetUserToken(dbUser);
 
     let mergedUser = merge(dbUser, oauthUser);
     mergedUser.role = mergedUser.role || ((mergedUser.email || mergedUser.phoneNumber || mergedUser.hashedPhoneNumber) ? 'member' : 'anonymous');
