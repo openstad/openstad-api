@@ -9,6 +9,13 @@ router
 	.all('*', function(req, res, next) {
 		req.scope = [];
 		req.scope.push('includeSite');
+
+		if (req.query.filters || req.query.exclude) {
+			req.scope.push({
+				method: ['filter', req.query.filters, req.query.exclude],
+			});
+		}
+
 		next();
 	});
 

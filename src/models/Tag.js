@@ -2,6 +2,7 @@ const sanitize = require('../util/sanitize');
 const config = require('config');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
+const getSequelizeConditionsForFilters = require('./../util/getSequelizeConditionsForFilters');
 
 module.exports = function (db, sequelize, DataTypes) {
   var Tag = sequelize.define(
@@ -20,7 +21,9 @@ module.exports = function (db, sequelize, DataTypes) {
         },
       },
 
-      tagsExtraData: getExtraDataConfig(DataTypes.JSON, 'tags'),
+      extraData: Object.assign({}, getExtraDataConfig(DataTypes.JSON, 'tags'), {
+        field: 'tagsExtraData'
+      }),
     },
     {
       hooks: {},
@@ -47,6 +50,23 @@ module.exports = function (db, sequelize, DataTypes) {
             model: db.Site,
           },
         ],
+      },
+
+      filter: function (filtersInclude, filtersExclude) {
+        const filterKeys = [
+          {
+            key: 'theme',
+            extraData: true,
+          },
+        ];
+
+        return getSequelizeConditionsForFilters(
+          filterKeys,
+          filtersInclude,
+          sequelize,
+          filtersExclude,
+          'tagsExtraData'
+        );
       },
     };
   };

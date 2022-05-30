@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 
-module.exports = (filterKeys, filtersInclude, sequelize, filtersExclude) => {
+module.exports = (filterKeys, filtersInclude, sequelize, filtersExclude, extraDataKey = 'extraData') => {
     let conditions = {
         [Sequelize.Op.and]: []
     };
@@ -22,7 +22,7 @@ module.exports = (filterKeys, filtersInclude, sequelize, filtersExclude) => {
             filterValue.forEach((value) => {
                 const escapedValue = sequelize.escape(value);
                 conditions[Sequelize.Op.and].push({
-                    [Sequelize.Op.and]: sequelize.literal(`extraData->${escapedKey}=${escapedValue}`)
+                    [Sequelize.Op.and]: sequelize.literal(`${extraDataKey}->${escapedKey}=${escapedValue}`)
                 });
             });
             
@@ -40,7 +40,7 @@ module.exports = (filterKeys, filtersInclude, sequelize, filtersExclude) => {
                 excludeFilterValue.forEach((value) => {
                     const escapedValue = sequelize.escape(value);
                     conditions[Sequelize.Op.and].push({
-                        [Sequelize.Op.and]: sequelize.literal(`extraData->${escapedKey}!=${escapedValue}`)
+                        [Sequelize.Op.and]: sequelize.literal(`${extraDataKey}->${escapedKey}!=${escapedValue}`)
                     });
                 })
             }
