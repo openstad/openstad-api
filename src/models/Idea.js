@@ -72,6 +72,33 @@ module.exports = function (db, sequelize, DataTypes) {
       }
     },
 
+    endDate: {
+      type: DataTypes.VIRTUAL(DataTypes.DATE, ['startDate']),
+      get: function () {
+        var _config = merge.recursive(true, config, this.site.config);
+        var duration =
+          (_config &&
+            _config.ideas &&
+            _config.ideas.duration) ||
+          90;
+        if (
+          this.site &&
+          this.site.config &&
+          this.site.config.ideas &&
+          this.site.config.ideas.automaticallyUpdateStatus &&
+          this.site.config.ideas.automaticallyUpdateStatus.isActive
+        ) {
+          duration =
+            this.site.config.ideas.automaticallyUpdateStatus.afterXDays || 0;
+        }
+        var endDate = moment(this.getDataValue('startDate'))
+          .add(duration, 'days')
+          .toDate();
+
+        return endDate
+      },
+    },
+
     sort: {
       type: DataTypes.INTEGER,
       auth:  {
