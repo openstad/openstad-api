@@ -1,4 +1,5 @@
 const createError = require('http-errors');
+const { isEmpty } = require('lodash');
 const log = require('debug')(
   'app:api-organisation/can-create-organisation-policy'
 );
@@ -12,7 +13,11 @@ const isEventProvider = require('./is-event-provider');
  */
 async function canCreateOrganisationPolicy(user, site) {
   // Check is user is an event provider
-  await isEventProvider(user, site);
+  // await isEventProvider(user, site);
+  log('isEmpty:', isEmpty(user))
+  if (isEmpty(user)) {
+    throw createError(400, 'Niet ingelogd')
+  }
 
   // Check for existing organisation
   const hasNoOrganisation = !user.organisationId;

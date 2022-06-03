@@ -6,7 +6,7 @@ exports.createOrganisation = Joi.object({
   zip: Joi.string().regex(/^[1-9][0-9]{3} ?(?!sa|sd|ss)[a-zA-Z]{2}$/),
   phone: Joi.string().max(10).trim(),
   district: Joi.string().required(),
-  email: Joi.string().email().required(),
+  email: Joi.string().email(),
   website: Joi.string().uri(),
   facebook: Joi.string()
     .allow('', null)
@@ -21,7 +21,7 @@ exports.createOrganisation = Joi.object({
       /https?:\/\/(www\.)?instagram\.com\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)(\/)?/
     ),
   areaId: Joi.number(),
-  tagIds: Joi.array().items(Joi.number()).min(1).required(),
+  tagIds: Joi.array().items(Joi.number()),
 
   // Contact details
   contactName: Joi.string().required(),
@@ -30,7 +30,7 @@ exports.createOrganisation = Joi.object({
   contactPhone: Joi.string().max(10).trim().required(),
 
   // Municipality contact details
-  municipalityContactName: Joi.string().required(),
+  municipalityContactName: Joi.string(),
   municipalityContactEmail: Joi.string().email(),
   municipalityContactPhone: Joi.string().min(10).max(10).trim(),
   municipalityContactStatement: Joi.string(),
@@ -56,5 +56,5 @@ exports.updateOrganisation = Joi.object({
     .regex(
       /https?:\/\/(www\.)?instagram\.com\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)/
     ),
-  tagIds: Joi.array().items(Joi.number()).min(1),
+  tagIds: Joi.array().items(Joi.number()),
 }).options({ stripUnknown: true });

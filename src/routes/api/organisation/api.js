@@ -2,7 +2,7 @@
 const express = require('express');
 const createError = require('http-errors');
 // const config = require('config');
-// const log = require('debug')('app:api-organisation');
+const log = require('debug')('app:api-organisation');
 
 const db = require('../../../db');
 const validateSchema = require('../../../middleware/validate-schema');
@@ -29,12 +29,18 @@ router.post(
           ...req.body,
           siteId: req.params.siteId,
         };
-
+        
         const organisation = await db.Organisation.create(values, {
           transaction,
         });
+
+        req.user.isEventProvider = true;
+        await req.user.save({ transaction });
         await organisation.addUser(req.user, { transaction });
-        await organisation.setTags(values.tagIds, { transaction });
+        
+        if (values.tagIds) {
+          await organisation.setTags(values.tagIds, { transaction });
+        }
 
         await transaction.commit();
         await organisation.reload();

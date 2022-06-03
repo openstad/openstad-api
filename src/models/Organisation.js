@@ -33,12 +33,12 @@ module.exports = function (db, sequelize, DataTypes) {
 
       phone: {
         type: DataTypes.STRING(10),
-        allowNull: false,
+        allowNull: true,
       },
 
       email: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true,
         validate: {
           isEmail: {
             msg: 'Geen geldig emailadres',
