@@ -602,6 +602,14 @@ module.exports = function (db, sequelize, DataTypes) {
           };
         }
       },
+
+      includeOrganisation: {
+        include: [
+          {
+            model: db.Organisation
+          }
+        ]
+      }
     };
   };
 

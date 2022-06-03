@@ -52,6 +52,11 @@ const router = express.Router({ mergeParams: true });
 
 router.all('*', function (req, res, next) {
   req.scope = ['includeSite'];
+
+  if (req.query.includeOrganisation) {
+    req.scope.push('includeOrganisation');
+  }
+
   next();
 });
 
