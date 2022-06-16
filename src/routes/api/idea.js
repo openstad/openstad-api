@@ -364,6 +364,7 @@ router.route('/:ideaId(\\d+)')
             if (req.query.includePoll) { // TODO: naar poll hooks
               if (found.poll) found.poll.countVotes(!req.query.withVotes);
             }
+            found.site = req.site;
             req.results = found;
             next();
           })
