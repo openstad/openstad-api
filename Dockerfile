@@ -1,5 +1,5 @@
 # Nodejs 8.0.0 alpine 3.6.0
-FROM node:13.14.0-alpine
+FROM node:16.16.0-alpine
 
 # Label for tracking
 LABEL nl.openstad.container="api_container" nl.openstad.version="0.0.1-beta" nl.openstad.release-date="2020-05-07"
@@ -27,7 +27,7 @@ ENV AUTH_API_URL=""
 
 
 # Install all base dependencies.# add perl for shell scripts
-RUN apk add --no-cache --update g++ make python musl-dev bash perl perl-dbd-mysql perl-posix-strftime-compiler
+RUN apk add --no-cache --update g++ make python3 musl-dev bash perl perl-dbd-mysql perl-posix-strftime-compiler
 
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.6/main' >> /etc/apk/repositories
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.6/community' >> /etc/apk/repositories
@@ -47,7 +47,7 @@ RUN npm install
 RUN npm install -g nodemon
 
 # Remove unused packages only used for building.
-RUN apk del g++ make python && rm -rf /var/cache/apk/*
+RUN apk del g++ make python3 && rm -rf /var/cache/apk/*
 
 # Set node ownership to /home/app
 RUN chown -R node:node /home/app
