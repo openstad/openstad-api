@@ -14,6 +14,7 @@ const argVoteThreshold = config.ideas && config.ideas.argumentVoteThreshold;
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 const roles = require('../lib/sequelize-authorization/lib/roles');
 const getExtraDataConfig = require('../lib/sequelize-authorization/lib/getExtraDataConfig');
+const htmlToText = require('html-to-text');
 
 function hideEmailsForNormalUsers(args) {
   return args.map((argument) => {
@@ -203,9 +204,11 @@ module.exports = function (db, sequelize, DataTypes) {
         //   msg  : `Samenvatting moet tussen ${summaryMinLength} en ${summaryMaxLength} tekens zijn`
         // }
         textLength(value) {
-          let len = sanitize.summary(value.trim()).length;
+          // We need to undo the sanitization before we can check the length
+          let len = htmlToText.fromString(value).length
           let summaryMinLength = (this.config && this.config.ideas && this.config.ideas.summaryMinLength || 20)
           let summaryMaxLength = (this.config && this.config.ideas && this.config.ideas.summaryMaxLength || 140)
+
           if (len < summaryMinLength || len > summaryMaxLength)
             throw new Error(`Samenvatting moet tussen ${summaryMinLength} en ${summaryMaxLength} tekens zijn`);
         }
