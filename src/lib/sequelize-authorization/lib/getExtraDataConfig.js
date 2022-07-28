@@ -56,7 +56,7 @@ module.exports = function (dataTypeJSON,  siteConfigKey) {
             val[key] = old[key];
           }
 
-          if (typeof val[key] === 'string') {
+          if (typeof val[key] === 'string' && key !== 'theme') {
             val[key] = sanitize.safeTags(val[key]);
           }
         });
