@@ -1,3 +1,7 @@
+// The use of express-brute was commented out 2 years ago, while express-brute has not been updated since 2016.
+// I propose to remove this dependency, and fix this in another way, to be done later.
+
+
 //const ExpressBrute = require('express-brute');
 // const createError = require('http-errors')
 // const moment = require('moment-timezone');
