@@ -26,5 +26,5 @@ Is the documentation updated, maybe a link
 
 ## Branch
 
-If the branch tot merge to is not development
+If the branch to merge to is not development
 
