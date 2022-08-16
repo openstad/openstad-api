@@ -35,5 +35,4 @@ GET request zijn public, de anderen alleen voor admin en de eigenaar
 ## Algemeen TODO
 - Error handling loopt nog via de standaards van de monolith. Dat moet anders want ze zijn nu niet in JSON.
 - De mijnopenstad config verondersteld een paar urls die nog niet zijn ingericht
-- Ik zou graag ASAP de images naar de image server overbrengen
 - PUT requests werken nu als PATCH reuqests; dat zou je voor heel netjes een keer uit elkaar moeten trekken

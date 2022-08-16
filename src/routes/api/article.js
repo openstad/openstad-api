@@ -35,10 +35,6 @@ router
 			req.scope.push('selectRunning');
 		}
 
-		if (req.query.includePosterImage) {
-			req.scope.push('includePosterImage');
-		}
-
 		if (req.query.includeUser) {
 			req.scope.push('includeUser');
 		}

@@ -104,10 +104,6 @@
 						{% for image in article.extraData.images %}
 							<img class="multipleImages" src="{{image}}" width="100%"/><br/>
 						{% endfor %}
-					{% else %}
-						{% if article.posterImageUrl %}
-							<img src="{{URL}}{{article.posterImageUrl}}" width="100%"/>
-						{% endif %}
 					{% endif %}
 
 				</td>

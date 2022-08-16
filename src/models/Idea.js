@@ -145,28 +145,6 @@ module.exports = function (db, sequelize, DataTypes) {
       }
     },
 
-    posterImageUrl: {
-      type: DataTypes.VIRTUAL,
-      get: function () {
-        var posterImage = this.get('posterImage');
-        var location = this.get('location');
-
-        if (Array.isArray(posterImage)) {
-          posterImage = posterImage[0];
-        }
-
-        // temp, want binnenkort hebben we een goed systeem voor images
-        let imageUrl = config.url || '';
-
-        return posterImage ? `${imageUrl}/image/${posterImage.key}?thumb` :
-          location ? 'https://maps.googleapis.com/maps/api/streetview?' +
-          'size=800x600&' +
-          `location=${location.coordinates[0]},${location.coordinates[1]}&` +
-          'heading=151.78&pitch=-0.76&key=' + config.openStadMap.googleKey
-          : null;
-      }
-    },
-
     summary: {
       type: DataTypes.TEXT,
       allowNull: false,
@@ -345,8 +323,6 @@ module.exports = function (db, sequelize, DataTypes) {
           siteId: instance.siteId,
           instanceId: instance.id
         });
-        // TODO: wat te doen met images
-        // idea.updateImages(imageKeys, data.imageExtraData);
       },
 
       afterUpdate: function (instance, options) {
@@ -356,8 +332,6 @@ module.exports = function (db, sequelize, DataTypes) {
           siteId: instance.siteId,
           instanceId: instance.id
         });
-        // TODO: wat te doen met images
-        // idea.updateImages(imageKeys, data.imageExtraData);
       },
 
     },
@@ -688,17 +662,6 @@ module.exports = function (db, sequelize, DataTypes) {
         }
       },
 
-      includePosterImage: {
-        include: [{
-          model: db.Image,
-          as: 'posterImage',
-          attributes: ['key'],
-          required: false,
-          where: {},
-          order: 'sort'
-        }]
-      },
-
       includeRanking: {
         // 				}).then((ideas) => {
         // 					// add ranking
@@ -863,17 +826,6 @@ module.exports = function (db, sequelize, DataTypes) {
         }],
         order: 'createdAt'
       },
-      withPosterImage: {
-        include: [{
-          model: db.Image,
-          as: 'posterImage',
-          attributes: ['key', 'extraData'],
-          required: false,
-          where: {
-            sort: 0
-          }
-        }]
-      },
       withArguments: function (userId) {
         return {
           include: [{
@@ -934,10 +886,7 @@ module.exports = function (db, sequelize, DataTypes) {
     this.hasMany(models.Argument, {as: 'argumentsAgainst'});
     // this.hasOne(models.Vote, {as: 'userVote', });
     this.hasMany(models.Argument, {as: 'argumentsFor'});
-    this.hasMany(models.Image);
-    // this.hasOne(models.Image, {as: 'posterImage'});
     this.hasOne(models.Poll, {as: 'poll', foreignKey: 'ideaId', });
-    this.hasMany(models.Image, {as: 'posterImage'});
     this.hasOne(models.Vote, {as: 'userVote', foreignKey: 'ideaId'});
     this.belongsTo(models.Site);
     this.belongsToMany(models.Tag, {through: 'ideaTags', constraints: false});
@@ -981,7 +930,7 @@ module.exports = function (db, sequelize, DataTypes) {
     // Get all running ideas.
     // TODO: Ideas with status CLOSED should automatically
     //       become DENIED at a certain point.
-    let scopes = ['summary', 'withPosterImage'];
+    let scopes = ['summary'];
     if (extraScopes) {
       scopes = scopes.concat(extraScopes);
     }
@@ -1158,38 +1107,6 @@ module.exports = function (db, sequelize, DataTypes) {
 
   Idea.prototype.setStatus = function (status) {
     return this.update({status: status});
-  }
-
-  Idea.prototype.updateImages = function (imageKeys, extraData) {
-    var self = this;
-    if (!imageKeys || !imageKeys.length) {
-      imageKeys = [''];
-    }
-
-    var ideaId = this.id;
-    var queries = [
-      db.Image.destroy({
-        where: {
-          ideaId: ideaId,
-          key: {[Sequelize.Op.not]: imageKeys}
-        }
-      })
-    ].concat(
-      imageKeys.map(function (imageKey, sort) {
-        return db.Image.update({
-          ideaId: ideaId,
-          extraData: extraData || null,
-          sort: sort
-        }, {
-          where: {key: imageKey}
-        });
-      })
-    );
-
-    return Promise.all(queries).then(function () {
-      // ImageOptim.processIdea(self.id);
-      return self;
-    });
   }
 
   let canMutate = function(user, self) {

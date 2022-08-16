@@ -28,7 +28,6 @@ Je kunt aan de GETs query parameters meegeven. Die werken als scopes voor Sequel
 
 `selectRunning`
 `includeArguments`
-`includePosterImage`
 `includeUser`
 `includeVoteCount`
 `includeUserVote`
@@ -111,5 +110,4 @@ Dat zou dan deze voorbeeld data ondersteunen:
 
 
 ## TODO
-- Wat hier nog niet is geimplementeerd is een oplossing voor images; je krijgt nu terug wat er in de DB zit.
 - Ik denk dat er een overkoepelend idea zou moeten zijn, maar even overleggen
