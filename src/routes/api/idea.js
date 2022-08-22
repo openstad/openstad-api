@@ -40,10 +40,8 @@ router
     /**
      * Old sort for backward compatibility
      */
-    let sort = (req.query.sort || '').replace(/[^a-z_]+/i, '') || (req.cookies['idea_sort'] && req.cookies['idea_sort'].replace(/[^a-z_]+/i, ''));
+    let sort = (req.query.sort || '').replace(/[^a-z_]+/i, '');
     if (sort) {
-      //res.cookie('idea_sort', sort, { expires: 0 });
-
       if (sort == 'votes_desc' || sort == 'votes_asc') {
         if (req.canIncludeVoteCount) req.scope.push('includeVoteCount'); // het werkt niet als je dat in de sort scope functie doet...
       }

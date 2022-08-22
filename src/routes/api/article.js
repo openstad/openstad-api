@@ -21,9 +21,8 @@ router
 
 		req.scope = ['api', 'includeSite'];
 
-		var sort = (req.query.sort || '').replace(/[^a-z_]+/i, '') || (req.cookies['article_sort'] && req.cookies['article_sort'].replace(/[^a-z_]+/i, ''));
+		var sort = (req.query.sort || '').replace(/[^a-z_]+/i, '');
 		if (sort) {
-			res.cookie('article_sort', sort, { expires: 0 });
 			req.scope.push({ method: ['sort', req.query.sort]});
 		}
 

@@ -44,10 +44,6 @@ module.exports = {
   },
 
   "security": {
-    "sessions": {
-      "secret": "COOKIE_SECRET",
-      "onlySecure": true
-    }
   },
 
   "authorization": {
