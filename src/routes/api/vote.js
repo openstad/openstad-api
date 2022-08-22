@@ -153,6 +153,7 @@ router.route('/')
 				vote.createdAt = entry.createdAt;
 				vote.checked =  entry.checked;
 				vote.user = entry.user;
+				if (vote.user.auth) vote.user.auth.user = req.user;
 				vote.userId = entry.userId;
 			}
       records[i] = vote

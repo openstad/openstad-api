@@ -5,7 +5,6 @@ var co        = require('co')
   , pick          = require('lodash/pick');
 
 var sanitize      = require('../util/sanitize');
-// var ImageOptim    = require('../ImageOptim');
 var notifications = require('../notifications');
 
 const merge = require('merge');
@@ -72,28 +71,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 			},
 			set          : function( text ) {
 				this.setDataValue('title', sanitize.title(text.trim()));
-			}
-		},
-
-		posterImageUrl: {
-			type         : DataTypes.VIRTUAL,
-			get          : function() {
-				var posterImage = this.get('posterImage');
-				var location    = this.get('location');
-
-				if ( Array.isArray(posterImage) ) {
-					posterImage = posterImage[0];
-				}
-
-				// temp, want binnenkort hebben we een goed systeem voor images
-				let imageUrl = config.url || '';
-
-				return posterImage ? `${imageUrl}/image/${posterImage.key}?thumb` :
-				       location    ? 'https://maps.googleapis.com/maps/api/streetview?'+
-				                     'size=800x600&'+
-				                     `location=${location.coordinates[0]},${location.coordinates[1]}&`+
-				                     'heading=151.78&pitch=-0.76&key=' + config.openStadMap.googleKey
-				                   : null;
 			}
 		},
 
@@ -209,14 +186,10 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 			afterCreate: function(instance, options) {
 				notifications.addToQueue({ type: 'article', action: 'create', siteId: instance.siteId, instanceId: instance.id });
-				// TODO: wat te doen met images
-				// article.updateImages(imageKeys, data.imageExtraData);
 			},
 
 			afterUpdate: function(instance, options) {
 				notifications.addToQueue({ type: 'article', action: 'update', siteId: instance.siteId, instanceId: instance.id });
-				// TODO: wat te doen met images
-				// article.updateImages(imageKeys, data.imageExtraData);
 			},
 
 		},
@@ -386,17 +359,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 				)
 			},
 
-			includePosterImage: {
-				include: [{
-					model      : db.Image,
-					as         : 'posterImage',
-					attributes : ['key'],
-					required   : false,
-					where      : {},
-					order      : 'sort'
-				}]
-			},
-
 			includeRanking: {
 // 				}).then((articles) => {
 // 					// add ranking
@@ -480,25 +442,11 @@ module.exports = function( db, sequelize, DataTypes ) {
 					attributes : ['role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
 				}]
 			},
-			withPosterImage: {
-				include: [{
-					model      : db.Image,
-					as         : 'posterImage',
-					attributes : ['key', 'extraData'],
-					required   : false,
-					where      : {
-						sort: 0
-					}
-				}]
-			},
 		}
 	}
 
 	Article.associate = function( models ) {
 		this.belongsTo(models.User);
-		this.hasMany(models.Image);
-		// this.hasOne(models.Image, {as: 'posterImage'});
-		this.hasMany(models.Image, {as: 'posterImage'});
 		this.belongsTo(models.Site);
 	}
 
@@ -532,7 +480,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		// Get all running articles.
 		// TODO: Articles with status CLOSED should automatically
 		//       become DENIED at a certain point.
-		let scopes = ['summary', 'withPosterImage'];
+		let scopes = ['summary'];
 		if (extraScopes)  {
 			scopes = scopes.concat(extraScopes);
 		}
@@ -617,38 +565,6 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 	Article.prototype.setStatus = function( status ) {
 		return this.update({status: status});
-	}
-
-	Article.prototype.updateImages = function( imageKeys, extraData ) {
-		var self = this;
-		if( !imageKeys || !imageKeys.length ) {
-			imageKeys = [''];
-		}
-
-		var articleId  = this.id;
-		var queries = [
-			db.Image.destroy({
-				where: {
-					articleId : articleId,
-					key    : {[Sequelize.Op.not]: imageKeys}
-				}
-			})
-		].concat(
-			imageKeys.map(function( imageKey, sort ) {
-				return db.Image.update({
-					articleId : articleId,
-					extraData : extraData || null,
-					sort   : sort
-				}, {
-					where: {key: imageKey}
-				});
-			})
-		);
-
-		return Promise.all(queries).then(function() {
-			// ImageOptim.processArticle(self.id);
-			return self;
-		});
 	}
 
   let canMutate = function(user, self) {

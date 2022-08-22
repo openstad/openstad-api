@@ -145,28 +145,6 @@ module.exports = function (db, sequelize, DataTypes) {
       }
     },
 
-    posterImageUrl: {
-      type: DataTypes.VIRTUAL,
-      get: function () {
-        var posterImage = this.get('posterImage');
-        var location = this.get('location');
-
-        if (Array.isArray(posterImage)) {
-          posterImage = posterImage[0];
-        }
-
-        // temp, want binnenkort hebben we een goed systeem voor images
-        let imageUrl = config.url || '';
-
-        return posterImage ? `${imageUrl}/image/${posterImage.key}?thumb` :
-          location ? 'https://maps.googleapis.com/maps/api/streetview?' +
-          'size=800x600&' +
-          `location=${location.coordinates[0]},${location.coordinates[1]}&` +
-          'heading=151.78&pitch=-0.76&key=' + config.openStadMap.googleKey
-          : null;
-      }
-    },
-
     summary: {
       type: DataTypes.TEXT,
       allowNull: false,
@@ -345,8 +323,6 @@ module.exports = function (db, sequelize, DataTypes) {
           siteId: instance.siteId,
           instanceId: instance.id
         });
-        // TODO: wat te doen met images
-        // idea.updateImages(imageKeys, data.imageExtraData);
       },
 
       afterUpdate: function (instance, options) {
@@ -356,8 +332,6 @@ module.exports = function (db, sequelize, DataTypes) {
           siteId: instance.siteId,
           instanceId: instance.id
         });
-        // TODO: wat te doen met images
-        // idea.updateImages(imageKeys, data.imageExtraData);
       },
 
     },
@@ -688,17 +662,6 @@ module.exports = function (db, sequelize, DataTypes) {
         }
       },
 
-      includePosterImage: {
-        include: [{
-          model: db.Image,
-          as: 'posterImage',
-          attributes: ['key'],
-          required: false,
-          where: {},
-          order: 'sort'
-        }]
-      },
-
       includeRanking: {
         // 				}).then((ideas) => {
         // 					// add ranking
@@ -863,17 +826,6 @@ module.exports = function (db, sequelize, DataTypes) {
         }],
         order: 'createdAt'
       },
-      withPosterImage: {
-        include: [{
-          model: db.Image,
-          as: 'posterImage',
-          attributes: ['key', 'extraData'],
-          required: false,
-          where: {
-            sort: 0
-          }
-        }]
-      },
       withArguments: function (userId) {
         return {
           include: [{
@@ -934,10 +886,7 @@ module.exports = function (db, sequelize, DataTypes) {
     this.hasMany(models.Argument, {as: 'argumentsAgainst'});
     // this.hasOne(models.Vote, {as: 'userVote', });
     this.hasMany(models.Argument, {as: 'argumentsFor'});
-    this.hasMany(models.Image);
-    // this.hasOne(models.Image, {as: 'posterImage'});
     this.hasOne(models.Poll, {as: 'poll', foreignKey: 'ideaId', });
-    this.hasMany(models.Image, {as: 'posterImage'});
     this.hasOne(models.Vote, {as: 'userVote', foreignKey: 'ideaId'});
     this.belongsTo(models.Site);
     this.belongsToMany(models.Tag, {through: 'ideaTags', constraints: false});
@@ -981,7 +930,7 @@ module.exports = function (db, sequelize, DataTypes) {
     // Get all running ideas.
     // TODO: Ideas with status CLOSED should automatically
     //       become DENIED at a certain point.
-    let scopes = ['summary', 'withPosterImage'];
+    let scopes = ['summary'];
     if (extraScopes) {
       scopes = scopes.concat(extraScopes);
     }
@@ -1160,38 +1109,6 @@ module.exports = function (db, sequelize, DataTypes) {
     return this.update({status: status});
   }
 
-  Idea.prototype.updateImages = function (imageKeys, extraData) {
-    var self = this;
-    if (!imageKeys || !imageKeys.length) {
-      imageKeys = [''];
-    }
-
-    var ideaId = this.id;
-    var queries = [
-      db.Image.destroy({
-        where: {
-          ideaId: ideaId,
-          key: {[Sequelize.Op.not]: imageKeys}
-        }
-      })
-    ].concat(
-      imageKeys.map(function (imageKey, sort) {
-        return db.Image.update({
-          ideaId: ideaId,
-          extraData: extraData || null,
-          sort: sort
-        }, {
-          where: {key: imageKey}
-        });
-      })
-    );
-
-    return Promise.all(queries).then(function () {
-      // ImageOptim.processIdea(self.id);
-      return self;
-    });
-  }
-
   let canMutate = function(user, self) {
     if (userHasRole(user, 'editor', self.userId) || userHasRole(user, 'admin', self.userId) || userHasRole(user, 'moderator', self.userId)) {
       return true;
@@ -1201,15 +1118,12 @@ module.exports = function (db, sequelize, DataTypes) {
       return false;
     }
 
-    if (!userHasRole(user, 'owner', self.userId)) {
-      return false;
+    if (userHasRole(user, 'owner', self.userId)) {
+      return true;
     }
 
-    let config = self.site && self.site.config && self.site.config.ideas
-    let canEditAfterFirstLikeOrArg = config && config.canEditAfterFirstLikeOrArg || false
-		let voteCount = self.no + self.yes;
-		let argCount  = self.argumentsFor && self.argumentsFor.length && self.argumentsAgainst && self.argumentsAgainst.length;
-		return canEditAfterFirstLikeOrArg || ( !voteCount && !argCount );
+    // canEditAfterFirstLikeOrArg is handled in the validate hook
+
   }
 
 	Idea.auth = Idea.prototype.auth = {
@@ -1284,27 +1198,25 @@ module.exports = function (db, sequelize, DataTypes) {
 
   return Idea;
 
-  function beforeValidateHook(instance, options) {
+  async function beforeValidateHook(instance, options) {
 
-    return new Promise((resolve, reject) => {
+    // add site config
+    let siteConfig = config;
+    if (instance.siteId) {
+      let site = await db.Site.findByPk(instance.siteId);
+      siteConfig = merge.recursive(true, config, site.config);
+    }
+    instance.config = siteConfig;
 
-      if (instance.siteId) {
-        db.Site.findByPk(instance.siteId)
-          .then(site => {
-            instance.config = merge.recursive(true, config, site.config);
-            return site;
-          })
-          .then(site => {
-            return resolve();
-          }).catch(err => {
-            throw err;
-          })
-      } else {
-        instance.config = config;
-        return resolve();
+    // count args and votes
+    let canEditAfterFirstLikeOrArg = siteConfig && siteConfig.canEditAfterFirstLikeOrArg || false
+    if (!canEditAfterFirstLikeOrArg) {
+      let firstLikeSubmitted = await db.Vote.count({ where: { ideaId: instance.id }});
+      let firstArgSubmitted  = await db.Argument.count({ where: { ideaId: instance.id }});
+      if (firstLikeSubmitted || firstArgSubmitted) {
+        throw Error('You cannot edit an idea after the first like or argument has been added')
       }
-
-    });
+    }
 
   }
 
