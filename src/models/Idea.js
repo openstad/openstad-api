@@ -1118,15 +1118,12 @@ module.exports = function (db, sequelize, DataTypes) {
       return false;
     }
 
-    if (!userHasRole(user, 'owner', self.userId)) {
-      return false;
+    if (userHasRole(user, 'owner', self.userId)) {
+      return true;
     }
 
-    let config = self.site && self.site.config && self.site.config.ideas
-    let canEditAfterFirstLikeOrArg = config && config.canEditAfterFirstLikeOrArg || false
-		let voteCount = self.no + self.yes;
-		let argCount  = self.argumentsFor && self.argumentsFor.length && self.argumentsAgainst && self.argumentsAgainst.length;
-		return canEditAfterFirstLikeOrArg || ( !voteCount && !argCount );
+    // canEditAfterFirstLikeOrArg is handled in the validate hook
+
   }
 
 	Idea.auth = Idea.prototype.auth = {
@@ -1201,27 +1198,25 @@ module.exports = function (db, sequelize, DataTypes) {
 
   return Idea;
 
-  function beforeValidateHook(instance, options) {
+  async function beforeValidateHook(instance, options) {
 
-    return new Promise((resolve, reject) => {
+    // add site config
+    let siteConfig = config;
+    if (instance.siteId) {
+      let site = await db.Site.findByPk(instance.siteId);
+      siteConfig = merge.recursive(true, config, site.config);
+    }
+    instance.config = siteConfig;
 
-      if (instance.siteId) {
-        db.Site.findByPk(instance.siteId)
-          .then(site => {
-            instance.config = merge.recursive(true, config, site.config);
-            return site;
-          })
-          .then(site => {
-            return resolve();
-          }).catch(err => {
-            throw err;
-          })
-      } else {
-        instance.config = config;
-        return resolve();
+    // count args and votes
+    let canEditAfterFirstLikeOrArg = siteConfig && siteConfig.canEditAfterFirstLikeOrArg || false
+    if (!canEditAfterFirstLikeOrArg) {
+      let firstLikeSubmitted = await db.Vote.count({ where: { ideaId: instance.id }});
+      let firstArgSubmitted  = await db.Argument.count({ where: { ideaId: instance.id }});
+      if (firstLikeSubmitted || firstArgSubmitted) {
+        throw Error('You cannot edit an idea after the first like or argument has been added')
       }
-
-    });
+    }
 
   }
 
