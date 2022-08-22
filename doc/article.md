@@ -49,7 +49,6 @@ GET request zijn public, POST is alleen toegankelijk voor admin, de anderen alle
 
 Je kunt aan de GETs query parameters meegeven. Die werken als scopes voor Sequelize; dat komt uit de bestaande app. Bestaande scopes zijn:
 
-`includePosterImage`
 `includeUser`
 
 ## extraData

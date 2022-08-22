@@ -104,10 +104,6 @@
 						{% for image in idea.extraData.images %}
 							<img class="multipleImages" src="{{image}}" width="100%"/><br/>
 						{% endfor %}
-					{% else %}
-						{% if idea.posterImageUrl %}
-							<img src="{{URL}}{{idea.posterImageUrl}}" width="100%"/>
-						{% endif %}
 					{% endif %}
 
 				</td>

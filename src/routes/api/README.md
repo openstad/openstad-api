@@ -205,7 +205,6 @@ Je kunt aan de GETs query parameters meegeven. Die werken als scopes voor Sequel
 
 `selectRunning`
 `includeArguments`
-`includePosterImage`
 `includeUser`
 `includeVoteCount`
 `includeUserVote`
