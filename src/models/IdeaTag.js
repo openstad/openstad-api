@@ -34,9 +34,9 @@ module.exports = function( db, sequelize, DataTypes ) {
 	IdeaTag.auth = IdeaTag.prototype.auth = {
     listableBy: 'all',
     viewableBy: 'all',
-    createableBy: 'admin',
-    updateableBy: 'admin',
-    deleteableBy: 'admin',
+    createableBy: 'editor',
+    updateableBy: 'editor',
+    deleteableBy: 'editor',
   }
 
 	return IdeaTag;

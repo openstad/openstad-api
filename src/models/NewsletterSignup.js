@@ -114,7 +114,7 @@ module.exports = function( db, sequelize, DataTypes ) {
   // dit is hoe het momenteel werkt; ik denk niet dat dat de bedoeling is, maar ik volg nu
 	NewsletterSignup.auth = NewsletterSignup.prototype.auth = {
     listableBy: ['moderator', 'admin'],
-    viewableBy: ['editor', 'owner'],
+    viewableBy: ['moderator', 'owner'],
     createableBy: 'all',
     updateableBy: 'admin',
     deleteableBy: 'admin',
