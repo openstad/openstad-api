@@ -205,8 +205,8 @@ module.exports = function( db, sequelize, DataTypes ) {
 	ChoicesGuideQuestion.auth = ChoicesGuideQuestion.prototype.auth = {
     listableBy: 'all',
     viewableBy: 'all',
-    createableBy: 'admin',
-    updateableBy: 'admin',
+    createableBy: 'editor',
+    updateableBy: 'editor',
     deleteableBy: 'admin',
   }
 

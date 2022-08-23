@@ -144,8 +144,8 @@ module.exports = function( db, sequelize, DataTypes ) {
 	ChoicesGuide.auth = ChoicesGuide.prototype.auth = {
     listableBy: 'all',
     viewableBy: 'all',
-    createableBy: 'admin',
-    updateableBy: 'admin',
+    createableBy: 'editor',
+    updateableBy: 'editor',
     deleteableBy: 'admin',
   }
 
