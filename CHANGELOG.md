@@ -2,6 +2,7 @@
 
 ## UNRELEASED
 * Remove remaining sessions
+* Allow connecting to MySQL through SSL by providing a CA certificate
 
 ## v0.40.0
 Update version number
