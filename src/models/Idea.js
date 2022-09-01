@@ -1210,7 +1210,7 @@ module.exports = function (db, sequelize, DataTypes) {
 
     // count args and votes
     let canEditAfterFirstLikeOrArg = siteConfig && siteConfig.canEditAfterFirstLikeOrArg || false
-    if (!canEditAfterFirstLikeOrArg) {
+    if (!canEditAfterFirstLikeOrArg && !userHasRole(instance.auth && instance.auth.user, 'moderator')) {
       let firstLikeSubmitted = await db.Vote.count({ where: { ideaId: instance.id }});
       let firstArgSubmitted  = await db.Argument.count({ where: { ideaId: instance.id }});
       if (firstLikeSubmitted || firstArgSubmitted) {
