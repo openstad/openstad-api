@@ -124,7 +124,10 @@ If you want to enable gitops flow in the ci pipeline of travis you need to confi
 - GITOPS_ACC_VALUES_FILE=k8s/openstad/environments/acc.values.yaml
 - GITOPS_PROD_VALUES_FILE=k8s/openstad/environments/prod.values.yaml
 
+## MySQL with SSL
+
+When you want to connect to a MySQL server using SSL, a Certificate Authority certificate is required. The contents of this CA certificate can be passed into the `MYSQL_CA_CERT` environment variable.
+
 ## Documentatie
 
 Meer informatie staat in de [docs directory](doc/index.md).
-
