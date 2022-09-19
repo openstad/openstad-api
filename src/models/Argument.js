@@ -39,7 +39,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		},
 
 		sentiment: {
-			type         : DataTypes.ENUM('against', 'for'),
+			type         : DataTypes.ENUM('against', 'for', 'no sentiment'),
 			defaultValue : 'for',
 			allowNull    : false
 		},

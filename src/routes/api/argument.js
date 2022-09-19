@@ -50,7 +50,7 @@ router
     let sentiment = req.query.sentiment;
     let where = { id: argumentId };
 
-    if (sentiment && (sentiment == 'against' || sentiment == 'for')) {
+    if (sentiment && (sentiment == 'against' || sentiment == 'for' || sentiment == 'no sentiment')) {
       where.sentiment = sentiment;
     }
 
@@ -83,7 +83,7 @@ router.route('/')
       where.ideaId = ideaId;
     }
     let sentiment = req.query.sentiment;
-    if (sentiment && (sentiment == 'against' || sentiment == 'for')) {
+    if (sentiment && (sentiment == 'against' || sentiment == 'for' || sentiment == 'no sentiment')) {
       where.sentiment = sentiment;
     }
 
