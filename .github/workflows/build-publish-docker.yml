@@ -47,16 +47,29 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
+        id: docker_build
         uses: docker/build-push-action@v2
         with:
           context: .
-          push: true # ${{ github.event_name != 'pull_request' }}
-          # Note: tags has to be all lower-case
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
-          # build on feature branches, push only on main branch
-          # push: ${{ github.ref == 'refs/heads/main' }}
+
+      # Comment build info in PR
+      - uses: actions/github-script@0.9.0
+        if: github.event_name == 'pull_request'
+        env:
+          STDOUT: "```${{ steps.docker_build.outputs.metadata }}```"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: process.env.STDOUT
+            })
 
       - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+        run: echo ${{ steps.docker_build.outputs.metadata  }}
 
        
