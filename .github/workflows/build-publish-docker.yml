@@ -7,9 +7,6 @@ on:
       - '**'
     tags:
       - "v*"
-  pull_request:
-    branches:
-      - 'master'
 jobs:
   # define job to build and publish docker image
   build-and-push-docker-image:
@@ -52,9 +49,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
-      # Comment build info in PR
+      # Comment build info in commit
       - uses: actions/github-script@0.9.0
-        if: github.event_name == 'pull_request'
         env:
           STDOUT: "Published new image: `${{ steps.docker_build.outputs.metadata.image.name }}`"
         with:
