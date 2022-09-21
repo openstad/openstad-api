@@ -52,7 +52,7 @@ jobs:
       # Comment build info in commit
       - uses: actions/github-script@0.9.0
         env:
-          STDOUT: "Published new image: `${{ steps.docker_build.outputs.metadata.image.name }}`"
+          STDOUT: "Published new image: `${{ fromJson(steps.docker_build.outputs.metadata).image.name }}`"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
