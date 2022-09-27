@@ -1,4 +1,6 @@
 const Sequelize = require('sequelize');
+const { Op } = require("sequelize");
+
 const getSequelizeConditionsForFilters = require('./../util/getSequelizeConditionsForFilters');
 const co = require('co')
 , config = require('config')
@@ -307,7 +309,23 @@ module.exports = function (db, sequelize, DataTypes) {
         }
       }
     },
-
+    publishedDate: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    publishedDateHumanized: {
+      type: DataTypes.VIRTUAL,
+      get: function () {
+        var date = this.getDataValue('publishedDate');
+        try {
+          if (!date)
+            return 'Onbekende datum';
+          return moment(date).format('LLL');
+        } catch (error) {
+          return (error.message || 'dateFilter error').toString()
+        }
+      }
+    },
   }, {
 
     hooks: {
@@ -514,24 +532,35 @@ module.exports = function (db, sequelize, DataTypes) {
 
       // nieuwe scopes voor de api
       // -------------------------
-
       onlyVisible: function (userId, userRole) {
         if (userId) {
           return {
-            where: sequelize.or(
-              { userId },
-              { viewableByRole: 'all' },
-              { viewableByRole: null },
-              { viewableByRole: roles[userRole] || '' },
-            )
+            where: {
+              [Op.or]: [
+                {
+                  [Op.or]: [
+                    {userId},
+                    {viewableByRole: 'all'},
+                    {viewableByRole: null},
+                    {viewableByRole: roles[userRole] || ''}
+                  ],
+                  publishedDate: {[Op.ne]: null}
+                },
+                {
+                  userId,
+                  publishedDate: null
+                }
+              ]
+            }
           };
         } else {
           return {
-            where: sequelize.or(
-              { viewableByRole: 'all' },
-              { viewableByRole: null },
-              { viewableByRole: roles[userRole] || '' },
-            )
+            where: {
+              [Op.and]: {
+                [Op.or]: [{viewableByRole: 'all'}, {viewableByRole: null}, {viewableByRole: roles[userRole] || ''}],
+                [Op.not]: [{publishedDate: null}],
+              }
+            }
           };
         }
       },
@@ -722,6 +751,13 @@ module.exports = function (db, sequelize, DataTypes) {
           }]
         };
         return result;
+      },
+      includeUserConcept: function(userId) {
+        return {
+          where: {
+            userId: userId,
+          }
+        }
       },
 
       includePoll:  function (userId) {
