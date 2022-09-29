@@ -317,6 +317,12 @@ router.route('/:ideaId(\\d+)')
       }
     }
 
+    if(!req.body.publishAsConcept) {
+      req.body['publishedDate'] = new Date();
+    } else {
+      req.body['publishedDate'] = null;
+    }
+
     let data = {
       ...req.body,
     };

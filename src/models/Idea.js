@@ -299,7 +299,7 @@ module.exports = function (db, sequelize, DataTypes) {
       }
     },
     publishedDate: {
-      type: DataTypes.TEXT,
+      type: DataTypes.DATE,
       allowNull: true
     },
     publishedDateHumanized: {
