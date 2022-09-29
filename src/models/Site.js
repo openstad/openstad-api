@@ -166,18 +166,31 @@ module.exports = function (db, sequelize, DataTypes) {
     // todo: formaat gelijktrekken met sequelize defs
     // todo: je zou ook opties kunnen hebben die wel een default hebbe maar niet editable zijn? apiUrl bijv. Of misschien is die afgeleid
     return {
+
       allowedDomains: {
         type: 'arrayOfStrings',
         default: [
           'openstad-api.amsterdam.nl'
         ]
       },
+
       allowedDomains: {
         type: 'arrayOfStrings',
         default: [
           'openstad-api.amsterdam.nl'
         ]
       },
+
+      project: {
+        type: 'object',
+        subset: {
+          endDate: {
+            type: 'string', // todo: add date type
+            default: null,
+          },
+        },
+      },
+
       basicAuth: {
         type: 'object',
         subset: {
@@ -195,6 +208,7 @@ module.exports = function (db, sequelize, DataTypes) {
           },
         }
       },
+
       cms: {
         type: 'object',
         subset: {
@@ -237,6 +251,7 @@ module.exports = function (db, sequelize, DataTypes) {
           }
         }
       },
+
       notifications: {
         type: 'object',
         subset: {
@@ -250,6 +265,7 @@ module.exports = function (db, sequelize, DataTypes) {
           },
         }
       },
+
       email: {
         type: 'object',
         subset: {
