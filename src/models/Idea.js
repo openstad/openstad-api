@@ -744,14 +744,6 @@ module.exports = function (db, sequelize, DataTypes) {
         };
         return result;
       },
-      includeUserConcept: function(userId) {
-        return {
-          where: {
-            userId: userId,
-          }
-        }
-      },
-
       includePoll:  function (userId) {
         return {
           include: [{
