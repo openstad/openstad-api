@@ -173,6 +173,12 @@ router.route('/')
     let userId = req.user.id;
     if (req.user.role == 'admin' && req.body.userId) userId = req.body.userId;
 
+    if(!req.body.publishAsConcept) {
+      req.body['publishedDate'] = new Date();
+    } else {
+      req.body['publishedDate'] = null;
+    }
+
     const data = {
       ...req.body,
       siteId: req.params.siteId,

@@ -130,10 +130,6 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
-        // len: {
-        //   args : [titleMinLength,titleMaxLength],
-        //   msg  : `Titel moet tussen ${titleMinLength} en ${titleMaxLength} tekens lang zijn`
-        // }
         textLength(value) {
           let len = sanitize.title(value.trim()).length;
           let titleMinLength = (this.config && this.config.ideas && this.config.ideas.titleMinLength || 10)
@@ -149,17 +145,13 @@ module.exports = function (db, sequelize, DataTypes) {
 
     summary: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: !this.publishedDate,
       validate: {
-        // len: {
-        //   args : [summaryMinLength,summaryMaxLength],
-        //   msg  : `Samenvatting moet tussen ${summaryMinLength} en ${summaryMaxLength} tekens zijn`
-        // }
         textLength(value) {
           let len = sanitize.summary(value.trim()).length;
           let summaryMinLength = (this.config && this.config.ideas && this.config.ideas.summaryMinLength || 20)
           let summaryMaxLength = (this.config && this.config.ideas && this.config.ideas.summaryMaxLength || 140)
-          if (len < summaryMinLength || len > summaryMaxLength)
+          if (this.publishedDate && (len < summaryMinLength || len > summaryMaxLength))
             throw new Error(`Samenvatting moet tussen ${summaryMinLength} en ${summaryMaxLength} tekens zijn`);
         }
       },
@@ -170,18 +162,15 @@ module.exports = function (db, sequelize, DataTypes) {
 
     description: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: !this.publishedDate,
       validate: {
-        // len: {
-        //  	args : [( this.config && this.config.ideas && config.ideas.descriptionMinLength || 140 ) ,descriptionMaxLength],
-        //  	msg  : `Beschrijving moet  tussen ${this.config && this.config.ideas && config.ideas.descriptionMinLength || 140} en ${descriptionMaxLength} tekens zijn`
-        // },
         textLength(value) {
           let len = sanitize.summary(value.trim()).length;
           let descriptionMinLength = (this.config && this.config.ideas && this.config.ideas.descriptionMinLength || 140)
           let descriptionMaxLength = (this.config && this.config.ideas && this.config.ideas.descriptionMaxLength || 5000)
-          if (len < descriptionMinLength || len > descriptionMaxLength)
+          if (this.publishedDate && (len < descriptionMinLength || len > descriptionMaxLength)) {
             throw new Error(`Beschrijving moet tussen ${descriptionMinLength} en ${descriptionMaxLength} tekens zijn`);
+          }
         }
       },
       set: function (text) {
@@ -310,7 +299,7 @@ module.exports = function (db, sequelize, DataTypes) {
       }
     },
     publishedDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.TEXT,
       allowNull: true
     },
     publishedDateHumanized: {
@@ -534,6 +523,11 @@ module.exports = function (db, sequelize, DataTypes) {
       // -------------------------
       onlyVisible: function (userId, userRole) {
         if (userId) {
+
+          if(userRole === 'admin') {
+            return {};
+          }
+
           return {
             where: {
               [Op.or]: [
@@ -556,10 +550,8 @@ module.exports = function (db, sequelize, DataTypes) {
         } else {
           return {
             where: {
-              [Op.and]: {
-                [Op.or]: [{viewableByRole: 'all'}, {viewableByRole: null}, {viewableByRole: roles[userRole] || ''}],
-                [Op.not]: [{publishedDate: null}],
-              }
+              [Op.or]: [{viewableByRole: 'all'}, {viewableByRole: null}, {viewableByRole: roles[userRole] || ''}],
+              [Op.not]: [{publishedDate: null}],
             }
           };
         }
