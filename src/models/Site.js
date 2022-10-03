@@ -191,6 +191,37 @@ module.exports = function (db, sequelize, DataTypes) {
         },
       },
 
+      anonymize: {
+        type: 'object',
+        subset: {
+          anonimizeUsersXDaysAfterEndDate: {
+            type: 'int',
+            default: 60,
+          },
+          warnUsersAfterXDaysOfInactivity: {
+            type: 'int',
+            default: 770,
+          },
+          anonimizeUsersAfterXDaysOfInactivity: {
+            type: 'int',
+            default: 860,
+          },
+          inactiveWarningEmail: {
+            type: 'object',
+            subset: {
+              subject: {
+                type: 'string',
+                default: undefined,
+              },
+              template: {
+                type: 'string',
+                default: undefined,
+              },
+            },
+          },
+        },
+      },
+
       basicAuth: {
         type: 'object',
         subset: {
