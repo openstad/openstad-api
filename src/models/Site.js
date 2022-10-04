@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const merge = require('merge');
 const moment = require('moment');
+const apiConfig = require('config');
 const OAuthApi = require('../services/oauth-api');
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 
@@ -286,15 +287,19 @@ module.exports = function (db, sequelize, DataTypes) {
       notifications: {
         type: 'object',
         subset: {
-          from: {
+          fromAddress: {
             type: 'string', // todo: add type email/list of emails
             default: 'EMAIL@NOT.DEFINED',
           },
-          to: {
+          projectmanagerAddress: {
             type: 'string', // todo: add type email/list of emails
             default: 'EMAIL@NOT.DEFINED',
           },
-        }
+          siteadminAddress: {
+            type: 'string', // todo: add type email/list of emails
+            default: 'EMAIL@NOT.DEFINED',
+          },
+        },
       },
 
       email: {
@@ -790,6 +795,23 @@ module.exports = function (db, sequelize, DataTypes) {
           value[key] = {default: value[key]};
         }
 
+        // backwards compatibility op notifications settings
+        if (key == 'notifications' && value[key]) {
+          if (value[key].from && ( !(value[key].fromAddress) || value[key].fromAddress == options[key].subset.fromAddress.default )) {
+            value[key].fromAddress = value[key].from;
+            value[key].from = undefined;
+          }
+          if (value[key].to) {
+            if ( !value[key].projectmanagerAddress || value[key].projectmanagerAddress == options[key].subset.projectmanagerAddress.default ) {
+              value[key].projectmanagerAddress = value[key].to || apiConfig.notifications.admin.emailAddress || options[key].subset.projectmanagerAddress.default;
+            }
+            if ( !value[key].siteadminAddress || value[key].siteadminAddress == options[key].subset.default ) {
+              value[key].siteadminAddress = apiConfig.notifications.admin.emailAddress || value[key].projectmanagerAddress;
+            }
+            value[key].to = undefined;
+          }
+        }
+
         // TODO: 'arrayOfObjects' met een subset
 
         // objects in objects
@@ -865,7 +887,9 @@ module.exports = function (db, sequelize, DataTypes) {
           newValue[key] = value[key];
         }
       });
+
       return newValue;
+
     }
 
   }

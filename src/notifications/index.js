@@ -76,8 +76,8 @@ Notifications.sendMessage = function(siteId, type, action, data) {
 
 			maildata.subject = type == 'argument' ? 'Nieuwe argumenten geplaatst' : ( action == 'create' ? 'Nieuwe inzending geplaatst' : 'Bestaande inzending bewerkt' );
 
-			maildata.from = ( myConfig.notifications && ( myConfig.notifications.from || ( myConfig.notifications.admin && myConfig.notifications.admin.emailAddress ) ) ) || myConfig.mail.from; // backwards compatible
-			maildata.to = ( myConfig.notifications && myConfig.notifications.to ) || maildata.from;
+			maildata.from = ( myConfig.notifications && myConfig.notifications.fromAddress ) || myConfig.mail.from;
+			maildata.to = ( myConfig.notifications && myConfig.notifications.projectmanagerAddress );
 
 			maildata.EMAIL = maildata.from;
 			maildata.HOSTNAME = ( myConfig.cms && ( myConfig.cms.hostname || myConfig.cms.domain ) ) || myConfig.hostname || myConfig.domain;
