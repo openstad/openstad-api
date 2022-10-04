@@ -5,7 +5,7 @@ module.exports = {
 		try {
 			return db.query(`
 				UPDATE ideas 
-				SET publishedDate = createdAt
+				SET publishDate = createdAt
 				WHERE createdAt < '2022-09-30'
 			`);
 		} catch(e) {
@@ -13,7 +13,7 @@ module.exports = {
 		}
 	},
 	down: function() {
-		return db.query(`ALTER TABLE ideas DROP publishedDate;`);
+		return db.query(`ALTER TABLE ideas DROP publishDate;`);
 	}
 }
 

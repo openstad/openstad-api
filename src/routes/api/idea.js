@@ -174,9 +174,9 @@ router.route('/')
     if (req.user.role == 'admin' && req.body.userId) userId = req.body.userId;
 
     if(!req.body.publishAsConcept) {
-      req.body['publishedDate'] = new Date();
+      req.body['publishDate'] = new Date();
     } else {
-      req.body['publishedDate'] = null;
+      req.body['publishDate'] = null;
     }
 
     const data = {
@@ -318,9 +318,9 @@ router.route('/:ideaId(\\d+)')
     }
 
     if(!req.body.publishAsConcept) {
-      req.body['publishedDate'] = new Date();
+      req.body['publishDate'] = new Date();
     } else {
-      req.body['publishedDate'] = null;
+      req.body['publishDate'] = null;
     }
 
     let data = {

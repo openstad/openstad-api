@@ -145,13 +145,13 @@ module.exports = function (db, sequelize, DataTypes) {
 
     summary: {
       type: DataTypes.TEXT,
-      allowNull: !this.publishedDate,
+      allowNull: !this.publishDate,
       validate: {
         textLength(value) {
           let len = sanitize.summary(value.trim()).length;
           let summaryMinLength = (this.config && this.config.ideas && this.config.ideas.summaryMinLength || 20)
           let summaryMaxLength = (this.config && this.config.ideas && this.config.ideas.summaryMaxLength || 140)
-          if (this.publishedDate && (len < summaryMinLength || len > summaryMaxLength))
+          if (this.publishDate && (len < summaryMinLength || len > summaryMaxLength))
             throw new Error(`Samenvatting moet tussen ${summaryMinLength} en ${summaryMaxLength} tekens zijn`);
         }
       },
@@ -162,13 +162,13 @@ module.exports = function (db, sequelize, DataTypes) {
 
     description: {
       type: DataTypes.TEXT,
-      allowNull: !this.publishedDate,
+      allowNull: !this.publishDate,
       validate: {
         textLength(value) {
           let len = sanitize.summary(value.trim()).length;
           let descriptionMinLength = (this.config && this.config.ideas && this.config.ideas.descriptionMinLength || 140)
           let descriptionMaxLength = (this.config && this.config.ideas && this.config.ideas.descriptionMaxLength || 5000)
-          if (this.publishedDate && (len < descriptionMinLength || len > descriptionMaxLength)) {
+          if (this.publishDate && (len < descriptionMinLength || len > descriptionMaxLength)) {
             throw new Error(`Beschrijving moet tussen ${descriptionMinLength} en ${descriptionMaxLength} tekens zijn`);
           }
         }
@@ -298,14 +298,14 @@ module.exports = function (db, sequelize, DataTypes) {
         }
       }
     },
-    publishedDate: {
+    publishDate: {
       type: DataTypes.DATE,
       allowNull: true
     },
-    publishedDateHumanized: {
+    publishDateHumanized: {
       type: DataTypes.VIRTUAL,
       get: function () {
-        var date = this.getDataValue('publishedDate');
+        var date = this.getDataValue('publishDate');
         try {
           if (!date)
             return 'Onbekende datum';
@@ -538,11 +538,11 @@ module.exports = function (db, sequelize, DataTypes) {
                     {viewableByRole: null},
                     {viewableByRole: roles[userRole] || ''}
                   ],
-                  publishedDate: {[Op.ne]: null}
+                  publishDate: {[Op.ne]: null}
                 },
                 {
                   userId,
-                  publishedDate: null
+                  publishDate: null
                 }
               ]
             }
@@ -551,7 +551,7 @@ module.exports = function (db, sequelize, DataTypes) {
           return {
             where: {
               [Op.or]: [{viewableByRole: 'all'}, {viewableByRole: null}, {viewableByRole: roles[userRole] || ''}],
-              [Op.not]: [{publishedDate: null}],
+              [Op.not]: [{publishDate: null}],
             }
           };
         }
@@ -744,6 +744,7 @@ module.exports = function (db, sequelize, DataTypes) {
         };
         return result;
       },
+
       includePoll:  function (userId) {
         return {
           include: [{
