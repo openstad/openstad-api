@@ -28,7 +28,7 @@ router.route('/total')
 // -----------
 	.get(function(req, res, next) {
 
-    let query = "SELECT count(ideas.id) AS counted FROM ideas WHERE ideas.deletedAt IS NULL AND ideas.siteId=?";
+    let query = "SELECT count(ideas.id) AS counted FROM ideas WHERE ideas.publishDate < NOW() AND ideas.deletedAt IS NULL AND ideas.siteId=?";
     let bindvars = [req.params.siteId]
 
     pool

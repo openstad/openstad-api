@@ -1,4 +1,6 @@
 const Sequelize = require('sequelize');
+const { Op } = require("sequelize");
+
 const getSequelizeConditionsForFilters = require('./../util/getSequelizeConditionsForFilters');
 const co = require('co')
 , config = require('config')
@@ -128,10 +130,6 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
-        // len: {
-        //   args : [titleMinLength,titleMaxLength],
-        //   msg  : `Titel moet tussen ${titleMinLength} en ${titleMaxLength} tekens lang zijn`
-        // }
         textLength(value) {
           let len = sanitize.title(value.trim()).length;
           let titleMinLength = (this.config && this.config.ideas && this.config.ideas.titleMinLength || 10)
@@ -147,17 +145,13 @@ module.exports = function (db, sequelize, DataTypes) {
 
     summary: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: !this.publishDate,
       validate: {
-        // len: {
-        //   args : [summaryMinLength,summaryMaxLength],
-        //   msg  : `Samenvatting moet tussen ${summaryMinLength} en ${summaryMaxLength} tekens zijn`
-        // }
         textLength(value) {
           let len = sanitize.summary(value.trim()).length;
           let summaryMinLength = (this.config && this.config.ideas && this.config.ideas.summaryMinLength || 20)
           let summaryMaxLength = (this.config && this.config.ideas && this.config.ideas.summaryMaxLength || 140)
-          if (len < summaryMinLength || len > summaryMaxLength)
+          if (this.publishDate && (len < summaryMinLength || len > summaryMaxLength))
             throw new Error(`Samenvatting moet tussen ${summaryMinLength} en ${summaryMaxLength} tekens zijn`);
         }
       },
@@ -168,18 +162,15 @@ module.exports = function (db, sequelize, DataTypes) {
 
     description: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: !this.publishDate,
       validate: {
-        // len: {
-        //  	args : [( this.config && this.config.ideas && config.ideas.descriptionMinLength || 140 ) ,descriptionMaxLength],
-        //  	msg  : `Beschrijving moet  tussen ${this.config && this.config.ideas && config.ideas.descriptionMinLength || 140} en ${descriptionMaxLength} tekens zijn`
-        // },
         textLength(value) {
           let len = sanitize.summary(value.trim()).length;
           let descriptionMinLength = (this.config && this.config.ideas && this.config.ideas.descriptionMinLength || 140)
           let descriptionMaxLength = (this.config && this.config.ideas && this.config.ideas.descriptionMaxLength || 5000)
-          if (len < descriptionMinLength || len > descriptionMaxLength)
+          if (this.publishDate && (len < descriptionMinLength || len > descriptionMaxLength)) {
             throw new Error(`Beschrijving moet tussen ${descriptionMinLength} en ${descriptionMaxLength} tekens zijn`);
+          }
         }
       },
       set: function (text) {
@@ -307,7 +298,23 @@ module.exports = function (db, sequelize, DataTypes) {
         }
       }
     },
-
+    publishDate: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    publishDateHumanized: {
+      type: DataTypes.VIRTUAL,
+      get: function () {
+        const date = this.getDataValue('publishDate');
+        try {
+          if (!date)
+            return 'Onbekende datum';
+          return moment(date).format('LLL');
+        } catch (error) {
+          return (error.message || 'dateFilter error').toString()
+        }
+      }
+    },
   }, {
 
     hooks: {
@@ -514,24 +521,38 @@ module.exports = function (db, sequelize, DataTypes) {
 
       // nieuwe scopes voor de api
       // -------------------------
-
       onlyVisible: function (userId, userRole) {
         if (userId) {
+
+          if(userRole === 'admin') {
+            return {};
+          }
+
           return {
-            where: sequelize.or(
-              { userId },
-              { viewableByRole: 'all' },
-              { viewableByRole: null },
-              { viewableByRole: roles[userRole] || '' },
-            )
+            where: {
+              [Op.or]: [
+                {
+                  [Op.or]: [
+                    {userId},
+                    {viewableByRole: 'all'},
+                    {viewableByRole: null},
+                    {viewableByRole: roles[userRole] || ''}
+                  ],
+                  publishDate: {[Op.ne]: null}
+                },
+                {
+                  userId,
+                  publishDate: null
+                }
+              ]
+            }
           };
         } else {
           return {
-            where: sequelize.or(
-              { viewableByRole: 'all' },
-              { viewableByRole: null },
-              { viewableByRole: roles[userRole] || '' },
-            )
+            where: {
+              [Op.or]: [{viewableByRole: 'all'}, {viewableByRole: null}, {viewableByRole: roles[userRole] || ''}],
+              [Op.not]: [{publishDate: null}],
+            }
           };
         }
       },
