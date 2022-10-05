@@ -9,6 +9,7 @@ const mail = require('../../lib/mail');
 const pagination = require('../../middleware/pagination');
 const searchResults = require('../../middleware/search-results-static');
 const isJson = require('../../util/isJson');
+const publishConcept = require('../../middleware/publish-concept');
 
 const router = express.Router({ mergeParams: true });
 const userhasModeratorRights = (user) => {
@@ -151,6 +152,7 @@ router.route('/')
   // create idea
   // -----------
   .post(auth.can('Idea', 'create'))
+  .post(publishConcept)
   .post(function(req, res, next) {
     if (!req.site) return next(createError(401, 'Site niet gevonden'));
     return next();
@@ -172,12 +174,6 @@ router.route('/')
 
     let userId = req.user.id;
     if (req.user.role == 'admin' && req.body.userId) userId = req.body.userId;
-
-    if(!req.body.publishAsConcept) {
-      req.body['publishDate'] = new Date();
-    } else {
-      req.body['publishDate'] = null;
-    }
 
     const data = {
       ...req.body,
@@ -292,6 +288,7 @@ router.route('/:ideaId(\\d+)')
   // update idea
   // -----------
   .put(auth.useReqUser)
+  .put(publishConcept)
   .put(function(req, res, next) {
     req.tags = req.body.tags;
     return next();
@@ -315,12 +312,6 @@ router.route('/:ideaId(\\d+)')
       if (req.body.location === null) {
         req.body.location = JSON.parse(null);
       }
-    }
-
-    if(!req.body.publishAsConcept) {
-      req.body['publishDate'] = new Date();
-    } else {
-      req.body['publishDate'] = null;
     }
 
     let data = {

@@ -305,7 +305,7 @@ module.exports = function (db, sequelize, DataTypes) {
     publishDateHumanized: {
       type: DataTypes.VIRTUAL,
       get: function () {
-        var date = this.getDataValue('publishDate');
+        const date = this.getDataValue('publishDate');
         try {
           if (!date)
             return 'Onbekende datum';

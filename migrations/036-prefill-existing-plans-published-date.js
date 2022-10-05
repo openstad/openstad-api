@@ -6,7 +6,6 @@ module.exports = {
 			return db.query(`
 				UPDATE ideas 
 				SET publishDate = createdAt
-				WHERE createdAt < '2022-09-30'
 			`);
 		} catch(e) {
 			return true;
