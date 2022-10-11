@@ -158,6 +158,7 @@ module.exports = function (db, sequelize, DataTypes) {
   }
 
   Site.associate = function (models) {
+    this.hasMany(models.User);
     this.hasMany(models.Idea);
     this.belongsTo(models.Area);
   }

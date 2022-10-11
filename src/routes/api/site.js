@@ -2,6 +2,7 @@ const express 				= require('express');
 const config 					= require('config');
 const fetch           = require('node-fetch');
 const merge           = require('merge');
+const Sequelize       = require('sequelize');
 const db      				= require('../../db');
 const auth 						= require('../../middleware/sequelize-authorization-middleware');
 const pagination 			= require('../../middleware/pagination');
@@ -39,7 +40,13 @@ router.route('/')
 	.get(auth.can('Site', 'list'))
 	.get(pagination.init)
 	.get(function(req, res, next) {
-		const scope = ['withArea'];
+
+		const scope = [];
+    if (req.query.includeAdminTriggers) {
+      scope.push('includeAdminTriggers');
+    } else {
+      scope.push('withArea');
+    }
 
 		db.Site
 			.scope(scope)
@@ -83,6 +90,112 @@ router.route('/')
 	.post(refreshSiteConfigMw)
 	.post(function(req, res, next) {
     return res.json(req.results);
+  })
+
+// list sites with issues
+router.route('/issues')
+// -------------------------------
+	.get(auth.can('Site', 'list'))
+	.get(pagination.init)
+	.get(function(req, res, next) {
+    req.results = [];
+    req.dbQuery.count = 0;
+    return next();
+  })
+	.get(function(req, res, next) {
+
+    // sites that should be ended but are not
+		db.Site
+			.findAndCountAll({
+        offset: req.dbQuery.offset, limit: req.dbQuery.limit,
+        attributes: { 
+          include: [
+            [Sequelize.literal('"Site endDate is in the past but projectHasEnded is not set"'), 'issue'],
+          ],
+        },
+        where: {
+          [Sequelize.Op.and]: [
+            {
+              config: {
+                project: {
+                  endDate: {
+                    [Sequelize.Op.not]: null
+                  }
+                }
+              }
+            }, {
+              config: {
+                project: {
+                  endDate: {
+                    [Sequelize.Op.lte]: new Date(),
+                  }
+                }
+              }
+            }, {
+              config: {
+                projectHasEnded: false,
+              }
+            }              
+          ]
+        }
+      })
+			.then( result => {
+        req.results = req.results.concat( result.rows );
+        req.dbQuery.count += result.count;
+        return next();
+			})
+			.catch(next);
+
+	})
+	.get(function(req, res, next) {
+
+    // sites that have ended but are not anonimized
+		db.Site
+			.findAndCountAll({
+        offset: req.dbQuery.offset, limit: req.dbQuery.limit,
+        attributes: { 
+          include: [
+            [Sequelize.literal('"Project has ended but is not yet anonimized"'), 'issue'],
+            [Sequelize.fn("COUNT", Sequelize.col("users.id")), "userCount"]
+          ],
+        },
+        include: [{
+          model: db.User,
+          attributes: [],
+          where: {
+            role: 'member',
+          }
+        }],
+        group: ['users.siteId'],
+        where: {
+					[Sequelize.Op.and]: [
+						// where site enddate is more then anonimizeUsersXDaysAfterEndDate days ago
+						Sequelize.literal("DATE_ADD(CAST(JSON_UNQUOTE(JSON_EXTRACT(site.config,'$.project.endDate')) as DATETIME), INTERVAL json_extract(site.config, '$.anonymize.anonimizeUsersXDaysAfterEndDate') DAY) < NOW()"),
+            { config: { projectHasEnded: true } },
+					]
+				}
+      })
+			.then( result => {
+        req.results = req.results.concat( result.rows );
+        req.dbQuery.count += result.count;
+        return next();
+			})
+			.catch(next);
+
+	})
+	.get(searchResults)
+	.get(auth.useReqUser)
+	.get(pagination.paginateResults)
+	.get(function(req, res, next) {
+    let records = req.results.records || req.results
+		records.forEach((record, i) => {
+      let site = record.toJSON()
+			if (!( req.user && req.user.role && req.user.role == 'admin' )) {
+        site.config = undefined;
+			}
+      records[i] = site;
+    });
+		res.json(req.results);
   })
 
 // one site routes: get site
