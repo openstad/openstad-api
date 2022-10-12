@@ -41,12 +41,7 @@ router.route('/')
 	.get(pagination.init)
 	.get(function(req, res, next) {
 
-		const scope = [];
-    if (req.query.includeAdminTriggers) {
-      scope.push('includeAdminTriggers');
-    } else {
-      scope.push('withArea');
-    }
+		const scope = ['withArea'];
 
 		db.Site
 			.scope(scope)
