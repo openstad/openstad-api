@@ -69,7 +69,6 @@ Notifications.sendMessage = function(siteId, type, action, data) {
 	db.Site.findByPk(siteId)
 		.then(site => {
 
-      
 			let myConfig = Object.assign({}, config, site && site.config);
 
 			let maildata = {};

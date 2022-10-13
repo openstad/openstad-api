@@ -419,6 +419,12 @@ module.exports = function (db, sequelize, DataTypes) {
       defaultValue: sequelize.NOW,
     },
 
+    isNotifiedAboutAnonymization: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
+
     // signedUpForNewsletter: {
     //  	type         : DataTypes.BOOLEAN,
     //  	allowNull    : false,

@@ -213,11 +213,11 @@ module.exports = function (db, sequelize, DataTypes) {
             subset: {
               subject: {
                 type: 'string',
-                default: undefined,
+                default: 'Je account is verlopen',
               },
               template: {
                 type: 'string',
-                default: undefined,
+                default: 'Je account op {{URL}} is verlopen. We gaan je account verwijderen. Als je dat niet wilt, log dan binnen 60 dagemn in.',
               },
             },
           },

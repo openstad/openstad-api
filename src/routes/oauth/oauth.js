@@ -160,6 +160,7 @@ router
             lastName: req.userData.lastName,
             role: req.userData.role || ((req.userData.email || req.userData.phoneNumber || req.userData.hashedPhoneNumber) ? 'member' : 'anonymous'),
             lastLogin: new Date(),
+            isNotifiedAboutAnonymization: null,
         }
 
         // if user has same siteId and userId

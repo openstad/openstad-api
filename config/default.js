@@ -66,6 +66,10 @@ let defaultConfig = {
 		}
 	},
 
+  "anonymize": {
+    "anonimizeUsersXDaysAfterNotification": 60,
+  },
+  
 	"authorization": {
 
 		"jwt-secret": "xxxxx",
@@ -303,6 +307,7 @@ defaultConfig.mail.transport.smtp.requireSSL = process.env.API_MAIL_TRANSPORT_SM
 defaultConfig.mail.transport.smtp.auth.user = process.env.API_MAIL_TRANSPORT_SMTP_AUTH_USER || defaultConfig.mail.transport.smtp.auth.user;
 defaultConfig.mail.transport.smtp.auth.pass = process.env.API_MAIL_TRANSPORT_SMTP_AUTH_PASS || defaultConfig.mail.transport.smtp.auth.pass;
 defaultConfig.notifications.admin.emailAddress = process.env.API_NOTIFICATIONS_ADMIN_EMAILADDRESS || defaultConfig.notifications.admin.emailAddress;
+defaultConfig.anonymize.anonimizeUsersXDaysAfterNotification = process.env.ANONIMIZE_USERS_X_DAYS_AFTER_NOTIFICATION || defaultConfig.anonymize.anonimizeUsersXDaysAfterNotification;
 defaultConfig.authorization['jwt-secret'] = process.env.API_AUTHORIZATION_JWTSECRET || defaultConfig.authorization['jwt-secret'];
 defaultConfig.authorization['auth-server-url'] = process.env.AUTH_API_URL || defaultConfig.authorization['auth-server-url'];
 defaultConfig.authorization["auth-client-id"] = process.env.AUTH_FIRST_CLIENT_ID || defaultConfig.authorization["auth-client-id"];
