@@ -92,6 +92,7 @@ Notifications.sendMessage = function(siteId, type, action, data) {
 			let model = type.charAt(0).toUpperCase() + type.slice(1);
 
 			let scope = type == 'idea' || type == 'article' ? ['withUser'] : ['withUser', 'withIdea'];
+      scope.push('includeSite');
 			db[model].scope(scope).findAll({ where: { id: instanceIds }})
 				.then( found => {
 					maildata.data = {};
