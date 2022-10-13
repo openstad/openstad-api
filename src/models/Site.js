@@ -190,6 +190,10 @@ module.exports = function (db, sequelize, DataTypes) {
             type: 'string', // todo: add date type
             default: null,
           },
+          endDateNotificationSent: {
+            type: 'boolean',
+            default: false,
+          },
         },
       },
 

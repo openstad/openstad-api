@@ -63,7 +63,12 @@ let defaultConfig = {
 			// Special high-frequency email notifications for site administrators.
 			// Should probably not be a personal email account.
 			"emailAddress": null
-		}
+		},
+    "sendEndDateNotifications": {
+      "XDaysBefore": 2,
+      "subject": "project bijna afgelopen",
+      "template": "Het project op {{URL}} nadert de einddatum. Vergeet niet om het vinkje PorjectHasEnded te zetten."
+    },
 	},
 
   "anonymize": {
