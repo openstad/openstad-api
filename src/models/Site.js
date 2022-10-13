@@ -79,9 +79,9 @@ module.exports = function (db, sequelize, DataTypes) {
           let current = await db.Site.findOne({ where: { id: instance.id } });
 
           // on update of projectHasEnded also update isActive of all the parts
-          if (current && typeof instance.config.projectHasEnded != 'undefined' && current.config.projectHasEnded !== instance.config.projectHasEnded) {
+          if (current && typeof instance.config.project.projectHasEnded != 'undefined' && current.config.project.projectHasEnded !== instance.config.project.projectHasEnded) {
             let config = merge.recursive(true, instance.config);
-            if (instance.config.projectHasEnded) {
+            if (instance.config.project.projectHasEnded) {
               config.votes.isActive = false;
               config.ideas.canAddNewIdeas = false;
               config.articles.canAddNewArticles = false;
@@ -118,7 +118,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
       beforeDestroy: function (instance, options) {
-        if (!(instance && instance.config && instance.config.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
+        if (!(instance && instance.config && instance.config.project.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
         return 
       },
 
@@ -191,6 +191,10 @@ module.exports = function (db, sequelize, DataTypes) {
             default: null,
           },
           endDateNotificationSent: {
+            type: 'boolean',
+            default: false,
+          },
+          projectHasEnded: {
             type: 'boolean',
             default: false,
           },
@@ -763,11 +767,6 @@ module.exports = function (db, sequelize, DataTypes) {
         default: []
       },
 
-      projectHasEnded: {
-        type: 'boolean',
-        default: false,
-      },
-
     }
   }
 
@@ -815,6 +814,13 @@ module.exports = function (db, sequelize, DataTypes) {
             }
             value[key].to = undefined;
           }
+        }
+
+        // backwards compatibility projectHasEnded
+        if (key == 'project' && value[key] && typeof value[key].projectHasEnded == 'undefined' && typeof value.projectHasEnded != 'undefined') {
+          // dit is een oude
+          value[key].projectHasEnded = value.projectHasEnded;
+          delete value.projectHasEnded
         }
 
         // TODO: 'arrayOfObjects' met een subset
@@ -907,7 +913,7 @@ module.exports = function (db, sequelize, DataTypes) {
     try {
 
       if (!self.id) throw Error('Site not found');
-      if (!self.config.projectHasEnded) throw Error('Cannot anonymize users on an active site - first set the project-has-ended parameter');
+      if (!self.config.project.projectHasEnded) throw Error('Cannot anonymize users on an active site - first set the project-has-ended parameter');
 
       let users = await db.User.findAll({ where: { siteId: self.id, externalUserId: { [Sequelize.Op.ne]: null } } });
 

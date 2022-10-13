@@ -128,7 +128,9 @@ router.route('/issues')
               }
             }, {
               config: {
-                projectHasEnded: false,
+                project: {
+                  projectHasEnded: false,
+                }
               }
             }              
           ]

@@ -53,16 +53,18 @@ module.exports = {
                     }
                   }
                 }
-//              }, {
-//                config: {
-//                  project: {
-//                    endDateNotificationSent: false
-//                  }
-//                }
               }, {
                 config: {
-                  projectHasEnded: false,
+                  project: {
+                    projectHasEnded: false,
+                  }
                 }
+//            }, {
+//              config: {
+//                project: {
+//                  endDateNotificationSent: false
+//                }
+//              }
               }
             ]
           }
