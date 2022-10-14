@@ -10,6 +10,7 @@ const searchResults 	= require('../../middleware/search-results-user');
 const oauthClients 		= require('../../middleware/oauth-clients');
 const checkHostStatus = require('../../services/checkHostStatus')
 const OAuthApi        = require('../../services/oauth-api');
+const sitesWithIssues = require('../../services/sites-with-issues');
 
 let router = express.Router({mergeParams: true});
 
@@ -100,42 +101,7 @@ router.route('/issues')
 	.get(function(req, res, next) {
 
     // sites that should be ended but are not
-		db.Site
-			.findAndCountAll({
-        offset: req.dbQuery.offset, limit: req.dbQuery.limit,
-        attributes: { 
-          include: [
-            [Sequelize.literal('"Site endDate is in the past but projectHasEnded is not set"'), 'issue'],
-          ],
-        },
-        where: {
-          [Sequelize.Op.and]: [
-            {
-              config: {
-                project: {
-                  endDate: {
-                    [Sequelize.Op.not]: null
-                  }
-                }
-              }
-            }, {
-              config: {
-                project: {
-                  endDate: {
-                    [Sequelize.Op.lte]: new Date(),
-                  }
-                }
-              }
-            }, {
-              config: {
-                project: {
-                  projectHasEnded: false,
-                }
-              }
-            }              
-          ]
-        }
-      })
+    sitesWithIssues.shouldHaveEndedButAreNot({ offset: req.dbQuery.offset, limit: req.dbQuery.limit })
 			.then( result => {
         req.results = req.results.concat( result.rows );
         req.dbQuery.count += result.count;
@@ -147,31 +113,7 @@ router.route('/issues')
 	.get(function(req, res, next) {
 
     // sites that have ended but are not anonimized
-		db.Site
-			.findAndCountAll({
-        offset: req.dbQuery.offset, limit: req.dbQuery.limit,
-        attributes: { 
-          include: [
-            [Sequelize.literal('"Project has ended but is not yet anonimized"'), 'issue'],
-            [Sequelize.fn("COUNT", Sequelize.col("users.id")), "userCount"]
-          ],
-        },
-        include: [{
-          model: db.User,
-          attributes: [],
-          where: {
-            role: 'member',
-          }
-        }],
-        group: ['users.siteId'],
-        where: {
-					[Sequelize.Op.and]: [
-						// where site enddate is more then anonimizeUsersXDaysAfterEndDate days ago
-						Sequelize.literal("DATE_ADD(CAST(JSON_UNQUOTE(JSON_EXTRACT(site.config,'$.project.endDate')) as DATETIME), INTERVAL json_extract(site.config, '$.anonymize.anonimizeUsersXDaysAfterEndDate') DAY) < NOW()"),
-            { config: { projectHasEnded: true } },
-					]
-				}
-      })
+    sitesWithIssues.endedButNotAnonimized({ offset: req.dbQuery.offset, limit: req.dbQuery.limit })
 			.then( result => {
         req.results = req.results.concat( result.rows );
         req.dbQuery.count += result.count;

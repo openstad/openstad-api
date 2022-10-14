@@ -11,10 +11,10 @@ const UseLock = require('../lib/use-lock');
 // 
 // Runs every day
 module.exports = {
-	cronTime: '*/10 * * * * *',
-	runOnInit: true,
-	// cronTime: '0 30 4 * * *',
-	// runOnInit: false,
+	// cronTime: '*/10 * * * * *',
+	// runOnInit: true,
+	cronTime: '0 30 4 * * *',
+	runOnInit: false,
 	onTick: UseLock.createLockedExecutable({
     name: 'send-enddate-notifications',
     task: async (next) => {
