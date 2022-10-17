@@ -11,11 +11,11 @@ const UseLock = require('../lib/use-lock');
 // 
 // Runs every day
 module.exports = {
-	// cronTime: '*/10 * * * * *',
-	// runOnInit: true,
-	cronTime: '0 30 4 * * *',
-	runOnInit: false,
-	onTick: UseLock.createLockedExecutable({
+  // cronTime: '*/10 * * * * *',
+  // runOnInit: true,
+  cronTime: '0 30 4 * * *',
+  runOnInit: false,
+  onTick: UseLock.createLockedExecutable({
     name: 'anonymize-inactive-users',
     task: async (next) => {
 
@@ -27,11 +27,11 @@ module.exports = {
         let sites = await db.Site.findAll();
         for (let i=0; i < sites.length; i++) {
           let site = sites[i];
+
+          // find users that have not logged in for a while
           let anonimizeUsersAfterXDaysOfInactivity = site.config.anonymize.anonimizeUsersAfterXDaysOfInactivity;
           let targetDate = new Date();
           targetDate.setDate(targetDate.getDate() - anonimizeUsersAfterXDaysOfInactivity);
-
-          // find users that have not logged in for a while
           let users = await db.User.findAll({
             where: {
               siteId: site.id,

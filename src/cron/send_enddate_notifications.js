@@ -11,11 +11,11 @@ const UseLock = require('../lib/use-lock');
 // 
 // Runs every day
 module.exports = {
-	// cronTime: '*/10 * * * * *',
-	// runOnInit: true,
-	cronTime: '0 30 4 * * *',
-	runOnInit: false,
-	onTick: UseLock.createLockedExecutable({
+  // cronTime: '*/10 * * * * *',
+  // runOnInit: true,
+  cronTime: '0 30 4 * * *',
+  runOnInit: false,
+  onTick: UseLock.createLockedExecutable({
     name: 'send-enddate-notifications',
     task: async (next) => {
 
@@ -26,7 +26,7 @@ module.exports = {
         // for each site
         let targetDate = new Date();
         targetDate.setDate(targetDate.getDate() - endDateConfig.XDaysBefore);
-				let sites = await db.Site.findAll({
+        let sites = await db.Site.findAll({
           where: {
             [Sequelize.Op.and]: [
               {
@@ -59,36 +59,35 @@ module.exports = {
                     projectHasEnded: false,
                   }
                 }
-//            }, {
-//              config: {
-//                project: {
-//                  endDateNotificationSent: false
-//                }
-//              }
+                //            }, {
+                //              config: {
+                //                project: {
+                //                  endDateNotificationSent: false
+                //                }
+                //              }
               }
             ]
           }
         });
-				for (let i=0; i < sites.length; i++) {
-					let site = sites[i];
+        for (let i=0; i < sites.length; i++) {
+          let site = sites[i];
 
           if (!site.config.project.endDateNotificationSent) { // todo: the where clause above does not work for reasons I do not have time for now
 
+            // send notification
             let data = {
               from: site.config.notifications.fromAddress,
               to: site.config.notifications.projectmanagerAddress,
               subject:  endDateConfig.subject,
               template:  endDateConfig.template,
             };
-
-					  // send notification
-					  console.log('CRON send-enddate-notifications: send email to projectmanager');
-					  Notifications.sendMessage({ site, data });
-					  site.update({ config: { project: { endDateNotificationSent: true } } });
+            console.log('CRON send-enddate-notifications: send email to projectmanager');
+            Notifications.sendMessage({ site, data });
+            site.update({ config: { project: { endDateNotificationSent: true } } });
 
           }
         }
-				
+        
         return next();
 
       } catch (err) {

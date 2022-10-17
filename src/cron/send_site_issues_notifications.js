@@ -12,11 +12,11 @@ const sitesWithIssues = require('../services/sites-with-issues');
 // 
 // Runs every day
 module.exports = {
-	// cronTime: '*/10 * * * * *',
-	// runOnInit: true,
-	cronTime: '0 15 4 * * *',
-	runOnInit: false,
-	onTick: UseLock.createLockedExecutable({
+  // cronTime: '*/10 * * * * *',
+  // runOnInit: true,
+  cronTime: '0 15 4 * * *',
+  runOnInit: false,
+  onTick: UseLock.createLockedExecutable({
     name: 'send-site-issues-notifications',
     task: async (next) => {
 
@@ -29,7 +29,7 @@ module.exports = {
         let shouldHaveEndedButAreNot = result.rows;
 
         // for each site
-  			for (let i=0; i < shouldHaveEndedButAreNot.length; i++) {
+        for (let i=0; i < shouldHaveEndedButAreNot.length; i++) {
           let site = shouldHaveEndedButAreNot[i];
           if (!notoficationsToBeSent[ site.id ]) notoficationsToBeSent[ site.id ] = { site, messages: [] };
           notoficationsToBeSent[ site.id ].messages.push(`Site ${ site.title } (${ site.domain }) has an endDate in the past but projectHasEnded is not set.`);
@@ -40,7 +40,7 @@ module.exports = {
         let endedButNotAnonimized = result.rows;
 
         // for each site
-  			for (let i=0; i < endedButNotAnonimized.length; i++) {
+        for (let i=0; i < endedButNotAnonimized.length; i++) {
           let site = endedButNotAnonimized[i];
           if (!notoficationsToBeSent[ site.id ]) notoficationsToBeSent[ site.id ] = { site, messages: [] };
           notoficationsToBeSent[ site.id ].messages.push(`Project ${ site.title } (${ site.domain }) has ended but is not yet anonimized.`);
@@ -57,7 +57,7 @@ module.exports = {
           };
           Notifications.sendMessage({ site: target.site, data });
         });
-				
+        
         return next();
 
       } catch (err) {

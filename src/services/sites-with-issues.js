@@ -44,7 +44,7 @@ sitesWithIssues.shouldHaveEndedButAreNot = function({ offset, limit }) {
 
 sitesWithIssues.endedButNotAnonimized = function({ offset, limit }) {
   return db.Site
-	  .findAndCountAll({
+    .findAndCountAll({
       offset, limit,
       attributes: { 
         include: [
@@ -61,12 +61,12 @@ sitesWithIssues.endedButNotAnonimized = function({ offset, limit }) {
       }],
       group: ['users.siteId'],
       where: {
-			  [Sequelize.Op.and]: [
-				  // where site enddate is more then anonimizeUsersXDaysAfterEndDate days ago
-				  Sequelize.literal("DATE_ADD(CAST(JSON_UNQUOTE(JSON_EXTRACT(site.config,'$.project.endDate')) as DATETIME), INTERVAL json_extract(site.config, '$.anonymize.anonimizeUsersXDaysAfterEndDate') DAY) < NOW()"),
+        [Sequelize.Op.and]: [
+          // where site enddate is more then anonimizeUsersXDaysAfterEndDate days ago
+          Sequelize.literal("DATE_ADD(CAST(JSON_UNQUOTE(JSON_EXTRACT(site.config,'$.project.endDate')) as DATETIME), INTERVAL json_extract(site.config, '$.anonymize.anonimizeUsersXDaysAfterEndDate') DAY) < NOW()"),
           { config: { projectHasEnded: true } },
-			  ]
-		  }
+        ]
+      }
     })
 }
 
