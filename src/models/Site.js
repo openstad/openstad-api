@@ -225,7 +225,7 @@ module.exports = function (db, sequelize, DataTypes) {
               },
               template: {
                 type: 'string',
-                default: 'Je account op {{URL}} is verlopen. We gaan je account verwijderen. Als je dat niet wilt, log dan binnen 60 dagemn in.',
+                default: 'Je account op {{URL}} is verlopen. We gaan je account verwijderen. Als je dat niet wilt, log dan binnen 60 dagen in.',
               },
             },
           },
