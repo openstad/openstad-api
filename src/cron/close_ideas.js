@@ -17,7 +17,7 @@ module.exports = {
     try {
 
       let sites = await db.Site.findAll({
-        where: Sequelize.where(Sequelize.fn('JSON_VALUE', Sequelize.col('config'), Sequelize.literal('"$.ideas.automaticallyUpdateStatus.isActive"')), true)
+        where: Sequelize.where(Sequelize.fn('JSON_VALUE', Sequelize.col('config'), Sequelize.literal('"$.ideas.automaticallyUpdateStatus.isActive"')), 'true')
       });
 
       for ( let site of sites ) {
