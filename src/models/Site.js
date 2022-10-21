@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const merge = require('merge');
 const moment = require('moment');
+const apiConfig = require('config');
 const OAuthApi = require('../services/oauth-api');
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
 
@@ -78,9 +79,9 @@ module.exports = function (db, sequelize, DataTypes) {
           let current = await db.Site.findOne({ where: { id: instance.id } });
 
           // on update of projectHasEnded also update isActive of all the parts
-          if (current && typeof instance.config.projectHasEnded != 'undefined' && current.config.projectHasEnded !== instance.config.projectHasEnded) {
+          if (current && typeof instance.config.project.projectHasEnded != 'undefined' && current.config.project.projectHasEnded !== instance.config.project.projectHasEnded) {
             let config = merge.recursive(true, instance.config);
-            if (instance.config.projectHasEnded) {
+            if (instance.config.project.projectHasEnded) {
               config.votes.isActive = false;
               config.ideas.canAddNewIdeas = false;
               config.articles.canAddNewArticles = false;
@@ -117,7 +118,7 @@ module.exports = function (db, sequelize, DataTypes) {
       },
 
       beforeDestroy: function (instance, options) {
-        if (!(instance && instance.config && instance.config.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
+        if (!(instance && instance.config && instance.config.project.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
         return 
       },
 
@@ -157,6 +158,7 @@ module.exports = function (db, sequelize, DataTypes) {
   }
 
   Site.associate = function (models) {
+    this.hasMany(models.User);
     this.hasMany(models.Idea);
     this.belongsTo(models.Area);
   }
@@ -166,18 +168,70 @@ module.exports = function (db, sequelize, DataTypes) {
     // todo: formaat gelijktrekken met sequelize defs
     // todo: je zou ook opties kunnen hebben die wel een default hebbe maar niet editable zijn? apiUrl bijv. Of misschien is die afgeleid
     return {
+
       allowedDomains: {
         type: 'arrayOfStrings',
         default: [
           'openstad-api.amsterdam.nl'
         ]
       },
+
       allowedDomains: {
         type: 'arrayOfStrings',
         default: [
           'openstad-api.amsterdam.nl'
         ]
       },
+
+      project: {
+        type: 'object',
+        subset: {
+          endDate: {
+            type: 'string', // todo: add date type
+            default: null,
+          },
+          endDateNotificationSent: {
+            type: 'boolean',
+            default: false,
+          },
+          projectHasEnded: {
+            type: 'boolean',
+            default: false,
+          },
+        },
+      },
+
+      anonymize: {
+        type: 'object',
+        subset: {
+          anonymizeUsersXDaysAfterEndDate: {
+            type: 'int',
+            default: 60,
+          },
+          warnUsersAfterXDaysOfInactivity: {
+            type: 'int',
+            default: 770,
+          },
+          anonymizeUsersAfterXDaysOfInactivity: {
+            type: 'int',
+            default: 860,
+          },
+          inactiveWarningEmail: {
+            type: 'object',
+            subset: {
+              subject: {
+                type: 'string',
+                default: 'Je account is verlopen',
+              },
+              template: {
+                type: 'string',
+                default: 'Je account op {{URL}} is verlopen. We gaan je account verwijderen. Als je dat niet wilt, log dan binnen {{XDaysBeforeAnonymization}} dagen in.',
+              },
+            },
+          },
+        },
+      },
+
       basicAuth: {
         type: 'object',
         subset: {
@@ -195,6 +249,7 @@ module.exports = function (db, sequelize, DataTypes) {
           },
         }
       },
+
       cms: {
         type: 'object',
         subset: {
@@ -237,19 +292,25 @@ module.exports = function (db, sequelize, DataTypes) {
           }
         }
       },
+
       notifications: {
         type: 'object',
         subset: {
-          from: {
+          fromAddress: {
             type: 'string', // todo: add type email/list of emails
             default: 'EMAIL@NOT.DEFINED',
           },
-          to: {
+          projectmanagerAddress: {
             type: 'string', // todo: add type email/list of emails
             default: 'EMAIL@NOT.DEFINED',
           },
-        }
+          siteadminAddress: {
+            type: 'string', // todo: add type email/list of emails
+            default: 'EMAIL@NOT.DEFINED',
+          },
+        },
       },
+
       email: {
         type: 'object',
         subset: {
@@ -706,11 +767,6 @@ module.exports = function (db, sequelize, DataTypes) {
         default: []
       },
 
-      projectHasEnded: {
-        type: 'boolean',
-        default: false,
-      },
-
     }
   }
 
@@ -741,6 +797,30 @@ module.exports = function (db, sequelize, DataTypes) {
         if (key == 'oauth' && value[key] && !value[key].default && (value[key]['auth-server-url'] || value[key]['auth-client-id'] || value[key]['auth-client-secret'] || value[key]['auth-server-login-path'] || value[key]['auth-server-exchange-code-path'] || value[key]['auth-server-get-user-path'] || value[key]['auth-server-logout-path'] || value[key]['after-login-redirect-uri'])) {
           // dit is een oude
           value[key] = {default: value[key]};
+        }
+
+        // backwards compatibility op notifications settings
+        if (key == 'notifications' && value[key]) {
+          if (value[key].from && ( !(value[key].fromAddress) || value[key].fromAddress == options[key].subset.fromAddress.default )) {
+            value[key].fromAddress = value[key].from;
+            value[key].from = undefined;
+          }
+          if (value[key].to) {
+            if ( !value[key].projectmanagerAddress || value[key].projectmanagerAddress == options[key].subset.projectmanagerAddress.default ) {
+              value[key].projectmanagerAddress = value[key].to || apiConfig.notifications.admin.emailAddress || options[key].subset.projectmanagerAddress.default;
+            }
+            if ( !value[key].siteadminAddress || value[key].siteadminAddress == options[key].subset.default ) {
+              value[key].siteadminAddress = apiConfig.notifications.admin.emailAddress || value[key].projectmanagerAddress;
+            }
+            value[key].to = undefined;
+          }
+        }
+
+        // backwards compatibility projectHasEnded
+        if (key == 'project' && value[key] && typeof value[key].projectHasEnded == 'undefined' && typeof value.projectHasEnded != 'undefined') {
+          // dit is een oude
+          value[key].projectHasEnded = value.projectHasEnded;
+          delete value.projectHasEnded
         }
 
         // TODO: 'arrayOfObjects' met een subset
@@ -818,7 +898,9 @@ module.exports = function (db, sequelize, DataTypes) {
           newValue[key] = value[key];
         }
       });
+
       return newValue;
+
     }
 
   }
@@ -831,7 +913,7 @@ module.exports = function (db, sequelize, DataTypes) {
     try {
 
       if (!self.id) throw Error('Site not found');
-      if (!self.config.projectHasEnded) throw Error('Cannot anonymize users on an active site - first set the project-has-ended parameter');
+      if (!self.config.project.projectHasEnded) throw Error('Cannot anonymize users on an active site - first set the project-has-ended parameter');
 
       let users = await db.User.findAll({ where: { siteId: self.id, externalUserId: { [Sequelize.Op.ne]: null } } });
 
@@ -895,7 +977,7 @@ module.exports = function (db, sequelize, DataTypes) {
     createableBy: 'admin',
     updateableBy: 'admin',
     deleteableBy: 'admin',
-    canAnonimizeAllUsers : function(user, self) {
+    canAnonymizeAllUsers : function(user, self) {
       self = self || this;
       if (!user) user = self.auth && self.auth.user;
       if (!user || !user.role) user = { role: 'all' };

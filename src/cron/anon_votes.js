@@ -12,15 +12,15 @@ module.exports = {
 	runOnInit: true,
 	onTick: function() {
 		Promise.all([
-			db.Vote.anonimizeOldVotes(),
-			db.ArgumentVote.anonimizeOldVotes()
+			db.Vote.anonymizeOldVotes(),
+			db.ArgumentVote.anonymizeOldVotes()
 		])
 		.then(function([ voteResult, argVoteResult ]) {
 			if( voteResult && voteResult.affectedRows ) {
-				log(`anonimized votes: ${voteResult.affectedRows}`);
+				log(`anonymized votes: ${voteResult.affectedRows}`);
 			}
 			if( argVoteResult && argVoteResult.affectedRows ) {
-				log(`anonimized argument votes: ${argVoteResult.affectedRows}`);
+				log(`anonymized argument votes: ${argVoteResult.affectedRows}`);
 			}
 		});
 	}

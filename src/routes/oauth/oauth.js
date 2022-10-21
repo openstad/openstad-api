@@ -158,8 +158,9 @@ router
             zipCode: req.userData.postcode ? req.userData.postcode : null,
             postcode: req.userData.postcode ? req.userData.postcode : null,
             lastName: req.userData.lastName,
-            // xxx
             role: req.userData.role || ((req.userData.email || req.userData.phoneNumber || req.userData.hashedPhoneNumber) ? 'member' : 'anonymous'),
+            lastLogin: new Date(),
+            isNotifiedAboutAnonymization: null,
         }
 
         // if user has same siteId and userId

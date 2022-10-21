@@ -63,7 +63,12 @@ let defaultConfig = {
 			// Special high-frequency email notifications for site administrators.
 			// Should probably not be a personal email account.
 			"emailAddress": null
-		}
+		},
+    "sendEndDateNotifications": {
+      "XDaysBefore": 7,
+      "subject": "project bijna afgelopen",
+      "template": "Het project op {{URL}} nadert de einddatum. Vergeet niet om het vinkje PorjectHasEnded te zetten."
+    },
 	},
 
 	"authorization": {
@@ -86,9 +91,9 @@ let defaultConfig = {
 		// When an idea is closed, this threshold must be met or the idea
 		// will be automatically denied.
 		"minimumYesVotes": 100,
-		// Threshold in days after which votes are anonimized (IP removed).
-		// Votes that are earmarked as fraudulous are never anonimized.
-		"anonimizeThreshold": 180,
+		// Threshold in days after which votes are anonymized (IP removed).
+		// Votes that are earmarked as fraudulous are never anonymized.
+		"anonymizeThreshold": 180,
 		// Minimum number of votes before it influences the date sorting of
 		// and idea's arguments.
 

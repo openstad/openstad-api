@@ -47,15 +47,15 @@ module.exports = function( db, sequelize, DataTypes ) {
 				ArgumentVote.belongsTo(models.User);
 			}
 
-	ArgumentVote.anonimizeOldVotes = function() {
-		var anonimizeThreshold = config.get('ideas.anonimizeThreshold');
+	ArgumentVote.anonymizeOldVotes = function() {
+		var anonymizeThreshold = config.get('ideas.anonymizeThreshold');
 		return sequelize.query(`
 					UPDATE
 						argument_votes v
 					SET
 						v.ip = NULL
 					WHERE
-						DATEDIFF(NOW(), v.updatedAt) > ${anonimizeThreshold} AND
+						DATEDIFF(NOW(), v.updatedAt) > ${anonymizeThreshold} AND
 						checked != 0
 				`)
 			.then(function([ result, metaData ]) {

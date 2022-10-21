@@ -230,7 +230,7 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
       .catch(next);
   })
   .put(async function (req, res, next) {
-    // if body contains user ids then anonimize only those
+    // if body contains user ids then anonymize only those
     try {
       let ids = req.body && req.body.onlyUserIds;
       if (!ids) return next();
@@ -243,7 +243,7 @@ router.route('/:userId(\\d+)/:willOrDo(will|do)-anonymize(:all(all)?)')
     return next();
   })
   .put(async function (req, res, next) {
-    // if body contains site ids then anonimize only the users for those sites
+    // if body contains site ids then anonymize only the users for those sites
     try {
       let ids = req.body && req.body.onlySiteIds;
       if (!ids) return next();

@@ -216,9 +216,63 @@ function sendNewsletterSignupConfirmationMail( newslettersignup, site, user ) {
 
 }
 
+// send email to user that is about to be anonymized
+// todo: this is a copy of sendThankYouMail and has too many code duplications; that should be merged. But since there is a new notification system that should be implemented more widly I am not going to spent time on that now
+function sendInactiveWarningEmail(site, user) {
+
+  let siteConfig = new MailConfig(site)
+
+  const url         = siteConfig.getCmsUrl();
+  const hostname    = siteConfig.getCmsHostname();
+  const sitename    = siteConfig.getTitle();
+  let fromAddress   = site.config.notifications.fromAddress || config.email;
+  if (!fromAddress) return console.error('Email error: fromAddress not provided');
+  if (fromAddress.match(/^.+<(.+)>$/, '$1')) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
+  const logo =  siteConfig.getLogo();
+  const XDaysBeforeAnonymization = site.config.anonymize && (site.config.anonymize.anonymizeUsersAfterXDaysOfInactivity - site.config.anonymize.warnUsersAfterXDaysOfInactivity) || 60;
+
+  let data    = {
+    date: new Date(),
+    user: user,
+    HOSTNAME: hostname,
+    SITENAME: sitename,
+    URL: url,
+    EMAIL: fromAddress,
+    logo: logo,
+    XDaysBeforeAnonymization,
+  };
+
+  let template = site.config.anonymize.inactiveWarningEmail.template;
+  let html = nunjucks.renderString(template, data);
+
+  let text = htmlToText.fromString(html, {
+    ignoreImage: true,
+    hideLinkHrefIfSameAsText: true,
+    uppercaseHeadings: false
+  });
+
+  let attachments = siteConfig.getResourceFeedbackEmailAttachments('idea') || siteConfig.getDefaultEmailAttachments();
+
+  try {
+    sendMail(site, {
+      to: user.email,
+      from: fromAddress,
+      subject: site.config.anonymize.inactiveWarningEmail.subject || 'Je account wordt binnenkort verwijderd',
+      html: html,
+      text: text,
+      attachments,
+    });
+  } catch(err) {
+    console.log(err);
+  }
+
+}
+
+
 module.exports = {
   sendMail,
 	sendNotificationMail,
   sendThankYouMail,
 	sendNewsletterSignupConfirmationMail,
+  sendInactiveWarningEmail,
 };

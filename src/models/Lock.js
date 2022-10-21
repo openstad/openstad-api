@@ -4,7 +4,11 @@ module.exports = function( db, sequelize, DataTypes ) {
     type: {
       type: DataTypes.STRING,
       allowNull: false,
-    },
+    }
+
+  },{
+
+    paranoid: false
 
   });
 

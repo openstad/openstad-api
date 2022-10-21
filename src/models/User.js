@@ -388,29 +388,41 @@ module.exports = function (db, sequelize, DataTypes) {
         zipCode = zipCode ? String(zipCode).trim() : null;
         this.setDataValue('zipCode', zipCode);
       },
+    },
 
-      postcode: {
-        type: DataTypes.STRING(10),
-        auth: {
-          listableBy: ['moderator', 'owner'],
-          viewableBy: ['moderator', 'owner'],
-          createableBy: ['moderator', 'owner'],
-          updateableBy: ['moderator', 'owner'],
-        },
-        allowNull: true,
-        validate: {
-          is: {
-            args: [/^\d{4} ?[a-zA-Z]{2}$/],
-            msg: 'Ongeldige postcode'
-          }
-        },
-        set: function (zipCode) {
-          zipCode = zipCode != null ?
-            String(zipCode).trim() :
-            null;
-          this.setDataValue('zipCode', zipCode);
-        },
+    postcode: {
+      type: DataTypes.STRING(10),
+      auth: {
+        listableBy: ['moderator', 'owner'],
+        viewableBy: ['moderator', 'owner'],
+        createableBy: ['moderator', 'owner'],
+        updateableBy: ['moderator', 'owner'],
       },
+      allowNull: true,
+      validate: {
+        is: {
+          args: [/^\d{4} ?[a-zA-Z]{2}$/],
+          msg: 'Ongeldige postcode'
+        }
+      },
+      set: function (zipCode) {
+        zipCode = zipCode != null ?
+          String(zipCode).trim() :
+          null;
+        this.setDataValue('zipCode', zipCode);
+      },
+    },
+
+    lastLogin: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: sequelize.NOW,
+    },
+
+    isNotifiedAboutAnonymization: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
     },
 
     // signedUpForNewsletter: {
