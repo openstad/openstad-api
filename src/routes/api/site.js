@@ -112,8 +112,8 @@ router.route('/issues')
 	})
 	.get(function(req, res, next) {
 
-    // sites that have ended but are not anonimized
-    sitesWithIssues.endedButNotAnonimized({ offset: req.dbQuery.offset, limit: req.dbQuery.limit })
+    // sites that have ended but are not anonymized
+    sitesWithIssues.endedButNotAnonymized({ offset: req.dbQuery.offset, limit: req.dbQuery.limit })
 			.then( result => {
         req.results = req.results.concat( result.rows );
         req.dbQuery.count += result.count;
@@ -272,7 +272,7 @@ router.route('/:siteIdOrDomain') //(\\d+)
 // anonymize all users
 // -------------------
 router.route('/:siteId(\\d+)/:willOrDo(will|do)-anonymize-all-users')
-	.put(auth.can('Site', 'anonimizeAllUsers'))
+	.put(auth.can('Site', 'anonymizeAllUsers'))
 	.put(function(req, res, next) {
     // the site
 		let where = { id: parseInt(req.params.siteId) };

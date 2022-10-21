@@ -65,16 +65,12 @@ let defaultConfig = {
 			"emailAddress": null
 		},
     "sendEndDateNotifications": {
-      "XDaysBefore": 2,
+      "XDaysBefore": 7,
       "subject": "project bijna afgelopen",
       "template": "Het project op {{URL}} nadert de einddatum. Vergeet niet om het vinkje PorjectHasEnded te zetten."
     },
 	},
 
-  "anonymize": {
-    "anonimizeUsersXDaysAfterNotification": 60,
-  },
-  
 	"authorization": {
 
 		"jwt-secret": "xxxxx",
@@ -95,9 +91,9 @@ let defaultConfig = {
 		// When an idea is closed, this threshold must be met or the idea
 		// will be automatically denied.
 		"minimumYesVotes": 100,
-		// Threshold in days after which votes are anonimized (IP removed).
-		// Votes that are earmarked as fraudulous are never anonimized.
-		"anonimizeThreshold": 180,
+		// Threshold in days after which votes are anonymized (IP removed).
+		// Votes that are earmarked as fraudulous are never anonymized.
+		"anonymizeThreshold": 180,
 		// Minimum number of votes before it influences the date sorting of
 		// and idea's arguments.
 
@@ -312,7 +308,6 @@ defaultConfig.mail.transport.smtp.requireSSL = process.env.API_MAIL_TRANSPORT_SM
 defaultConfig.mail.transport.smtp.auth.user = process.env.API_MAIL_TRANSPORT_SMTP_AUTH_USER || defaultConfig.mail.transport.smtp.auth.user;
 defaultConfig.mail.transport.smtp.auth.pass = process.env.API_MAIL_TRANSPORT_SMTP_AUTH_PASS || defaultConfig.mail.transport.smtp.auth.pass;
 defaultConfig.notifications.admin.emailAddress = process.env.API_NOTIFICATIONS_ADMIN_EMAILADDRESS || defaultConfig.notifications.admin.emailAddress;
-defaultConfig.anonymize.anonimizeUsersXDaysAfterNotification = process.env.ANONIMIZE_USERS_X_DAYS_AFTER_NOTIFICATION || defaultConfig.anonymize.anonimizeUsersXDaysAfterNotification;
 defaultConfig.authorization['jwt-secret'] = process.env.API_AUTHORIZATION_JWTSECRET || defaultConfig.authorization['jwt-secret'];
 defaultConfig.authorization['auth-server-url'] = process.env.AUTH_API_URL || defaultConfig.authorization['auth-server-url'];
 defaultConfig.authorization["auth-client-id"] = process.env.AUTH_FIRST_CLIENT_ID || defaultConfig.authorization["auth-client-id"];

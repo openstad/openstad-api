@@ -22,7 +22,7 @@ module.exports = {
 
       try {
 
-        let notoficationsToBeSent = {};
+        let notificationsToBeSent = {};
 
         // sites that should be ended but are not
         let result = await sitesWithIssues.shouldHaveEndedButAreNot({});
@@ -31,24 +31,24 @@ module.exports = {
         // for each site
         for (let i=0; i < shouldHaveEndedButAreNot.length; i++) {
           let site = shouldHaveEndedButAreNot[i];
-          if (!notoficationsToBeSent[ site.id ]) notoficationsToBeSent[ site.id ] = { site, messages: [] };
-          notoficationsToBeSent[ site.id ].messages.push(`Site ${ site.title } (${ site.domain }) has an endDate in the past but projectHasEnded is not set.`);
+          if (!notificationsToBeSent[ site.id ]) notificationsToBeSent[ site.id ] = { site, messages: [] };
+          notificationsToBeSent[ site.id ].messages.push(`Site ${ site.title } (${ site.domain }) has an endDate in the past but projectHasEnded is not set.`);
         }
 
-        // sites that have ended but are not anonimized
-        result = await sitesWithIssues.endedButNotAnonimized({})
-        let endedButNotAnonimized = result.rows;
+        // sites that have ended but are not anonymized
+        result = await sitesWithIssues.endedButNotAnonymized({})
+        let endedButNotAnonymized = result.rows;
 
         // for each site
-        for (let i=0; i < endedButNotAnonimized.length; i++) {
-          let site = endedButNotAnonimized[i];
-          if (!notoficationsToBeSent[ site.id ]) notoficationsToBeSent[ site.id ] = { site, messages: [] };
-          notoficationsToBeSent[ site.id ].messages.push(`Project ${ site.title } (${ site.domain }) has ended but is not yet anonimized.`);
+        for (let i=0; i < endedButNotAnonymized.length; i++) {
+          let site = endedButNotAnonymized[i];
+          if (!notificationsToBeSent[ site.id ]) notificationsToBeSent[ site.id ] = { site, messages: [] };
+          notificationsToBeSent[ site.id ].messages.push(`Project ${ site.title } (${ site.domain }) has ended but is not yet anonymized.`);
         }
 
         // send notifications
-        Object.keys(notoficationsToBeSent).forEach(id => {
-          let target = notoficationsToBeSent[ id ];
+        Object.keys(notificationsToBeSent).forEach(id => {
+          let target = notificationsToBeSent[ id ];
           let data = {
             from: target.site.config.notifications.fromAddress,
             to: target.site.config.notifications.siteadminAddress,

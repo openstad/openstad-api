@@ -204,7 +204,7 @@ module.exports = function (db, sequelize, DataTypes) {
       anonymize: {
         type: 'object',
         subset: {
-          anonimizeUsersXDaysAfterEndDate: {
+          anonymizeUsersXDaysAfterEndDate: {
             type: 'int',
             default: 60,
           },
@@ -212,7 +212,7 @@ module.exports = function (db, sequelize, DataTypes) {
             type: 'int',
             default: 770,
           },
-          anonimizeUsersAfterXDaysOfInactivity: {
+          anonymizeUsersAfterXDaysOfInactivity: {
             type: 'int',
             default: 860,
           },
@@ -225,7 +225,7 @@ module.exports = function (db, sequelize, DataTypes) {
               },
               template: {
                 type: 'string',
-                default: 'Je account op {{URL}} is verlopen. We gaan je account verwijderen. Als je dat niet wilt, log dan binnen 60 dagen in.',
+                default: 'Je account op {{URL}} is verlopen. We gaan je account verwijderen. Als je dat niet wilt, log dan binnen {{XDaysBeforeAnonymization}} dagen in.',
               },
             },
           },
@@ -977,7 +977,7 @@ module.exports = function (db, sequelize, DataTypes) {
     createableBy: 'admin',
     updateableBy: 'admin',
     deleteableBy: 'admin',
-    canAnonimizeAllUsers : function(user, self) {
+    canAnonymizeAllUsers : function(user, self) {
       self = self || this;
       if (!user) user = self.auth && self.auth.user;
       if (!user || !user.role) user = { role: 'all' };

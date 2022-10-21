@@ -11,15 +11,11 @@ const UseLock = require('../lib/use-lock');
 // 
 // Runs every day
 module.exports = {
-  // cronTime: '*/10 * * * * *',
-  // runOnInit: true,
-  cronTime: '0 30 4 * * *',
-  runOnInit: false,
+  cronTime: '*/10 * * * * *',
+  runOnInit: true,
   onTick: UseLock.createLockedExecutable({
     name: 'anonymize-inactive-users',
     task: async (next) => {
-
-      let anonimizeUsersXDaysAfterNotification = config.anonymize.anonimizeUsersXDaysAfterNotification;
 
       try {
 
@@ -27,11 +23,12 @@ module.exports = {
         let sites = await db.Site.findAll();
         for (let i=0; i < sites.length; i++) {
           let site = sites[i];
+          let anonymizeUsersXDaysAfterNotification = site.config.anonymize.anonymizeUsersAfterXDaysOfInactivity - site.config.anonymize.warnUsersAfterXDaysOfInactivity;
 
           // find users that have not logged in for a while
-          let anonimizeUsersAfterXDaysOfInactivity = site.config.anonymize.anonimizeUsersAfterXDaysOfInactivity;
+          let anonymizeUsersAfterXDaysOfInactivity = site.config.anonymize.warnUsersAfterXDaysOfInactivity;
           let targetDate = new Date();
-          targetDate.setDate(targetDate.getDate() - anonimizeUsersAfterXDaysOfInactivity);
+          targetDate.setDate(targetDate.getDate() - anonymizeUsersAfterXDaysOfInactivity);
           let users = await db.User.findAll({
             where: {
               siteId: site.id,
@@ -49,7 +46,7 @@ module.exports = {
 
               if (user.isNotifiedAboutAnonymization) {
                 let daysSinceNotification = parseInt( (Date.now() - new Date(user.isNotifiedAboutAnonymization).getTime()) / ( 24 * 60 * 60 * 1000 ) );
-                if (daysSinceNotification > anonimizeUsersXDaysAfterNotification) {
+                if (daysSinceNotification > anonymizeUsersXDaysAfterNotification) {
                   console.log('CRON anonymize-inactive-users: anonymize user', user.email, user.lastLogin);
                   // anonymize user
                   user.doAnonymize();
