@@ -465,7 +465,7 @@ module.exports = function (db, sequelize, DataTypes) {
                 order: [['createdAt', 'DESC']],
             });
 
-            const afterCreationDate = moment(lastRun.createdAt).add(30, "minutes");
+            const afterCreationDate = lastRun ? moment(lastRun.createdAt).add(30, "minutes") : moment().add(-30, "minutes");
             const reasonableTimeAfterCreation = moment().isAfter(afterCreationDate);
 
             // if in some case a status running gets stuck make sure after certain time the actions
