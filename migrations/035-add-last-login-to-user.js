@@ -5,7 +5,7 @@ module.exports = {
 
     try {
       return db.query(`
-        ALTER TABLE users ADD lastLogin DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER signedUpForNewsletter; 
+        ALTER TABLE users ADD lastLogin DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER extraData; 
 			`);
     } catch(e) {
       return true;
