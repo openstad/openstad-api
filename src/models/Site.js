@@ -176,13 +176,6 @@ module.exports = function (db, sequelize, DataTypes) {
         ]
       },
 
-      allowedDomains: {
-        type: 'arrayOfStrings',
-        default: [
-          'openstad-api.amsterdam.nl'
-        ]
-      },
-
       project: {
         type: 'object',
         subset: {
