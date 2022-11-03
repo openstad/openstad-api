@@ -25,7 +25,7 @@ module.exports = {
 
         // for each site
         let targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() - endDateConfig.XDaysBefore);
+        targetDate.setDate(targetDate.getDate() + endDateConfig.XDaysBefore);
         let sites = await db.Site.findAll({
           where: {
             [Sequelize.Op.and]: [
@@ -41,15 +41,7 @@ module.exports = {
                 config: {
                   project: {
                     endDate: {
-                      [Sequelize.Op.lte]: new Date(),
-                    }
-                  }
-                }
-              }, {
-                config: {
-                  project: {
-                    endDate: {
-                      [Sequelize.Op.gte]: targetDate,
+                      [Sequelize.Op.lte]: targetDate,
                     }
                   }
                 }
