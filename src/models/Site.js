@@ -42,7 +42,8 @@ module.exports = function (db, sequelize, DataTypes) {
         this.setDataValue('config', this.parseConfig(value));
       },
       auth: {
-        viewableBy: 'admin',
+        viewableBy: 'editor',
+        updateableBy: 'editor',
       },
     },
 
@@ -968,7 +969,7 @@ module.exports = function (db, sequelize, DataTypes) {
     listableBy: 'all',
     viewableBy: 'all',
     createableBy: 'admin',
-    updateableBy: 'admin',
+    updateableBy: 'editor',
     deleteableBy: 'admin',
     canAnonymizeAllUsers : function(user, self) {
       self = self || this;

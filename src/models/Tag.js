@@ -63,9 +63,9 @@ module.exports = function( db, sequelize, DataTypes ) {
 	Tag.auth = Tag.prototype.auth = {
     listableBy: 'all',
     viewableBy: 'all',
-    createableBy: 'editor',
-    updateableBy: 'editor',
-    deleteableBy: 'editor',
+    createableBy: 'moderator',
+    updateableBy: 'moderator',
+    deleteableBy: 'moderator',
   }
 
 	return Tag;

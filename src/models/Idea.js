@@ -215,7 +215,7 @@ module.exports = function (db, sequelize, DataTypes) {
       allowNull: true,
       set: function (budget) {
         budget = budget ? budget : null
-        this.setDataValue('budget', parseInt(budget, 10));
+        this.setDataValue('budget', parseInt(budget, 10) || null);
       }
     },
 

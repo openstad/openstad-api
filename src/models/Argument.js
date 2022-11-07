@@ -299,8 +299,8 @@ module.exports = function( db, sequelize, DataTypes ) {
     listableBy: 'all',
     viewableBy: 'all',
     createableBy: 'member',
-    updateableBy: ['editor','owner'],
-    deleteableBy: ['editor','owner'],
+    updateableBy: ['moderator','owner'],
+    deleteableBy: ['moderator','owner'],
     canVote: function(user, self) {
       // TODO: ik denk dat je alleen moet kunnen voten bij idea.isOpen, maar dat doet hij nu ook niet. Sterker: hij checkt nu alleen maar op parentId.
       if (userHasRole(user, 'member') && self.id && !self.parentId) {
