@@ -244,7 +244,11 @@ router.route('/')
   })
   .post(function(req, res, next) {
     res.json(req.results);
-    if (!req.query.nomail) mail.sendThankYouMail(req.results, 'ideas', req.site, req.user); // todo: optional met config?
+    if (!req.query.nomail && req.body['publishDate']) {
+      mail.sendThankYouMail(req.results, 'ideas', req.site, req.user); 
+    } else if(!req.query.nomail && !req.body['publishDate']) {
+      mail.sendThankYouMailForConcept(req.results, 'ideas', req.site, req.user);
+    }
   });
 
 // one idea
@@ -289,6 +293,14 @@ router.route('/:ideaId(\\d+)')
   // -----------
   .put(auth.useReqUser)
   .put(publishConcept)
+  .put(function(req, res, next) {    
+    if (!(req.site.config && req.site.config.ideas && req.site.config.ideas.canAddNewIdeas)) {
+      if(!req.results.dataValues.publishDate) {
+          return next(createError(401, 'Aanpassen en inzenden van concept plannen is gesloten'));
+      }
+    }
+    return next();
+  })
   .put(function(req, res, next) {
     req.tags = req.body.tags;
     return next();

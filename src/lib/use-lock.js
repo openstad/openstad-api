@@ -27,7 +27,10 @@ useLock.executeLockedFunction = async function({ name, task }) {
     await transaction.commit();
 
   } catch(err) {
-    await lock.destroy();
+    if(lock) {
+      await lock.destroy();
+    }
+  
     await transaction.rollback();
     console.log(`LOCKED FUNCTION FAILED: ${ name }`);
     console.log(err);
