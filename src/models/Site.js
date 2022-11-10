@@ -42,7 +42,8 @@ module.exports = function (db, sequelize, DataTypes) {
         this.setDataValue('config', this.parseConfig(value));
       },
       auth: {
-        viewableBy: 'admin',
+        viewableBy: 'editor',
+        updateableBy: 'editor',
       },
     },
 
@@ -168,13 +169,6 @@ module.exports = function (db, sequelize, DataTypes) {
     // todo: formaat gelijktrekken met sequelize defs
     // todo: je zou ook opties kunnen hebben die wel een default hebbe maar niet editable zijn? apiUrl bijv. Of misschien is die afgeleid
     return {
-
-      allowedDomains: {
-        type: 'arrayOfStrings',
-        default: [
-          'openstad-api.amsterdam.nl'
-        ]
-      },
 
       allowedDomains: {
         type: 'arrayOfStrings',
@@ -975,7 +969,7 @@ module.exports = function (db, sequelize, DataTypes) {
     listableBy: 'all',
     viewableBy: 'all',
     createableBy: 'admin',
-    updateableBy: 'admin',
+    updateableBy: 'editor',
     deleteableBy: 'admin',
     canAnonymizeAllUsers : function(user, self) {
       self = self || this;
