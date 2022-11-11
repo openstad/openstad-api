@@ -83,8 +83,7 @@ Notifications.sendNewContentMessage = function({ siteId, type, action, content }
       let instanceIds = content.map( entry => entry.instanceId );
       let model = type.charAt(0).toUpperCase() + type.slice(1);
 
-      let scope = type == 'idea' || type == 'article' ? ['withUser'] : ['withUser', 'withIdea'];
-      scope.push('includeSite');
+      let scope = type == 'idea' || type == 'article' ? ['withUser', 'includeSite'] : ['withUser', 'withIdea'];
       db[model].scope(scope).findAll({ where: { id: instanceIds }})
         .then( found => {
           data.data = {};
