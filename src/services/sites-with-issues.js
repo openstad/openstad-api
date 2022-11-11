@@ -64,7 +64,7 @@ sitesWithIssues.endedButNotAnonymized = function({ offset, limit }) {
         [Sequelize.Op.and]: [
           // where site enddate is more then anonymizeUsersXDaysAfterEndDate days ago
           Sequelize.literal("DATE_ADD(CAST(JSON_UNQUOTE(JSON_EXTRACT(site.config,'$.project.endDate')) as DATETIME), INTERVAL json_extract(site.config, '$.anonymize.anonymizeUsersXDaysAfterEndDate') DAY) < NOW()"),
-          { config: { projectHasEnded: true } },
+          { config: { project: { projectHasEnded: true } } },
         ]
       }
     })
