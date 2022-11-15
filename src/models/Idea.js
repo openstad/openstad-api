@@ -553,7 +553,7 @@ module.exports = function (db, sequelize, DataTypes) {
       onlyVisible: function (userId, userRole) {
         if (userId) {
 
-          if(userRole === 'admin') {
+          if(userRole === 'admin' || userRole === 'moderator' || userRole === 'editor') {
             return {};
           }
 

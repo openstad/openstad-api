@@ -114,6 +114,7 @@ var users = [
     password: randomString(10),
     firstName: 'Administrator',
     lastName: '',
+	lastLogin: new Date(),
 
 	//Add one dummy Idea for fun
 	ideas : [
