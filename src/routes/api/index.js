@@ -53,7 +53,11 @@ router.use( '/site/:siteId(\\d+)/newslettersignup', require('./newslettersignup'
 // choices-guide
 router.use( '/site/:siteId(\\d+)/choicesguide', require('./choicesguide') );
 
+// actions
 router.use( '/site/:siteId(\\d+)/action', require('./action') );
+
+// locks
+router.use( '/lock', require('./lock') );
 
 // To do test and fix log API
 //router.use( '/site/:siteId(\\d+)/log', require('./log') );
