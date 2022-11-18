@@ -11,7 +11,7 @@ useLock.executeLockedFunction = async function({ name, task }) {
   try {
     
     // create lock
-    lock = await db.Lock.findOne({ type: name })
+    lock = await db.Lock.findOne({where: { type: name }})
     if (lock) {
       await transaction.rollback();
       return console.log(`LOCKED FUNCTION NOT RUNNING: ${ name } is locked`)
