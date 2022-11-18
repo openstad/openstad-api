@@ -12,7 +12,6 @@ const UseLock = require('../lib/use-lock');
 // Runs every day
 module.exports = {
   // cronTime: '*/10 * * * * *',
-  // runOnInit: true,
   cronTime: '0 30 4 * * *',
   runOnInit: false,
   onTick: UseLock.createLockedExecutable({
@@ -34,6 +33,14 @@ module.exports = {
                   project: {
                     endDate: {
                       [Sequelize.Op.not]: null
+                    }
+                  }
+                }
+              }, {
+                config: {
+                  project: {
+                    endDate: {
+                      [Sequelize.Op.not]: ''
                     }
                   }
                 }
@@ -72,6 +79,8 @@ module.exports = {
               to: site.config.notifications.projectmanagerAddress,
               subject:  endDateConfig.subject,
               template:  endDateConfig.template,
+              endDate: new Date(site.config.project.endDate).toLocaleDateString("nl-NL"),
+              webmasterEmail: site.config.notifications.siteadminAddress, 
             };
             console.log('CRON send-enddate-notifications: send email to projectmanager');
             Notifications.sendMessage({ site, data });

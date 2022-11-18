@@ -118,6 +118,8 @@ Notifications.sendMessage = function({ site, data }) {
   data.HOSTNAME = data.HOSTNAME || ( myConfig.cms && ( myConfig.cms.hostname || myConfig.cms.domain ) ) || myConfig.hostname || myConfig.domain;
   data.URL = data.URL || ( myConfig.cms && myConfig.cms.url ) || myConfig.url || ( 'https://' + data.HOSTNAME );
   data.SITENAME = data.SITENAME || ( site && site.title ) || myConfig.siteName;
+  data.ENDDATE = data.endDate || '';
+  data.WEBMASTER_EMAIL = data.webmasterEmail;
 
   data.subject = data.subject || 'Geen onderwerp';
   data.template = data.template;

@@ -215,11 +215,20 @@ module.exports = function (db, sequelize, DataTypes) {
             subset: {
               subject: {
                 type: 'string',
-                default: 'Je account is verlopen',
+                default: 'We gaan je account verwijderen',
               },
               template: {
                 type: 'string',
-                default: 'Je account op {{URL}} is verlopen. We gaan je account verwijderen. Als je dat niet wilt, log dan binnen {{XDaysBeforeAnonymization}} dagen in.',
+                default: `Beste {{DISPLAYNAME}},<br/>\
+<br/>\
+Je bent al een tijd niet actief geweest op de website <a href="{{URL}}">{{URL}}</a>. We willen niet onnodig je gegevens blijven bewaren, en gaan die daarom verwijderen.<br/>\
+<br/>\
+Dat betekent dat een eventuele bijdrage die je hebt geleverd op de website, bijvoorbeeld inzendingen en/of reacties, geanonimiseerd worden.<br/>\
+<br/>\
+Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website om je account actief te houden. Doe dit wel voor {{ANONYMIZEDATE}}, want anders gaan we op die dag je gegevens verwijderen.<br/>\
+<br/>\
+<br/>\
+<em>Dit is een geautomatiseerde email.</em>`,
               },
             },
           },

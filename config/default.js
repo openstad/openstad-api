@@ -66,8 +66,20 @@ let defaultConfig = {
 		},
     "sendEndDateNotifications": {
       "XDaysBefore": 7,
-      "subject": "project bijna afgelopen",
-      "template": "Het project op {{URL}} nadert de einddatum. Vergeet niet om het vinkje PorjectHasEnded te zetten."
+      "subject": "Sluitingsdatum website nadert",
+      "template": `De website <a href="{{URL}}">{{URL}}</a> nadert de ingestelde sluitingsdatum. De sluitingsdatum is ingesteld op {{ENDDATE}}.<br/>\
+<br/>\
+Klopt deze datum nog? Dan hoef je niets te doen.<br/>\
+<br/>\
+Klopt deze datum niet (meer)? Neem dan contact op met de webmaster: <a href="mailto:{{WEBMASTER_EMAIL}}">{{WEBMASTER_EMAIL}}</a><br/>\
+<br/>\
+Het is belangrijk dat de sluitingsdatum goed is ingesteld. De website is daarna nog wel te bezoeken, maar afhankelijk van de website/project kunnen er geen nieuwe plannen ingediend worden, geen reacties meer worden geplaatst, geen nieuwe stemmen of likes uitgebracht worden, en kunnen er geen nieuwe gebruikers zich aanmelden.<br/>\
+<br/>\
+De sluitingsdatum wordt ook als referentie gebruikt voor het, op een later moment, anonimiseren van gebruikersgegevens.<br/>\
+<br/>\
+<br/>\
+<br/>\
+<em>Dit is een geautomatiseerde email.</em>`
     },
 	},
 

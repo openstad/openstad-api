@@ -12,7 +12,6 @@ const UseLock = require('../lib/use-lock');
 // Runs every day
 module.exports = {
   // cronTime: '*/10 * * * * *',
-  // runOnInit: true,
   cronTime: '0 20 4 * * *',
   runOnInit: false,
   onTick: UseLock.createLockedExecutable({
