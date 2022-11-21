@@ -67,19 +67,18 @@ let defaultConfig = {
     "sendEndDateNotifications": {
       "XDaysBefore": 7,
       "subject": "Sluitingsdatum website nadert",
-      "template": `De website <a href="{{URL}}">{{URL}}</a> nadert de ingestelde sluitingsdatum. De sluitingsdatum is ingesteld op {{ENDDATE}}.<br/>\
+      "template": `De website <a href="{{URL}}">{{URL}}</a> nadert de ingestelde sluitingsdatum. De sluitingsdatum is ingesteld op <strong>{{ENDDATE}}</strong>.<br/>\
 <br/>\
-Klopt deze datum nog? Dan hoef je niets te doen.<br/>\
+<strong>Klopt dit nog? Het is belangrijk dat de sluitingsdatum goed is ingesteld.</strong> Daarmee wordt gezorgd dat gebruikers vanaf dat moment hun account kunnen verwijderen, zonder dat stemmen of likes ongeldig gemaakt worden. De sluitingsdatum wordt ook als referentie gebruikt om op een later moment alle gebruikersgegevens te anonimiseren.<br/>\
 <br/>\
-Klopt deze datum niet (meer)? Neem dan contact op met de webmaster: <a href="mailto:{{WEBMASTER_EMAIL}}">{{WEBMASTER_EMAIL}}</a><br/>\
+De webmaster zorgt ervoor dat de website gesloten wordt, handmatig of automatisch. Neem contact op om af te spreken wanneer dit precies moet gebeuren, als je dat nog niet gedaan hebt: <a href="mailto:{{WEBMASTER_EMAIL}}">{{WEBMASTER_EMAIL}}</a>.<br/>\
 <br/>\
-Het is belangrijk dat de sluitingsdatum goed is ingesteld. De website is daarna nog wel te bezoeken, maar afhankelijk van de website/project kunnen er geen nieuwe plannen ingediend worden, geen reacties meer worden geplaatst, geen nieuwe stemmen of likes uitgebracht worden, en kunnen er geen nieuwe gebruikers zich aanmelden.<br/>\
-<br/>\
-De sluitingsdatum wordt ook als referentie gebruikt voor het, op een later moment, anonimiseren van gebruikersgegevens.<br/>\
+Als de webmaster de website gesloten heeft is deze in principe nog wel te bezoeken, maar afhankelijk van het project kunnen er geen nieuwe plannen ingediend worden, geen reacties meer worden geplaatst, geen nieuwe stemmen of likes uitgebracht worden, en kunnen er geen nieuwe gebruikers zich aanmelden.<br/>\
 <br/>\
 <br/>\
 <br/>\
-<em>Dit is een geautomatiseerde email.</em>`
+<em>Dit is een geautomatiseerde email.</em><br/>\
+`
     },
 	},
 
