@@ -1,8 +1,19 @@
 # Changelog
 
-## UNRELEASED
-* Remove remaining sessions
-* Allow connecting to MySQL through SSL by providing a CA certificate
+## 1.0.0
+* Anonymize site users 
+* Save idea as concept
+* Bugfix: no-sentiment in arguments-block
+* Bugfix: edit idea after first like or argument
+* Add env MYSQL_CA_CERT for MySQL SSL connection
+* Update/cleanup access rights for moderators and editors
+* Bugfix: add constraint to users table, to prevent double users
+* Remove all remaining code related to sessions; the API is stateless
+* Remove old image code
+* Bugfix: users in vote export
+* Bugfix: site.config.ideas.automaticallyUpdateStatus
+* Upgrade to node 16
+* Add virtual end date to idea
 
 ## v0.40.0
 Update version number
