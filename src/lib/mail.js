@@ -251,7 +251,11 @@ function sendInactiveWarningEmail(site, user) {
   if (!fromAddress) return console.error('Email error: fromAddress not provided');
   if (fromAddress.match(/^.+<(.+)>$/, '$1')) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
   const logo = siteConfig.getLogo();
+
   const XDaysBeforeAnonymization = site.config.anonymize && (site.config.anonymize.anonymizeUsersAfterXDaysOfInactivity - site.config.anonymize.warnUsersAfterXDaysOfInactivity) || 60;
+  let ANONYMIZEDATE = new Date();
+  ANONYMIZEDATE = ANONYMIZEDATE.setDate(ANONYMIZEDATE.getDate()+XDaysBeforeAnonymization);
+  ANONYMIZEDATE = new Date(ANONYMIZEDATE).toLocaleDateString("nl-NL");
 
   let data = {
     date: new Date(),
@@ -262,6 +266,8 @@ function sendInactiveWarningEmail(site, user) {
     EMAIL: fromAddress,
     logo: logo,
     XDaysBeforeAnonymization,
+    DISPLAYNAME: user.displayName,
+    ANONYMIZEDATE,
   };
 
   let template = site.config.anonymize.inactiveWarningEmail.template;

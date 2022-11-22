@@ -12,7 +12,6 @@ const UseLock = require('../lib/use-lock');
 // Runs every day
 module.exports = {
   // cronTime: '*/10 * * * * *',
-  // runOnInit: true,
   cronTime: '0 20 4 * * *',
   runOnInit: false,
   onTick: UseLock.createLockedExecutable({
@@ -55,9 +54,11 @@ module.exports = {
                 }
               } else {
                 // send notification
-                console.log('CRON anonymize-inactive-users: send warning email to user', user.email, user.lastLogin);
-                mail.sendInactiveWarningEmail(site, user);
-                user.update({ isNotifiedAboutAnonymization: new Date() });
+                if (user.email) {
+                  console.log('CRON anonymize-inactive-users: send warning email to user', user.email, user.lastLogin);
+                  mail.sendInactiveWarningEmail(site, user);
+                  user.update({ isNotifiedAboutAnonymization: new Date() });
+                }
               }
 
             }
