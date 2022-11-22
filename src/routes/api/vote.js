@@ -323,36 +323,55 @@ router.route('/*')
 
   // validaties voor voteType=count
 	.post(function(req, res, next) {
+		let transaction = res.locals.transaction
 		if (req.site.config.votes.voteType != 'count') return next();
 		if (req.votes.length >= req.site.config.votes.minIdeas && req.votes.length <= req.site.config.votes.maxIdeas) {
 			return next();
 		}
-		return next(createError(400, 'Aantal ideeen klopt niet'));
+		let err = createError(400, 'Aantal ideeen klopt niet');
+		if (transaction) {
+			return transaction.rollback()
+				.then(() => next(err))
+				.catch(() => next(err))
+		} else {
+			return next(err);
+		}
 	})
 
   // validaties voor voteType=budgeting
 	.post(function(req, res, next) {
+		let transaction = res.locals.transaction
 		if (req.site.config.votes.voteType != 'budgeting') return next();
 		let budget = 0;
 		req.votes.forEach((vote) => {
 			let idea = req.ideas.find(idea => idea.id == vote.ideaId);
 			budget += idea.budget;
 		});
+		let err;
 		if (!( budget >= req.site.config.votes.minBudget && budget <= req.site.config.votes.maxBudget )) {
-		  return next(createError(400, 'Budget klopt niet'));
+		  err = createError(400, 'Budget klopt niet');
 		}
 		if (!( req.votes.length >= req.site.config.votes.minIdeas && req.votes.length <= req.site.config.votes.maxIdeas )) {
-		  return next(createError(400, 'Aantal ideeen klopt niet'));
+		  err = createError(400, 'Aantal ideeen klopt niet');
 		}
-		return next();
+		if (err) {
+			if (transaction) {
+				return transaction.rollback()
+					.then(() => next(err))
+					.catch(() => next(err))
+			} else {
+				return next(err);
+			}
+		} else {
+			return next();
+		}
   })
 
   // validaties voor voteType=count-per-theme
 	.post(function(req, res, next) {
+		let transaction = res.locals.transaction
 		if (req.site.config.votes.voteType != 'count-per-theme') return next();
-
     let themes = req.site.config.votes.themes || [];
-
     let totalNoOfVotes = 0;
     req.votes.forEach((vote) => {
 			let idea = req.ideas.find(idea => idea.id == vote.ideaId);
@@ -377,12 +396,23 @@ router.route('/*')
       isOk = false;
 		}
 
-		return next( isOk ? null : createError(400, 'Count per thema klopt niet') );
-
+		if (isOk) {
+			return next();
+		} else {
+			let err = createError(400, 'Count per thema klopt niet');
+			if (transaction) {
+				return transaction.rollback()
+					.then(() => next(err))
+					.catch(() => next(err))
+			} else {
+				return next(err);
+			}
+		}
 	})
 
   // validaties voor voteType=budgeting-per-theme
 	.post(function(req, res, next) {
+		let transaction = res.locals.transaction
 		if (req.site.config.votes.voteType != 'budgeting-per-theme') return next();
     let themes = req.site.config.votes.themes || [];
 		req.votes.forEach((vote) => {
@@ -401,7 +431,18 @@ router.route('/*')
 		  }
   //    console.log(theme.value, theme.budget, theme.minBudget, theme.maxBudget, theme.budget < theme.minBudget || theme.budget > theme.maxBudget);
     });
-		return next( isOk ? null : createError(400, 'Budget klopt niet') );
+		if (isOk) {
+			return next();
+		} else {
+			let err = createError(400, 'Budget klopt niet');
+			if (transaction) {
+				return transaction.rollback()
+					.then(() => next(err))
+					.catch(() => next(err))
+			} else {
+				return next(err);
+			}
+		}
 	})
 
 	.post(function(req, res, next) {
