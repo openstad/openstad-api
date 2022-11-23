@@ -29,7 +29,7 @@ const dialectOptions = {
 	socketPath         : dbConfig.socketPath
 }
 
-if (process.env.MYSQL_CA_CERT) {
+if (process.env.MYSQL_CA_CERT && process.env.MYSQL_CA_CERT.trim && process.env.MYSQL_CA_CERT.trim()) {
 	dialectOptions.ssl = {
 		rejectUnauthorized: true,
 		ca: [ process.env.MYSQL_CA_CERT ]
