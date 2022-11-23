@@ -820,10 +820,13 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
         }
 
         // backwards compatibility projectHasEnded
-        if (key == 'project' && value[key] && typeof value[key].projectHasEnded == 'undefined' && typeof value.projectHasEnded != 'undefined') {
-          // dit is een oude
-          value[key].projectHasEnded = value.projectHasEnded;
-          delete value.projectHasEnded
+        if (key == 'project') {
+          value[key] = value[key] || {};
+          if (typeof value[key].projectHasEnded == 'undefined' && typeof value.projectHasEnded != 'undefined') {
+            // dit is een oude
+            value[key].projectHasEnded = value.projectHasEnded;
+            delete value.projectHasEnded
+          }
         }
 
         // TODO: 'arrayOfObjects' met een subset
