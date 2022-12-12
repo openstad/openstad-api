@@ -309,7 +309,7 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
           },
           siteadminAddress: {
             type: 'string', // todo: add type email/list of emails
-            default: 'EMAIL@NOT.DEFINED',
+            default: apiConfig.notifications.admin.emailAddress,
           },
         },
       },
