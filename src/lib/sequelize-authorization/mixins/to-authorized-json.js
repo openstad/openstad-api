@@ -40,7 +40,7 @@ module.exports = function toAuthorizedJSON(user) {
 
   function authorizedValue(key, value, user) {
 
-    if (value && value.toJSON) {
+    if (value && value.toJSON && value.authorizeData) {
       // TODO: for associated models this should use the association key to check the validity
       return value.toJSON(user);
     }
