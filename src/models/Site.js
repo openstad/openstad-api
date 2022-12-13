@@ -978,7 +978,7 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
   }
 
   Site.auth = Site.prototype.auth = {
-    listableBy: 'all',
+    listableBy: 'moderator',
     viewableBy: 'all',
     createableBy: 'admin',
     updateableBy: 'editor',
