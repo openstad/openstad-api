@@ -12,7 +12,7 @@ const searchResults = require('../../middleware/search-results-static');
 const router = express.Router({mergeParams: true});
 
 const userhasModeratorRights = (user) => {
-	return user && (user.role === 'admin' || user.role === 'editor' || user.role === 'moderator');
+	return user && user.role === 'admin';
 }
 
 // basis validaties
@@ -39,7 +39,7 @@ router.route('*')
 	.all(function(req, res, next) {
 		if (req.method == 'GET') return next(); // nvt
 
-		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');  // TODO: er staat een functie bovenin deze file; waarom gerbuik je die niet?
+		let hasModeratorRights = userhasModeratorRights(req.user.role);
 
 		if (!req.user) {
 			return next(createError(401, 'Geen gebruiker gevonden'));
@@ -77,7 +77,7 @@ router.route('/')
 
 // mag je de stemmen bekijken
 	.get(function(req, res, next) {
-		let hasModeratorRights = (req.user.role === 'admin' || req.user.role === 'editor' || req.user.role === 'moderator');  // TODO: er staat een functie bovenin deze file; waarom gerbuik je die niet?
+		let hasModeratorRights = userhasModeratorRights(req.user.role);
 
 		if (!(req.site.config.votes.isViewable || hasModeratorRights)) {
 			return next(createError(403, 'Stemmen zijn niet zichtbaar'));
