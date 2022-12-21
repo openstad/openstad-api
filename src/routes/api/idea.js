@@ -412,6 +412,8 @@ router.route('/:ideaId(\\d+)')
   });
 
 
+  // This function is used with import/create and import/update of ideas. 
+  // Because an exported idea can only have names we need to figure out which names exists on tags on the siteId and which need to be created
   const getOrCreateTagIds = async function(siteId, tags) {
     let tagIdsToAdd = [];
     const tagsOfSite = await db.Tag.findAll({where: { siteId }});
