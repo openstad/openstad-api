@@ -216,14 +216,21 @@ router.route('/')
       });
 
   })
-  .post(function(req, res, next) {
+  .post(async function(req, res, next) {
+    const tags = req.body.tags;
+    if (!tags) return next();
+    const ideaInstance = req.results;
+    const siteId = req.params.siteId;
+    // assume we are not using import so the values are ids
+    let tagIdsToAdd = tags;
 
-    // tags
-    if (!req.body.tags) return next();
+    // We only have names available to us when we import change them to ids
+    if(req.body.throughImport) {
+      tagIdsToAdd = Array.from(await getOrCreateTagIds(siteId, tags));
+    }
 
-    let ideaInstance = req.results;
     ideaInstance
-      .setTags(req.body.tags)
+      .setTags(tagIdsToAdd)
       .then(tags => {
         // refetch. now with tags
         let scope = [...req.scope, 'includeTags'];
@@ -347,17 +354,21 @@ router.route('/:ideaId(\\d+)')
       })
       .catch(next);
   })
-  .put(function(req, res, next) {
-
+  .put(async function(req, res, next) {
     // tags
-    if (!req.tags) return next();
-
-    let tagIds = [];
-    let responseData;
+    const siteId = req.params.siteId;
+    const tags = req.body.tags || req.tags;
+    if (!tags) return next();
+    let tagIds = tags;
     let ideaInstance = req.results;
 
+    // We only have names available to us when we import
+    if(req.body.throughImport) {
+      tagIds = Array.from(await getOrCreateTagIds(siteId, tags));
+    }
+    
     ideaInstance
-      .setTags(req.tags)
+      .setTags(tagIds)
       .then(result => {
         // refetch. now with tags
         let scope = [...req.scope, 'includeTags'];
@@ -400,4 +411,26 @@ router.route('/:ideaId(\\d+)')
       .catch(next);
   });
 
+
+  const getOrCreateTagIds = async function(siteId, tags) {
+    let tagIdsToAdd = [];
+    const tagsOfSite = await db.Tag.findAll({where: { siteId }});
+    const tagsNotExistingInDB = tags.filter(tag => !tagsOfSite.some(tagFromDb => tagFromDb.name === tag));
+
+    const tagsExistingInDB = tagsOfSite.filter(tag => tags.some(tagFromBody => tagFromBody === tag.name));
+
+    for (const notExistingTagName of tagsNotExistingInDB) {
+      tagIdsToAdd.push(await db.Tag.create({
+        siteId, 
+        name: notExistingTagName, 
+        extraData: {}
+      }));
+    }
+
+    for(const existingTag of tagsExistingInDB) {
+      tagIdsToAdd.push(existingTag.id);
+    }
+    return new Set(tagIdsToAdd);
+
+  };
 module.exports = router;
