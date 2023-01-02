@@ -225,7 +225,7 @@ router.route('/')
     let tagIdsToAdd = tags;
 
     // We only have names available to us when we import change them to ids
-    if(req.body.throughImport) {
+    if(req.body.changeTagNamesToIds) {
       tagIdsToAdd = Array.from(await getOrCreateTagIds(siteId, tags));
     }
 
@@ -363,7 +363,7 @@ router.route('/:ideaId(\\d+)')
     let ideaInstance = req.results;
 
     // We only have names available to us when we import
-    if(req.body.throughImport) {
+    if(req.body.changeTagNamesToIds) {
       tagIds = Array.from(await getOrCreateTagIds(siteId, tags));
     }
     
