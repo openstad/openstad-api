@@ -39,7 +39,7 @@ router.route('*')
 	.all(function(req, res, next) {
 		if (req.method == 'GET') return next(); // nvt
 
-		let hasModeratorRights = userhasModeratorRights(req.user.role);
+		let hasModeratorRights = userhasModeratorRights(req.user);
 
 		if (!req.user) {
 			return next(createError(401, 'Geen gebruiker gevonden'));
@@ -77,7 +77,7 @@ router.route('/')
 
 // mag je de stemmen bekijken
 	.get(function(req, res, next) {
-		let hasModeratorRights = userhasModeratorRights(req.user.role);
+		let hasModeratorRights = userhasModeratorRights(req.user);
 
 		if (!(req.site.config.votes.isViewable || hasModeratorRights)) {
 			return next(createError(403, 'Stemmen zijn niet zichtbaar'));
