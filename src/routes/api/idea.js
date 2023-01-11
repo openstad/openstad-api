@@ -221,16 +221,17 @@ router.route('/')
     if (!tags) return next();
     const ideaInstance = req.results;
     const siteId = req.params.siteId;
-    // assume we are not using import so the values are ids
-    let tagIdsToAdd = tags;
+    let tagIds = tags;
 
-    // We only have names available to us when we import change them to ids
-    if(req.body.changeTagNamesToIds) {
-      tagIdsToAdd = Array.from(await getOrCreateTagIds(siteId, tags));
+    // should always be an array of either [1,2,3] from openstad
+    // or ['naam'] when importing ideas from react-admin.
+    const isNamePredicate = value => typeof value == 'string' && isNaN(value);
+    if(Array.isArray(tags) && tags.every(isNamePredicate)) {
+      tagIds = Array.from(await getOrCreateTagIds(siteId, tags));
     }
 
     ideaInstance
-      .setTags(tagIdsToAdd)
+      .setTags(tagIds)
       .then(tags => {
         // refetch. now with tags
         let scope = [...req.scope, 'includeTags'];
@@ -360,12 +361,15 @@ router.route('/:ideaId(\\d+)')
     const tags = req.body.tags || req.tags;
     if (!tags) return next();
     let tagIds = tags;
-    let ideaInstance = req.results;
 
-    // We only have names available to us when we import
-    if(req.body.changeTagNamesToIds) {
+    // should always be an array of either [1,2,3] from openstad
+    // or ['naam'] when importing ideas from react-admin.
+    const isNamePredicate = value => typeof value == 'string' && isNaN(value);
+    if(Array.isArray(tags) && tags.every(isNamePredicate)) {
       tagIds = Array.from(await getOrCreateTagIds(siteId, tags));
     }
+
+    let ideaInstance = req.results;
     
     ideaInstance
       .setTags(tagIds)
