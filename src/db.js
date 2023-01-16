@@ -54,7 +54,7 @@ var sequelize = new Sequelize(dbConfig.database, dbConfig.user, dbConfig.passwor
 	},
 	pool: {
 		min  : 0,
-		max  : 5,
+		max  : dbConfig.maxPoolSize,
 		idle : 10000
 	},
 });
