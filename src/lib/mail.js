@@ -87,29 +87,7 @@ function sendNotificationMail(data, site) {
 };
 
 // send email to user that submitted a resource
-function sendThankYouMail(resource, resourceType, site, user) {
-  sendThankYouMailInternal(resource, resourceType, site, user);
-}
-
-
-function sendThankYouMailForConcept(resource, resourceType, site, user) {
-  sendThankYouMailInternal(resource, resourceType, site, user, "Beste {{user.fullName | default('indiener')}},\r\n" +
-    '<br /><br />\r\n' +
-    'Bedankt voor je CONCEPT inzending op <a href="{{URL}}">{{SITENAME}}</a>! Je inzending is goed ontvangen.\r\n' +
-    '<br />\r\n' +
-    '<br />\r\n' +
-    '  Houd de site van <a href="{{URL}}">{{HOSTNAME}}</a> in de gaten voor meer informatie over het project.\r\n' +
-    '  Mocht je nog vragen hebben, stuur dan een e-mail naar <a href="mailto: {{EMAIL}}">{{EMAIL}}</a>\r\n' +
-    '  <br />\r\n' +
-    '  <br />\r\n' +
-    '  <p>\r\n' +
-    '      Hartelijke groet,<br />\r\n' +
-    '      <strong>Team {{SITENAME}}</strong>\r\n' +
-    '  </p>');
-}
-
-
-function sendThankYouMailInternal(resource, resourceType, site, user, customTemplate = '') {
+function sendThankYouMail(resource, resourceType, site, user,customTemplateFileName= '') {
 
   let siteConfig = new MailConfig(site)
 
@@ -142,26 +120,38 @@ function sendThankYouMailInternal(resource, resourceType, site, user, customTemp
   };
 
   let html;
-  let template = customTemplate || siteConfig.getResourceFeedbackEmailTemplate(resourceType);
+  let template = siteConfig.getResourceFeedbackEmailTemplate(resourceType);
 
-  if (template) {
-    /**
-     * This is for legacy reasons
-     * if contains <html> we assume it doesn't need a layout wrapper then render as a string
-     * if not included then include by rendering the string and then rendering a blanco
-     * the layout by calling the blanco template
-     */
-    if (template.includes("<html>")) {
-      html = nunjucks.renderString(template, data)
-    } else {
-      html = nunjucks.render('blanco.njk', Object.assign(data, {
-        message: nunjucks.renderString(template, data)
-      }));
+  if(customTemplateFileName) {
+    try {
+      html = nunjucks.render(customTemplateFileName, data);
+      console.log({html});
+    } catch(e) {
+      console.log(`Could not render custom mail template with name ${customTemplateFileName}`);
+      throw e;
     }
-  } else {
-    html = nunjucks.render(`${resourceType}_created.njk`, data);
   }
 
+  if(!html) {
+    if (template) {
+      /**
+       * This is for legacy reasons
+       * if contains <html> we assume it doesn't need a layout wrapper then render as a string
+       * if not included then include by rendering the string and then rendering a blanco
+       * the layout by calling the blanco template
+       */
+      if (template.includes("<html>")) {
+        html = nunjucks.renderString(template, data)
+      } else {
+        html = nunjucks.render('blanco.njk', Object.assign(data, {
+          message: nunjucks.renderString(template, data)
+        }));
+      }
+    } else {
+      html = nunjucks.render(`${resourceType}_created.njk`, data);
+    }
+  }
+  
   let text = htmlToText.fromString(html, {
     ignoreImage: true,
     hideLinkHrefIfSameAsText: true,
@@ -301,7 +291,6 @@ module.exports = {
   sendMail,
   sendNotificationMail,
   sendThankYouMail,
-  sendThankYouMailForConcept,
   sendNewsletterSignupConfirmationMail,
   sendInactiveWarningEmail,
 };

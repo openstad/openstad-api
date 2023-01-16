@@ -10,6 +10,7 @@ const pagination = require('../../middleware/pagination');
 const searchResults = require('../../middleware/search-results-static');
 const isJson = require('../../util/isJson');
 const publishConcept = require('../../middleware/publish-concept');
+const c = require('config');
 
 const router = express.Router({ mergeParams: true });
 const userhasModeratorRights = (user) => {
@@ -247,7 +248,7 @@ router.route('/')
     if (!req.query.nomail && req.body['publishDate']) {
       mail.sendThankYouMail(req.results, 'ideas', req.site, req.user); 
     } else if(!req.query.nomail && !req.body['publishDate']) {
-      mail.sendThankYouMailForConcept(req.results, 'ideas', req.site, req.user);
+      mail.sendThankYouMail(req.results, 'ideas', req.site, req.user, 'concept_ideas_created.njk');
     }
   });
 
@@ -303,10 +304,16 @@ router.route('/:ideaId(\\d+)')
   })
   .put(function(req, res, next) {
     req.tags = req.body.tags;
-    return next();
+    next();
   })
   .put(function(req, res, next) {
-
+    const currentIdea = req.results.dataValues;
+    const wasConcept = currentIdea && !currentIdea.publishDate;
+    const willNowBePublished = req.body['publishDate'];   
+    req.changedToPublished = wasConcept && willNowBePublished;
+    next();
+  })
+  .put(function(req, res, next) {
     var idea = req.results;
 
     if (!(idea && idea.can && idea.can('update'))) return next(new Error('You cannot update this Idea'));
@@ -379,7 +386,12 @@ router.route('/:ideaId(\\d+)')
           })
           .catch(next);
       });
-
+  })
+  .put(function(req, res, next) {
+    if(req.changedToPublished) {
+      mail.sendThankYouMail(req.results, 'ideas', req.site, req.user, 'concept_ideas_edited.njk');
+    }
+    next();
   })
   .put(function(req, res, next) {
     res.json(req.results);
