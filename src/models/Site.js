@@ -67,7 +67,13 @@ module.exports = function (db, sequelize, DataTypes) {
     areaId: {
       type: DataTypes.INTEGER,
       allowNull: true,
-    }
+    },
+
+    adminIsNotified: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      default: null,
+    },
 
   }, {
 

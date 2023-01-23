@@ -31,8 +31,10 @@ module.exports = {
         // for each site
         for (let i=0; i < shouldHaveEndedButAreNot.length; i++) {
           let site = shouldHaveEndedButAreNot[i];
-          if (!notificationsToBeSent[ site.id ]) notificationsToBeSent[ site.id ] = { site, messages: [] };
-          notificationsToBeSent[ site.id ].messages.push(`Site ${ site.title } (${ site.domain }) has an endDate in the past but projectHasEnded is not set.`);
+          if (!site.adminIsNotified || site.adminIsNotified.getTime() < Date.now() - 23 * 60 * 60 * 1000) {
+            if (!notificationsToBeSent[ site.id ]) notificationsToBeSent[ site.id ] = { site, messages: [] };
+            notificationsToBeSent[ site.id ].messages.push(`Site ${ site.title } (${ site.domain }) has an endDate in the past but projectHasEnded is not set.`);
+          }
         }
 
         // sites that have ended but are not anonymized
@@ -42,22 +44,38 @@ module.exports = {
         // for each site
         for (let i=0; i < endedButNotAnonymized.length; i++) {
           let site = endedButNotAnonymized[i];
-          if (!notificationsToBeSent[ site.id ]) notificationsToBeSent[ site.id ] = { site, messages: [] };
-          notificationsToBeSent[ site.id ].messages.push(`Project ${ site.title } (${ site.domain }) has ended but is not yet anonymized.`);
+          if (!site.adminIsNotified || site.adminIsNotified.getTime() < Date.now() - 23 * 60 * 60 * 1000) {
+            if (!notificationsToBeSent[ site.id ]) notificationsToBeSent[ site.id ] = { site, messages: [] };
+            notificationsToBeSent[ site.id ].messages.push(`Project ${ site.title } (${ site.domain }) has ended but is not yet anonymized.`);
+          }
         }
 
-        // send notifications
+        // aggregate notifications to the same address
+        let aggregatedNotificationsToBeSent = [];
         Object.keys(notificationsToBeSent).forEach(id => {
           let target = notificationsToBeSent[ id ];
-          let data = {
-            from: target.site.config.notifications.fromAddress,
-            to: target.site.config.notifications.siteadminAddress,
-            subject: 'Sites with issues',
-            template: target.messages.join('\r\n'),
-          };
-          Notifications.sendMessage({ site: target.site, data });
+          let toAddress = target.site.config.notifications.siteadminAddress || target.site.config.notifications.projectmanagerAddress;
+          if ( aggregatedNotificationsToBeSent[ toAddress ] ) {
+            aggregatedNotificationsToBeSent[ toAddress ].data.template += '<br/>\r\n' + target.messages.join('<br/>\r\n');
+          } else {
+            aggregatedNotificationsToBeSent[ toAddress ] = {
+              site: target.site,
+              data: {
+                from: target.site.config.notifications.fromAddress,
+                to: toAddress,
+                subject: 'Sites with issues',
+                template: target.messages.join('<br/>\r\n'),
+              }
+            };
+          }
+          target.site.update({ adminIsNotified: new Date() })
         });
-        
+
+        // send notifications
+        Object.values(aggregatedNotificationsToBeSent).forEach(target => {
+          Notifications.sendMessage({ site: target.site, data: target.data });
+        })
+
         return next();
 
       } catch (err) {
