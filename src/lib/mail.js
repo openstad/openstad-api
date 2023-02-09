@@ -87,7 +87,7 @@ function sendNotificationMail(data, site) {
 };
 
 // send email to user that submitted a resource
-function sendThankYouMail(resource, resourceType, site, user,customTemplateFileName= '') {
+function sendThankYouMail(resource, resourceType, site, user,customTemplateFileName= '', customSubjectName= '') {
 
   let siteConfig = new MailConfig(site)
 
@@ -165,7 +165,7 @@ function sendThankYouMail(resource, resourceType, site, user,customTemplateFileN
       // in some cases the resource, like order or account has a different email from the submitted user, default to resource, otherwise send to owner of resource
       to: resource.email ? resource.email : user.email,
       from: fromAddress,
-      subject: siteConfig.getResourceFeedbackEmailSubject(resourceType) || 'Bedankt voor je inzending',
+      subject: customSubjectName || siteConfig.getResourceFeedbackEmailSubject(resourceType) || 'Bedankt voor je inzending',
       html: html,
       text: text,
       attachments,

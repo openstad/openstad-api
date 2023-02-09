@@ -217,14 +217,19 @@ router.route('/')
       });
 
   })
-  .post(function(req, res, next) {
+  .post(async function(req, res, next) {
 
     // tags
-    if (!req.body.tags) return next();
+    let tags = req.body.tags
+    if (!tags) return next();
 
-    let ideaInstance = req.results;
+    const ideaInstance = req.results;
+    const siteId = req.params.siteId;
+
+    let tagIds = Array.from(await getOrCreateTagIds(siteId, tags, req.user));
+
     ideaInstance
-      .setTags(req.body.tags)
+      .setTags(tagIds)
       .then(tags => {
         // refetch. now with tags
         let scope = [...req.scope, 'includeTags'];
@@ -248,7 +253,7 @@ router.route('/')
     if (!req.query.nomail && req.body['publishDate']) {
       mail.sendThankYouMail(req.results, 'ideas', req.site, req.user); 
     } else if(!req.query.nomail && !req.body['publishDate']) {
-      mail.sendThankYouMail(req.results, 'ideas', req.site, req.user, 'concept_ideas_created.njk');
+      mail.sendThankYouMail(req.results, 'ideas', req.site, req.user, 'concept_ideas_created.njk', 'Uw concept plan - LET OP, dien uw plan definitief in voor de deadline');
     }
   });
 
@@ -354,17 +359,19 @@ router.route('/:ideaId(\\d+)')
       })
       .catch(next);
   })
-  .put(function(req, res, next) {
+  .put(async function(req, res, next) {
 
     // tags
-    if (!req.tags) return next();
+    let tags = req.body.tags
+    if (!tags) return next();
 
-    let tagIds = [];
-    let responseData;
-    let ideaInstance = req.results;
+    const ideaInstance = req.results;
+    const siteId = req.params.siteId;
+
+    let tagIds = Array.from(await getOrCreateTagIds(siteId, tags, req.user));
 
     ideaInstance
-      .setTags(req.tags)
+      .setTags(tagIds)
       .then(result => {
         // refetch. now with tags
         let scope = [...req.scope, 'includeTags'];
@@ -389,7 +396,7 @@ router.route('/:ideaId(\\d+)')
   })
   .put(function(req, res, next) {
     if(req.changedToPublished) {
-      mail.sendThankYouMail(req.results, 'ideas', req.site, req.user, 'concept_ideas_edited.njk');
+      mail.sendThankYouMail(req.results, 'ideas', req.site, req.user, 'concept_ideas_edited.njk', 'Bedankt voor uw plan!');
     }
     next();
   })
@@ -411,5 +418,57 @@ router.route('/:ideaId(\\d+)')
       })
       .catch(next);
   });
+
+// when adding or updating ideas parse the tags
+async function getOrCreateTagIds(siteId, tags, user) {
+
+  let result = [];
+  let tagsOfSite = await db.Tag.findAll({where: { siteId }});
+
+  for (let i = 0; i < tags.length; i++) {
+
+    let tag = tags[i];
+    
+    // tags may be sent as [id1, id2] or [name1, name2] or [ { id: id1, name: name1 }, { id: id2, name: name2 } ]
+    let tagId, tagName;
+    if (typeof tag === 'object') {
+      tagId = tag.id
+      tagName = tag.name;
+    } else if (tag == parseInt(tag)) {
+      tagId = tag;
+    } else {
+      tagName = tag;
+    }
+
+    // find in site tags by id or name
+    let found = tagsOfSite.find( tag => tag.id == tagId );
+    if (!found) found = tagsOfSite.find( tag => tag.name == tagName );
+    if (found) {
+      result.push(found);
+    } else {
+      
+      // or try to find this tag in another site
+      if (tagId) {
+        let tagOnOtherSite = await db.Tag.findOne({where: { id: tagId }});
+        if (tagOnOtherSite) tagName = tagOnOtherSite.name; // use name to create a new tag
+      }
+
+      // create a new tag
+      if (tagName && userhasModeratorRights(user)) { // else ignore
+        let newTag = await db.Tag.create({
+          siteId, 
+          name: tagName, 
+          extraData: {}
+        });
+        result.push(newTag);
+      }
+
+    }
+    
+  };
+
+  return result;
+
+}
 
 module.exports = router;
