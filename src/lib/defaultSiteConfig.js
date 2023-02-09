@@ -5,6 +5,20 @@ module.exports = {
     hostname: '',
   },
   ideas: {
+    conceptEmail: {
+      from:          '',
+      subject:       '',
+      inzendingPath: '',
+      template:      '',
+      attachments:   []
+    },
+    conceptToPublishedEmail: {
+      from:          '',
+      subject:       '',
+      inzendingPath: '',
+      template:      '',
+      attachments:   []
+    },
     feedbackEmail: {
       from:          '',
       subject:       '',

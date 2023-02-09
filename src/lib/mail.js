@@ -1,7 +1,7 @@
 const config = require('config');
 const nodemailer = require('nodemailer');
 const merge = require('merge');
-const htmlToText = require('html-to-text');
+const {htmlToText} = require('html-to-text');
 const MailConfig = require('./mail-config');
 const mailTransporter = require('./mailTransporter');
 
@@ -83,13 +83,55 @@ function sendNotificationMail(data, site) {
     text: `Er hebben recent activiteiten plaatsgevonden op ${data.SITENAME} die mogelijk voor jou interessant zijn!`,
     attachments: siteConfig.getDefaultEmailAttachments(),
   });
-
 };
 
-// send email to user that submitted a resource
-function sendThankYouMail(resource, resourceType, site, user,customTemplateFileName= '', customSubjectName= '') {
+function sendConceptEmail(resource, resourceType, site, user) {
+  const siteConfig = new MailConfig(site)
+  if (!resourceType) return console.error('sendConceptMail error: resourceType not provided');
 
-  let siteConfig = new MailConfig(site)
+  let resourceConceptEmail = siteConfig.getResourceConceptEmail(resourceType);
+  const hasBeenPublished = resource.publishDate;
+  if(hasBeenPublished) {
+    resourceConceptEmail = siteConfig.getResourceConceptToPublishedEmail(resourceType);
+  }
+
+  const url = siteConfig.getCmsUrl();
+  const logo = siteConfig.getLogo();
+  const hostname = siteConfig.getCmsHostname();
+  const sitename = siteConfig.getTitle();
+  let inzendingPath = resourceConceptEmail.inzendingPath;
+
+  let fromAddress = resourceConceptEmail.from || config.email;
+  if (!fromAddress) return console.error('Email error: fromAddress not provided');
+  if (fromAddress.match(/^.+<(.+)>$/, '$1')) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
+
+  let idRegex = new RegExp(`\\[\\[(?:${resourceType}|idea)?Id\\]\\]`, 'g');
+  inzendingPath = inzendingPath && inzendingPath.replace(idRegex, resource.id).replace(/\[\[resourceType\]\]/, resourceType) || "/";
+  const inzendingURL = url + inzendingPath;
+  const data = prepareEmailData(user, resource, hostname, sitename, inzendingURL, url, fromAddress, logo);
+
+  const template = resourceConceptEmail.template;
+  const html = prepareHtml(template, data);
+  const text = convertHtmlToText(html);
+  const attachments = resourceConceptEmail.attachments || siteConfig.getDefaultEmailAttachments();
+
+  try {
+    sendMail(site, {
+      to: resource.email ? resource.email : user.email,
+      from: fromAddress,
+      subject: resourceConceptEmail.subject || 'Bedankt voor je CONCEPT inzending!',
+      html: html,
+      text: text,
+      attachments,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+// send email to user that submitted a resource
+function sendThankYouMail(resource, resourceType, site, user) {
+  const siteConfig = new MailConfig(site)
 
   if (!resourceType) return console.error('sendThankYouMail error: resourceType not provided');
 
@@ -106,66 +148,19 @@ function sendThankYouMail(resource, resourceType, site, user,customTemplateFileN
   const inzendingURL = url + inzendingPath;
   const logo = siteConfig.getLogo();
 
-  let data = {
-    date: new Date(),
-    user: user,
-    idea: resource,
-    article: resource,
-    HOSTNAME: hostname,
-    SITENAME: sitename,
-    inzendingURL,
-    URL: url,
-    EMAIL: fromAddress,
-    logo: logo
-  };
-
-  let html;
-  let template = siteConfig.getResourceFeedbackEmailTemplate(resourceType);
-
-  if(customTemplateFileName) {
-    try {
-      html = nunjucks.render(customTemplateFileName, data);
-      console.log({html});
-    } catch(e) {
-      console.log(`Could not render custom mail template with name ${customTemplateFileName}`);
-      throw e;
-    }
-  }
-
-  if(!html) {
-    if (template) {
-      /**
-       * This is for legacy reasons
-       * if contains <html> we assume it doesn't need a layout wrapper then render as a string
-       * if not included then include by rendering the string and then rendering a blanco
-       * the layout by calling the blanco template
-       */
-      if (template.includes("<html>")) {
-        html = nunjucks.renderString(template, data)
-      } else {
-        html = nunjucks.render('blanco.njk', Object.assign(data, {
-          message: nunjucks.renderString(template, data)
-        }));
-      }
-    } else {
-      html = nunjucks.render(`${resourceType}_created.njk`, data);
-    }
-  }
+  const data = prepareEmailData(user, resource, hostname, sitename, inzendingURL, url, fromAddress, logo);
   
-  let text = htmlToText.fromString(html, {
-    ignoreImage: true,
-    hideLinkHrefIfSameAsText: true,
-    uppercaseHeadings: false
-  });
-
-  let attachments = siteConfig.getResourceFeedbackEmailAttachments(resourceType) || siteConfig.getDefaultEmailAttachments();
+  let template = siteConfig.getResourceFeedbackEmailTemplate(resourceType);
+  const html = prepareHtml(template, data);
+  const text = convertHtmlToText(html);
+  const attachments = siteConfig.getResourceFeedbackEmailAttachments(resourceType) || siteConfig.getDefaultEmailAttachments();
 
   try {
     sendMail(site, {
       // in some cases the resource, like order or account has a different email from the submitted user, default to resource, otherwise send to owner of resource
       to: resource.email ? resource.email : user.email,
       from: fromAddress,
-      subject: customSubjectName || siteConfig.getResourceFeedbackEmailSubject(resourceType) || 'Bedankt voor je inzending',
+      subject: siteConfig.getResourceFeedbackEmailSubject(resourceType) || 'Bedankt voor je inzending',
       html: html,
       text: text,
       attachments,
@@ -175,6 +170,46 @@ function sendThankYouMail(resource, resourceType, site, user,customTemplateFileN
   }
 }
 
+function prepareEmailData(user, resource, hostname, sitename, inzendingURL, url, fromAddress, logo ) {
+  return {
+    date: new Date(),
+    user,
+    idea: resource,
+    article: resource,
+    HOSTNAME: hostname,
+    SITENAME: sitename,
+    inzendingURL,
+    URL: url,
+    EMAIL: fromAddress,
+    logo
+  };
+}
+
+function prepareHtml(template, data) {
+  /**
+   * This is for legacy reasons
+   * if contains <html> we assume it doesn't need a layout wrapper then render as a string
+   * if not included then include by rendering the string and then rendering a blanco
+   * the layout by calling the blanco template
+   */
+  let html;
+  if (template.includes("<html>")) {
+    html = nunjucks.renderString(template, data)
+  } else {
+    html = nunjucks.render('blanco.njk', Object.assign(data, {
+      message: nunjucks.renderString(template, data)
+    }));
+  }
+  return html;
+}
+
+function convertHtmlToText(html) {
+  return htmlToText(html, {
+    ignoreImage: true,
+    hideLinkHrefIfSameAsText: true,
+    uppercaseHeadings: false
+  });
+}
 
 // send email to user that submitted a NewsletterSignup
 function sendNewsletterSignupConfirmationMail(newslettersignup, site, user) {
@@ -291,6 +326,7 @@ module.exports = {
   sendMail,
   sendNotificationMail,
   sendThankYouMail,
+  sendConceptEmail,
   sendNewsletterSignupConfirmationMail,
   sendInactiveWarningEmail,
 };

@@ -253,7 +253,7 @@ router.route('/')
     if (!req.query.nomail && req.body['publishDate']) {
       mail.sendThankYouMail(req.results, 'ideas', req.site, req.user); 
     } else if(!req.query.nomail && !req.body['publishDate']) {
-      mail.sendThankYouMail(req.results, 'ideas', req.site, req.user, 'concept_ideas_created.njk', 'Uw concept plan - LET OP, dien uw plan definitief in voor de deadline');
+      mail.sendConceptEmail(req.results, 'ideas', req.site, req.user);
     }
   });
 
@@ -396,7 +396,7 @@ router.route('/:ideaId(\\d+)')
   })
   .put(function(req, res, next) {
     if(req.changedToPublished) {
-      mail.sendThankYouMail(req.results, 'ideas', req.site, req.user, 'concept_ideas_edited.njk', 'Bedankt voor uw plan!');
+      mail.sendConceptEmail(req.results, 'ideas', req.site, req.user);
     }
     next();
   })
