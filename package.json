@@ -48,7 +48,7 @@
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "sanitize-html": "^2.7.0",
-    "sequelize": "^6.19.0",
+    "sequelize": "^6.28.2",
     "umzug": "^2.3.0",
     "useragent": "^2.3.0",
     "ws": "^7.5.7"
