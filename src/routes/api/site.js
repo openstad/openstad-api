@@ -282,40 +282,24 @@ router.route('/:siteId(\\d+)/:willOrDo(will|do)-anonymize-all-users')
 				if ( !found ) throw new Error('Site not found');
 				req.results = found;
 				req.site = req.results; // middleware expects this to exist
-        next();
-				return null;
+        		next();
 			})
 			.catch(next);
 	})
   .put(async function (req, res, next) {
     try {
+		const result = await req.site.willAnonymizeAllUsers();
+		req.results = result;
+		console.log({result});
       if (req.params.willOrDo == 'do') {
-        req.results = await req.site.doAnonymizeAllUsers();
-      } else {
-        req.results = await req.site.willAnonymizeAllUsers();
-      }
+		result.message = 'Ok';
+		req.site.doAnonymizeAllUsers(
+			[...result.users], 
+			[...result.externalUserIds],
+			req
+		);
+      } 
       next();
-			return null;
-    } catch (err) {
-      return next(err);
-    }
-  })
-  .put(async function (req, res, next) {
-    try {
-      if (req.results.externalUserIds.length == 0) return next();
-      for (let externalUserId of req.results.externalUserIds) {
-        let users = await db.User.findAll({ where: { externalUserId } });
-        if (users.length == 0) {
-          // no api users left for this oauth user, so remove the oauth user
-          let which = req.query.useOauth || 'default';
-          let siteConfig = req.site && merge({}, req.site.config, { id: req.site.id });
-          if (req.params.willOrDo == 'do') {
-            let result = await OAuthApi.deleteUser({ siteConfig, which, userData: { id: externalUserId }})
-          }
-        }
-      }
-      next();
-			return null;
     } catch (err) {
       return next(err);
     }
