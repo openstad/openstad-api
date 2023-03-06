@@ -89,7 +89,10 @@ Then run following command:
 ```
 env ... node reset.js
 ```
-
+If you are using an existing database and only want to migrate run the following command:
+```
+node -r dotenv/config migrate.js
+```
 
 ### 4. Start de server
 ```
