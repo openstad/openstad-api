@@ -118,8 +118,18 @@ module.exports = function (db, sequelize, DataTypes) {
         return beforeUpdateOrCreate(instance, options);
       },
 
-      beforeDestroy: function (instance, options) {
+      beforeDestroy: async function (instance, options) {
+        // project has ended
         if (!(instance && instance.config && instance.config.project.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
+        // are all users anonymized
+        let found = await db.User
+            .findAll({
+              where: {
+                siteId: instance.id,
+                role: 'member',
+              }
+            })
+        if (found) throw Error('Cannot delete an active site - first anonymize all users');
         return 
       },
 
