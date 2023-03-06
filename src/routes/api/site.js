@@ -290,7 +290,6 @@ router.route('/:siteId(\\d+)/:willOrDo(will|do)-anonymize-all-users')
     try {
 		const result = await req.site.willAnonymizeAllUsers();
 		req.results = result;
-		console.log({result});
       if (req.params.willOrDo == 'do') {
 		result.message = 'Ok';
 		req.site.doAnonymizeAllUsers(
