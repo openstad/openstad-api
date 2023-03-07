@@ -935,13 +935,14 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
     return result;
   }
 
-  Site.prototype.doAnonymizeAllUsers = async function (usersToAnonymize, externalUserIds) {
+  Site.prototype.doAnonymizeAllUsers = async function (usersToAnonymize, externalUserIds, useOauth='default') {
     // anonymize all users for this site
     let self = this;
     const amountOfUsersPerSecond = 50;
     try {
       // Anonymize users
       for (const user of usersToAnonymize) {
+        console.log({user});
         await new Promise((resolve, reject) => {
           setTimeout(async function() {
             user.site = self;
@@ -959,11 +960,8 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
         let users = await db.User.findAll({ where: { externalUserId } });
         if (users.length == 0) {
           // no api users left for this oauth user, so remove the oauth user
-          let which = req.query.useOauth || 'default';
-          let siteConfig = req.site && merge({}, req.site.config, { id: req.site.id });
-          if (req.params.willOrDo == 'do') {
-            await OAuthApi.deleteUser({ siteConfig, which, userData: { id: externalUserId }})
-          }
+          let siteConfig = self && merge({}, self.config, { id: self.id });
+            await OAuthApi.deleteUser({ siteConfig, useOauth, userData: { id: externalUserId }})
         }
       }
     } catch (err) {
