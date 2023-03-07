@@ -11,6 +11,7 @@ const oauthClients 		= require('../../middleware/oauth-clients');
 const checkHostStatus = require('../../services/checkHostStatus')
 const OAuthApi        = require('../../services/oauth-api');
 const sitesWithIssues = require('../../services/sites-with-issues');
+const tasks = require('../../../auth/db/tasks');
 
 let router = express.Router({mergeParams: true});
 
@@ -292,10 +293,10 @@ router.route('/:siteId(\\d+)/:willOrDo(will|do)-anonymize-all-users')
 		req.results = result;
       if (req.params.willOrDo == 'do') {
 		result.message = 'Ok';
+		
 		req.site.doAnonymizeAllUsers(
 			[...result.users], 
 			[...result.externalUserIds],
-			req
 		);
       } 
       next();

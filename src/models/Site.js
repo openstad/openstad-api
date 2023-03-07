@@ -4,7 +4,6 @@ const moment = require('moment');
 const apiConfig = require('config');
 const OAuthApi = require('../services/oauth-api');
 const userHasRole = require('../lib/sequelize-authorization/lib/hasRole');
-const tasks = require('../../../auth/db/tasks');
 
 module.exports = function (db, sequelize, DataTypes) {
 
@@ -928,8 +927,6 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
 
       // extract externalUserIds
       result.externalUserIds = result.users.filter( user => user.externalUserId ).map( user => user.externalUserId );
-
-      console.log({result});
     } catch (err) {
       console.log(err);
       throw err;
@@ -938,17 +935,11 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
     return result;
   }
 
-  Site.prototype.doAnonymizeAllUsers = async function (usersToAnonymize, externalUserIds, req) {
+  Site.prototype.doAnonymizeAllUsers = async function (usersToAnonymize, externalUserIds) {
     // anonymize all users for this site
     let self = this;
     const amountOfUsersPerSecond = 50;
     try {
-      let task = await tasks.save(null, { 
-        userCountToAnonymize: usersToAnonymize.length, 
-        anonymizedUsers: 0 
-      });
-      let taskId = req.taskId = task.taskId;
-
       // Anonymize users
       for (const user of usersToAnonymize) {
         await new Promise((resolve, reject) => {
@@ -956,13 +947,8 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
             user.site = self;
             let res = await user.doAnonymize();
             user.site = null;
-            task.anonymizedUsers++;
           }, 1000 / amountOfUsersPerSecond)
         })       
-        .then(result => {
-          task.anonymizedUsers++;
-          return tasks.save(taskId, task);
-        })
         .then(result => resolve() )
           .catch(function (err) {
             throw err;
