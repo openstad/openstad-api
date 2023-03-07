@@ -129,7 +129,8 @@ module.exports = function (db, sequelize, DataTypes) {
                 role: 'member',
               }
             })
-        if (found) throw Error('Cannot delete an active site - first anonymize all users');
+
+        if (found.length > 0) throw Error('Cannot delete an active site - first anonymize all users');
         return 
       },
 
