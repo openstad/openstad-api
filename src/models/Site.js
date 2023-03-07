@@ -942,7 +942,6 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
     try {
       // Anonymize users
       for (const user of usersToAnonymize) {
-        console.log({user});
         await new Promise((resolve, reject) => {
           setTimeout(async function() {
             user.site = self;
