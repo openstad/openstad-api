@@ -434,6 +434,42 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
               default: undefined,
             },
           },
+          conceptEmail: {
+            from: {
+              type: 'string', // todo: add type email/list of emails
+              default: 'EMAIL@NOT.DEFINED',
+            },
+            subject: {
+              type: 'string',
+              default: undefined,
+            },
+            inzendingPath: {
+              type: 'string',
+              default: "/PATH/TO/PLAN/[[ideaId]]",
+            },
+            template: {
+              type: 'string',
+              default: undefined,
+            },
+          },
+          conceptToPublishedEmail: {
+              from: {
+                type: 'string', // todo: add type email/list of emails
+                default: 'EMAIL@NOT.DEFINED',
+              },
+              subject: {
+                type: 'string',
+                default: undefined,
+              },
+              inzendingPath: {
+                type: 'string',
+                default: "/PATH/TO/PLAN/[[ideaId]]",
+              },
+              template: {
+                type: 'string',
+                default: undefined,
+              },
+            },
           extraDataMustBeDefined: {
             type: 'boolean',
             default: false,
