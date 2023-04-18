@@ -128,7 +128,6 @@ router.route('/')
  */
   .post(function (req, res, next) {
     if (req.oAuthUser) {
-      console.log(1);
       next();
     } else {
       // in case no oauth user is found with this e-mail create it
