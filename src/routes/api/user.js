@@ -14,7 +14,7 @@ const OAuthUser = require('../../services/oauth-user');
 
 const filterBody = (req, res, next) => {
   const data = {};
-  const keys = ['firstName', 'lastName', 'nickName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole'];
+  const keys = ['firstName', 'lastName', 'nickName', 'email', 'phoneNumber', 'streetName', 'houseNumber', 'city', 'suffix', 'zipcode', 'postcode', 'extraData', 'listableByRole', 'detailsViewableByRole'];
 
   keys.forEach((key) => {
     if (typeof req.body[key] != 'undefined') {
@@ -128,6 +128,7 @@ router.route('/')
  */
   .post(function (req, res, next) {
     if (req.oAuthUser) {
+      console.log(1);
       next();
     } else {
       // in case no oauth user is found with this e-mail create it
@@ -166,7 +167,8 @@ router.route('/')
       ...req.body,
       siteId: req.site.id,
       role: req.oAuthUser.role || 'member',
-      externalUserId: req.oAuthUser.id
+      externalUserId: req.oAuthUser.id,
+      lastLogin: Date.now(),
     };
     db.User
       .authorizeData(data, 'create', req.user)
