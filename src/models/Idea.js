@@ -78,7 +78,7 @@ module.exports = function (db, sequelize, DataTypes) {
     endDate: {
       type: DataTypes.VIRTUAL(DataTypes.DATE, ['startDate']),
       get: function () {
-        var _config = merge.recursive(true, config, this.site.config);
+        var _config = merge.recursive(true, config, this.site?.config || {});
         var duration =
           (_config &&
             _config.ideas &&
