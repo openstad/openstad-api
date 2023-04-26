@@ -62,6 +62,10 @@ class MailConfig {
     return this.getResourceFeedbackEmail(resourceType).inzendingPath;
   }
   
+  getConceptEmailInzendingPath(resourceType) {
+    return this.getResourceConceptEmail(resourceType).inzendingPath;
+  }
+
   getResourceFeedbackEmailTemplate(resourceType) {
     return this.getResourceFeedbackEmail(resourceType).template;
   }

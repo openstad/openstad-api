@@ -105,8 +105,10 @@ function sendConceptEmail(resource, resourceType, site, user) {
   if (!fromAddress) return console.error('Email error: fromAddress not provided');
   if (fromAddress.match(/^.+<(.+)>$/, '$1')) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
 
+
   let idRegex = new RegExp(`\\[\\[(?:${resourceType}|idea)?Id\\]\\]`, 'g');
   inzendingPath = inzendingPath && inzendingPath.replace(idRegex, resource.id).replace(/\[\[resourceType\]\]/, resourceType) || "/";
+
   const inzendingURL = url + inzendingPath;
   const data = prepareEmailData(user, resource, hostname, sitename, inzendingURL, url, fromAddress, logo);
 

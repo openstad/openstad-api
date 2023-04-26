@@ -7,22 +7,22 @@ module.exports = {
   ideas: {
     conceptEmail: {
       from:          '',
-      subject:       '',
-      inzendingPath: '',
+      subject:       'Bedankt voor je concept inzending!',
+      inzendingPath: '/PATH/NAAR/INGEDIEND/PLAN/[[ideaId]]',
       template:      '',
       attachments:   []
     },
     conceptToPublishedEmail: {
       from:          '',
-      subject:       '',
-      inzendingPath: '',
+      subject:       'Bedankt voor je inzending!',
+      inzendingPath: '/PATH/NAAR/INGEDIEND/PLAN/[[ideaId]]',
       template:      '',
       attachments:   []
     },
     feedbackEmail: {
       from:          '',
-      subject:       '',
-      inzendingPath: '',
+      subject:       'Bedankt voor je inzending!',
+      inzendingPath: '/PATH/NAAR/INGEDIEND/PLAN/[[ideaId]]',
       template:      '',
       attachments:   []
     }
