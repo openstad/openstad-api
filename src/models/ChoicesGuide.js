@@ -77,7 +77,14 @@ module.exports = function( db, sequelize, DataTypes ) {
       set: function(value) {
         try {
           if (typeof value == 'string') {
-            value = JSON.parse(value);
+            value = JSON.parse(value) || {};
+          }
+          if (value.isActive == 'true') value.isActive = true;
+          if (value.isActive == 'false' || value.isActive == null) value.isActive = false;
+          if (value.isActive == false) value.submissionType = 'form';
+          if (value.submissionType != 'form') {
+            delete value.requiredUserRole;
+            delete value.withExisting;
           }
         } catch (err) {}
         this.setDataValue('config', JSON.stringify(value));

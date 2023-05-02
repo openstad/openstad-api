@@ -109,6 +109,7 @@ function sendConceptEmail(resource, resourceType, site, user) {
 
   const data = prepareEmailData(user, resource, hostname, sitename, inzendingURL, url, fromAddress, logo);
 
+
   const template = resourceConceptEmail.template;
   const html = prepareHtml(template, data);
   const text = convertHtmlToText(html);
@@ -152,6 +153,7 @@ function sendThankYouMail(resource, resourceType, site, user) {
   const html = prepareHtml(template, data);
   const text = convertHtmlToText(html);
   const attachments = siteConfig.getResourceFeedbackEmailAttachments(resourceType) || siteConfig.getDefaultEmailAttachments();
+
 
   try {
     sendMail(site, {
