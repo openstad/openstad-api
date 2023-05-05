@@ -99,16 +99,16 @@ function sendConceptEmail(resource, resourceType, site, user) {
   const logo = siteConfig.getLogo();
   const hostname = siteConfig.getCmsHostname();
   const sitename = siteConfig.getTitle();
+
   let inzendingPath = resourceConceptEmail.inzendingPath;
+  const inzendingURL = getInzendingURL(inzendingPath, url, resource, resourceType);
 
   let fromAddress = resourceConceptEmail.from || config.email;
   if (!fromAddress) return console.error('Email error: fromAddress not provided');
   if (fromAddress.match(/^.+<(.+)>$/, '$1')) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
 
-  let idRegex = new RegExp(`\\[\\[(?:${resourceType}|idea)?Id\\]\\]`, 'g');
-  inzendingPath = inzendingPath && inzendingPath.replace(idRegex, resource.id).replace(/\[\[resourceType\]\]/, resourceType) || "/";
-  const inzendingURL = url + inzendingPath;
   const data = prepareEmailData(user, resource, hostname, sitename, inzendingURL, url, fromAddress, logo);
+
 
   const template = resourceConceptEmail.template;
   const html = prepareHtml(template, data);
@@ -132,28 +132,28 @@ function sendConceptEmail(resource, resourceType, site, user) {
 // send email to user that submitted a resource
 function sendThankYouMail(resource, resourceType, site, user) {
   const siteConfig = new MailConfig(site)
-
+  
   if (!resourceType) return console.error('sendThankYouMail error: resourceType not provided');
 
   const url = siteConfig.getCmsUrl();
   const hostname = siteConfig.getCmsHostname();
   const sitename = siteConfig.getTitle();
+  let inzendingPath = siteConfig.getFeedbackEmailInzendingPath(resourceType);
+  const inzendingURL = getInzendingURL(inzendingPath, url, resource, resourceType);
+
   let fromAddress = siteConfig.getFeedbackEmailFrom(resourceType) || config.email;
   if (!fromAddress) return console.error('Email error: fromAddress not provided');
   if (fromAddress.match(/^.+<(.+)>$/, '$1')) fromAddress = fromAddress.replace(/^.+<(.+)>$/, '$1');
 
-  // todo: als je dan toch met een siteConfig.get werkt, moet deze search-and-replace dan niet ook daar?
-  let idRegex = new RegExp(`\\[\\[(?:${resourceType}|idea)?Id\\]\\]`, 'g'); // 'idea' wegens backward compatible
-  const inzendingPath = (siteConfig.getFeedbackEmailInzendingPath(resourceType) && siteConfig.getFeedbackEmailInzendingPath(resourceType).replace(idRegex, resource.id).replace(/\[\[resourceType\]\]/, resourceType)) || "/";
-  const inzendingURL = url + inzendingPath;
-  const logo = siteConfig.getLogo();
 
+  const logo = siteConfig.getLogo();
   const data = prepareEmailData(user, resource, hostname, sitename, inzendingURL, url, fromAddress, logo);
   
   let template = siteConfig.getResourceFeedbackEmailTemplate(resourceType);
   const html = prepareHtml(template, data);
   const text = convertHtmlToText(html);
   const attachments = siteConfig.getResourceFeedbackEmailAttachments(resourceType) || siteConfig.getDefaultEmailAttachments();
+
 
   try {
     sendMail(site, {
@@ -321,6 +321,16 @@ function sendInactiveWarningEmail(site, user) {
 
 }
 
+function getInzendingURL(inzendingPath, url, resource, resourceType) {
+  let idRegex = new RegExp(`\\{(?:${resourceType}|idea)?Id\\}`, 'g');
+  let oldIdRegex = new RegExp(`\\[\\[(?:${resourceType}|idea)?Id\\]\\]`, 'g');
+
+  inzendingPath = inzendingPath && inzendingPath
+  .replace(idRegex, resource.id)
+  .replace(oldIdRegex, resource.id)
+  .replace(/\[\[resourceType\]\]/, resourceType) || "/";
+  return url + inzendingPath;
+}
 
 module.exports = {
   sendMail,
