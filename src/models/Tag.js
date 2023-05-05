@@ -20,6 +20,14 @@ module.exports = function( db, sequelize, DataTypes ) {
 			}
 		},
 
+		type: {
+			type         : DataTypes.STRING,
+			allowNull    : true,
+			set          : function( text ) {
+				this.setDataValue('type', sanitize.safeTags(text.trim()));
+			}
+		},
+
 		extraData: getExtraDataConfig(DataTypes.JSON, 'tags')
 	}, {
 

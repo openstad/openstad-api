@@ -46,6 +46,7 @@ router.route('/')
 	.post(function(req, res, next) {
 		const data = {
 			name   : req.body.name,
+			type   : req.body.type, 
 			siteId : req.params.siteId,
 		};
 

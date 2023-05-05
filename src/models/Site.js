@@ -118,8 +118,19 @@ module.exports = function (db, sequelize, DataTypes) {
         return beforeUpdateOrCreate(instance, options);
       },
 
-      beforeDestroy: function (instance, options) {
+      beforeDestroy: async function (instance, options) {
+        // project has ended
         if (!(instance && instance.config && instance.config.project.projectHasEnded)) throw Error('Cannot delete an active site - first set the project-has-ended parameter');
+        // are all users anonymized
+        let found = await db.User
+            .findAll({
+              where: {
+                siteId: instance.id,
+                role: 'member',
+              }
+            })
+
+        if (found.length > 0) throw Error('Cannot delete an active site - first anonymize all users');
         return 
       },
 
@@ -423,6 +434,42 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
               default: undefined,
             },
           },
+          conceptEmail: {
+            from: {
+              type: 'string', // todo: add type email/list of emails
+              default: 'EMAIL@NOT.DEFINED',
+            },
+            subject: {
+              type: 'string',
+              default: undefined,
+            },
+            inzendingPath: {
+              type: 'string',
+              default: "/PATH/TO/PLAN/[[ideaId]]",
+            },
+            template: {
+              type: 'string',
+              default: undefined,
+            },
+          },
+          conceptToPublishedEmail: {
+              from: {
+                type: 'string', // todo: add type email/list of emails
+                default: 'EMAIL@NOT.DEFINED',
+              },
+              subject: {
+                type: 'string',
+                default: undefined,
+              },
+              inzendingPath: {
+                type: 'string',
+                default: "/PATH/TO/PLAN/[[ideaId]]",
+              },
+              template: {
+                type: 'string',
+                default: undefined,
+              },
+            },
           extraDataMustBeDefined: {
             type: 'boolean',
             default: false,
@@ -912,12 +959,10 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
   }
 
   Site.prototype.willAnonymizeAllUsers = async function () {
-
     let self = this;
     let result = {};
 
     try {
-
       if (!self.id) throw Error('Site not found');
       if (!self.config.project.projectHasEnded) throw Error('Cannot anonymize users on an active site - first set the project-has-ended parameter');
 
@@ -929,43 +974,46 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
 
       // extract externalUserIds
       result.externalUserIds = result.users.filter( user => user.externalUserId ).map( user => user.externalUserId );
-
     } catch (err) {
       console.log(err);
       throw err;
     }
 
     return result;
-    
   }
 
-  Site.prototype.doAnonymizeAllUsers = async function () {
-
+  Site.prototype.doAnonymizeAllUsers = async function (usersToAnonymize, externalUserIds, useOauth='default') {
     // anonymize all users for this site
     let self = this;
-    let result;
-
+    const amountOfUsersPerSecond = 50;
     try {
-
-      result = await self.willAnonymizeAllUsers();
-
-      let users = [ ...result.users ]
-
-      // anonymize users
-      for (const user of users) {
-        user.site = self;
-        let res = await user.doAnonymize();
-        user.site = null;
+      // Anonymize users
+      for (const user of usersToAnonymize) {
+        await new Promise((resolve, reject) => {
+          setTimeout(async function() {
+            user.site = self;
+            let res = await user.doAnonymize();
+            user.site = null;
+          }, 1000 / amountOfUsersPerSecond)
+        })       
+        .then(result => resolve() )
+          .catch(function (err) {
+            throw err;
+          });
       }
 
+      for (let externalUserId of externalUserIds) {
+        let users = await db.User.findAll({ where: { externalUserId } });
+        if (users.length == 0) {
+          // no api users left for this oauth user, so remove the oauth user
+          let siteConfig = self && merge({}, self.config, { id: self.id });
+            await OAuthApi.deleteUser({ siteConfig, useOauth, userData: { id: externalUserId }})
+        }
+      }
     } catch (err) {
       console.log(err);
       throw err;
     }
-
-    result.message = 'Ok';
-    return result;
-
   }
 
   Site.prototype.isVoteActive = function () {

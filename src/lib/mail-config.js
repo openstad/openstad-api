@@ -45,6 +45,14 @@ class MailConfig {
     return this.getResourceConfig(resourceType).feedbackEmail || {};
   }
 
+  getResourceConceptEmail(resourceType) {
+    return this.getResourceConfig(resourceType).conceptEmail || {};
+  }
+
+  getResourceConceptToPublishedEmail(resourceType) {
+    return this.getResourceConfig(resourceType).conceptToPublishedEmail || {};
+  }
+
   getFeedbackEmailFrom(resourceType) {
     resourceType = resourceType || 'ideas'
     return this.getResourceFeedbackEmail(resourceType).from;
