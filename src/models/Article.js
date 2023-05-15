@@ -198,7 +198,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 
 		validate: {
 			validExtraData: function(next) {
-
+				console.log("validate", {next});
         let self = this;
 				let errors = [];
 				let value = self.extraData || {}
@@ -567,7 +567,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 		return this.update({status: status});
 	}
 
-  let canMutate = function(user, self) {
+  function canMutate(user, self) {
     if( !self.isOpen() ) {
 			return false;
 		}
@@ -589,7 +589,7 @@ module.exports = function( db, sequelize, DataTypes ) {
     viewableBy: 'all',
     createableBy: 'editor',
     updateableBy: ['editor','owner'],
-    deleteableBy: ['editor','owner'],
+    deleteableBy: ['all'],
     canUpdate: canMutate,
     canDelete: canMutate,
     toAuthorizedJSON: function(user, data) {
@@ -613,7 +613,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 	return Article;
 
   function beforeValidateHook( instance, options ) {
-
+		console.log({instance}, "in before validation hook");
 		return new Promise((resolve, reject) => {
 
 			if (instance.siteId) {

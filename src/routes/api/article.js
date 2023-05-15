@@ -168,7 +168,7 @@ router.route('/')
 router.route('/:articleId(\\d+)')
 	.all(function(req, res, next) {
 		var articleId = parseInt(req.params.articleId) || 1;
-
+		console.log({articleId});
 		db.Article
 			.scope(...req.scope)
 			.findOne({
