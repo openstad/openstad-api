@@ -24,7 +24,7 @@ module.exports = function( db, sequelize, DataTypes ) {
 			type         : DataTypes.STRING,
 			allowNull    : true,
 			set          : function( text ) {
-				this.setDataValue('type', sanitize.safeTags(text.trim()));
+				this.setDataValue('type', text?sanitize.safeTags(text.trim()):null);
 			}
 		},
 
