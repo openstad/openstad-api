@@ -699,17 +699,37 @@ module.exports = function (db, sequelize, DataTypes) {
 
 
 
-      selectTags: function (tags) {
-        return {
+      selectTags: function (tags, shouldUseAnd) {
+        const shouldFilterByAnd = shouldUseAnd === 'true';
+        // const filter = shouldFilterByAnd ? {[Op.and]:tags} :{[Op.in]:tags}
+        const query = {  
+          where: {},
+          subQuery: false,
           include: [{
             model: db.Tag,
             attributes: ['id', 'name'],
             through: {attributes: []},
-            where: {
-              id: tags
-            }
-          }],
+            where: { id: tags }
+          }]
+        };
+       
+        query.include.push({ model: db.Tag, as: 'filterTags' });
+  
+        if(shouldFilterByAnd) {
+          const and = tags.map(tag => [tag]).map(tagCollection =>({
+            '$filterTags.id$': [].concat(tagCollection),
+          }));
+
+          if (query.where[Op.or]) {
+            query.where[Op.or].push(and);
+          } else {
+            query.where[Op.or] = and;
+          }
+        } else {
+          query.where['$filterTags.id$'] = [].concat(tags);
         }
+
+        return query;
       },
 
       includeRanking: {
@@ -940,6 +960,7 @@ module.exports = function (db, sequelize, DataTypes) {
     this.hasOne(models.Vote, {as: 'userVote', foreignKey: 'ideaId'});
     this.belongsTo(models.Site);
     this.belongsToMany(models.Tag, {through: 'ideaTags', constraints: false});
+    this.belongsToMany(models.Tag, {through: 'ideaTags', as: 'filterTags',constraints: false});
   }
 
   Idea.getRunning = function (sort, extraScopes) {
@@ -1267,7 +1288,5 @@ module.exports = function (db, sequelize, DataTypes) {
         throw Error('You cannot edit an idea after the first like or argument has been added')
       }
     }
-
   }
-
 };

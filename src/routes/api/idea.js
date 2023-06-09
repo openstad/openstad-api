@@ -80,8 +80,9 @@ router
     }
 
     if (req.query.tags) {
-      let tags = req.query.tags;
-      req.scope.push({ method: ['selectTags', tags] });
+      const query = req.query;
+      const tags = query.tags;
+      req.scope.push({ method: ['selectTags', tags, req.query.filterByTagsAnd]});
       req.scope.push('includeTags');
     }
 
@@ -108,6 +109,8 @@ router.route('/')
   .get(function(req, res, next) {
     let { dbQuery } = req;
 
+    console.log({dbQuery});
+    console.log({queryConditions: req.queryConditions})
     dbQuery.where = {
       siteId: req.params.siteId,
       ...req.queryConditions,
