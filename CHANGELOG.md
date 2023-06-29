@@ -14,7 +14,7 @@
 * Bugfix: site.config.ideas.automaticallyUpdateStatus
 * Upgrade to node 16
 * Add virtual end date to idea
-
+* Make submissions listable & viewable, and allow them to be filtered by formId
 ## v0.40.0
 Update version number
 * Remove sessions and cookies - the API is stateless

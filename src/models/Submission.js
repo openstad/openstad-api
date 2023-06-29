@@ -2,6 +2,8 @@ const config = require('config');
 const eventService = require('../services/eventService');
 const getSequelizeConditionsForFilters = require('./../util/getSequelizeConditionsForFilters');
 
+const Sequelize = require('sequelize');
+const getSequelizeConditionsForFilters = require('./../util/getSequelizeConditionsForFilters');
 
 module.exports = function (db, sequelize, DataTypes) {
   const Submission = sequelize.define('submission', {
