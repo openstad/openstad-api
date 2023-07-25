@@ -10,6 +10,11 @@ module.exports = {
 	cronTime: '0 0 1 * * *',
 	runOnInit: true,
 	onTick: function() {
+    // Do not run this cronjob if we have PREVENT_BACKUP_CRONJOBS set to true, or if the S3_DBS_TO_BACKUP is not empty (which means we want to backup to S3).
+    if (!!process.env.PREVENT_BACKUP_CRONJOBS === true || !!process.env.S3_DBS_TO_BACKUP === false) {
+      return;
+    }
+    
     const mysqlRootPw = process.env.MYSQL_ROOT_PASS;
     const objectStoreUrl = process.env.OBJECT_STORE_URL;
     const objectStoreUser = process.env.OBJECT_STORE_USER;

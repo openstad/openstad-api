@@ -14,6 +14,7 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.INTEGER,
       allowNull: true
     },
+
     formName: {
       type: DataTypes.STRING,
       allowNull: true
@@ -78,28 +79,31 @@ module.exports = function (db, sequelize, DataTypes) {
 					attributes : ['role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
 				}]
 			},
-            forSiteId: function (siteId) {
-                return {
-                    where: {
-                        siteId: siteId,
-                    }
-                };
-            },
-            filter:    function (filtersInclude, filtersExclude) {
-                const filterKeys = [
-                    {
-                        'key': 'id'
-                    },
-                    {
-                        'key': 'status'
-                    },
-                    {
-                        'key': 'formId'
-                    },
-                ];
+			forSiteId: function (siteId) {
+					return {
+							where: {
+									siteId: siteId,
+							}
+					};
+			},
+			filter:    function (filtersInclude, filtersExclude) {
+					const filterKeys = [
+							{
+									'key': 'id'
+							},
+							{
+									'key': 'status'
+							},
+							{
+									'key': 'formName'
+							},
+              {
+                  'key': 'formId'
+              },
+					];
 
-                return getSequelizeConditionsForFilters(filterKeys, filtersInclude, sequelize, filtersExclude);
-            },
+					return getSequelizeConditionsForFilters(filterKeys, filtersInclude, sequelize, filtersExclude);
+			},
 		};
 	}
 
