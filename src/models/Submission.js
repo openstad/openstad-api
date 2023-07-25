@@ -70,15 +70,15 @@ module.exports = function (db, sequelize, DataTypes) {
   }
   });
 
-  Submission.scopes = function scopes() {
-    return {
-      defaultScope: {},
-      withUser: {
-        include: [{
-          model: db.User,
-          attributes: ['role', 'nickName', 'firstName', 'lastName', 'email']
-        }]
-      },
+	Submission.scopes = function scopes() {
+		return {
+			defaultScope: {},
+			withUser: {
+				include: [{
+					model      : db.User,
+					attributes : ['role', 'displayName', 'nickName', 'firstName', 'lastName', 'email']
+				}]
+			},
 			forSiteId: function (siteId) {
 					return {
 							where: {
@@ -95,8 +95,11 @@ module.exports = function (db, sequelize, DataTypes) {
 									'key': 'status'
 							},
 							{
-									'key': 'formId'
+									'key': 'formName'
 							},
+              {
+                  'key': 'formId'
+              },
 					];
 
 					return getSequelizeConditionsForFilters(filterKeys, filtersInclude, sequelize, filtersExclude);
