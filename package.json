@@ -31,6 +31,7 @@
     "html-to-text": "^6.0.0",
     "http-errors": "^1.8.1",
     "ip": "^1.1.5",
+    "isomorphic-fetch": "^3.0.0",
     "json-logic-js": "^2.0.2",
     "jsonwebtoken": "^9.0.0",
     "mariadb": "^2.5.6",

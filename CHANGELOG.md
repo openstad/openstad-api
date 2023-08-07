@@ -1,5 +1,8 @@
 # Changelog
 
+## UNRELEASED
+* Add input, textarea and multiple-choice question types to the choices guide
+
 ## 1.0.0
 * Anonymize site users 
 * Save idea as concept

@@ -167,6 +167,8 @@ router.route('/:choicesGuideId(\\d+)$')
               minLabel: question.minLabel,
               maxLabel: question.maxLabel,
               seqnr: question.seqnr,
+              validation: question.validation,
+              extraConfig: question.extraConfig,
             });
           });
         }
@@ -564,6 +566,8 @@ router.route('/:choicesGuideId(\\d+)/questiongroup/:questionGroupId(\\d+)/questi
       minLabel: req.body.minLabel,
       maxLabel: req.body.maxLabel,
       seqnr: req.body.seqnr,
+      validation: req.body.validation,
+      extraConfig: req.body.extraConfig,
     };
     req.question
 			.authorizeData(data, 'update', req.user)
