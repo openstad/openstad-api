@@ -3,6 +3,7 @@
 ## UNRELEASED
 * Change mongoDB S3 backup to read the database dump in chunks and upload it to the S3 bucket using a MultiPart upload setup.
 * Allow s3 backups to be disabled from the cronjobs, but instead be run through a different entrypoint (backup.js) to allow kubernetes cronjobs to be used.
+* Add input, textarea and multiple-choice question types to the choices guide
 
 ## 1.0.0
 * Anonymize site users 

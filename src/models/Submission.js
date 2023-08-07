@@ -14,6 +14,7 @@ module.exports = function (db, sequelize, DataTypes) {
       type: DataTypes.INTEGER,
       allowNull: true
     },
+
     formName: {
       type: DataTypes.STRING,
       allowNull: true
