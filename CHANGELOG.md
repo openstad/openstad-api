@@ -1,6 +1,8 @@
 # Changelog
 
 ## UNRELEASED
+* Change mongoDB S3 backup to read the database dump in chunks and upload it to the S3 bucket using a MultiPart upload setup.
+* Allow s3 backups to be disabled from the cronjobs, but instead be run through a different entrypoint (backup.js) to allow kubernetes cronjobs to be used.
 * Add input, textarea and multiple-choice question types to the choices guide
 
 ## 1.0.0
@@ -28,7 +30,6 @@ Update version number
 * New template distribution system
 * Do not wait for cms when updating site config
 * Move docker builds from travis to github actions
-
 ## v0.20.0 (2021-12-20)
 * Fix responding to not existing routes with to much information
 * Make submissions listable & viewable, and allow them to be filtered by formId

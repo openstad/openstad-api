@@ -1,76 +1,60 @@
-const AWS = require('aws-sdk');
-const fs = require('fs'); // Needed for example below
+const fs     = require('fs');
 const moment = require('moment')
-const os = require('os');
-//const BACKUP_PATH = (ZIP_NAME) => path.resolve(os.tmpdir(), ZIP_NAME);
-const { exec } = require('child_process');
-const log = require('debug')('app:cron');
-const db = require('../db');
-
-// Purpose
-// -------
-// Auto-close ideas that passed the deadline.
-//          accessKeyId: process.env.S3_KEY,
-          secretAccessKey: process.env.S3_SECRET
-// Runs every night at 1:00.
-//
-function currentTime(timezoneOffset) {
-    if (timezoneOffset) {
-        return moment(moment(moment.now()).utcOffset(timezoneOffset, true).toDate()).format("YYYY-MM-DDTHH-mm-ss");
-    } else {
-        return moment
-            .utc()
-            .format('YYYY-MM-DDTHH-mm-ss');
-    }
-}
+const {exec} = require('child_process');
+const s3     = require('../services/awsS3');
+const util   = require('util');
 
 const backupMongoDBToS3 = async () => {
-    if (process.env.S3_MONGO_BACKUPS === 'ON') {
-      const host = process.env.MONGO_DB_HOST || 'localhost';
-      const port = process.env.MONGO_DB_PORT || 27017;
-      const tmpDbFile = 'db_mongo'
+  if (!!process.env.PREVENT_BACKUP_CRONJOBS === true) {
+    return;
+  }
+  
+  console.log('backing up to mongodb', process.env.S3_MONGO_BACKUPS);
+  
+  if (process.env.S3_MONGO_BACKUPS === 'ON') {
+    const host            = process.env.MONGO_DB_HOST || 'localhost';
+    const port            = process.env.MONGO_DB_PORT || 27017;
+    const tempFile        = 'db_mongo';
+    const isOnK8s         = !!process.env.KUBERNETES_NAMESPACE;
+    const namespace       = process.env.KUBERNETES_NAMESPACE;
+    const created = moment().format('YYYY-MM-DD hh:mm:ss')
+    const fileNameInS3 = isOnK8s ? `mongodb/${namespace}/mongo_${created}` : `mongodb/mongo_${created}`;
+    const deleteTempFile = () => {
+      try {
+        console.log ('removing temp file', tempFile);
+        fs.unlinkSync(tempFile);
+      } catch (e) {
+        console.error('error removing file', tempFile, e);
+      }
+    };
+    
+    // Default command, does not considers username or password
+    let command = `mongodump -h ${host} --port=${port} --archive=${tempFile}`;
+    
+    const promiseExec = util.promisify(exec);
+    
+    return promiseExec(command, async (err, stdout, stderr) => {
+      if (err) {
+        // Most likely, mongodump isn't installed or isn't accessible
+        console.error(`mongodump command error: ${err}`);
+        deleteTempFile();
+        return;
+      }
+      
+      const statsFile = fs.statSync(tempFile);
+      console.info(`file size: ${Math.round(statsFile.size / 1024 / 1024)}MB`);
 
-    //  let DB_BACKUP_NAME = `mongodb_${currentTime()}.gz`;
-
-      // Default command, does not considers username or password
-      let command = `mongodump -h ${host} --port=${port} --archive=${tmpDbFile}`;
-
-      // When Username and password is provided
-      // /
-      //if (username && password) {
-      //    command = `mongodump -h ${host} --port=${port} -d ${database} -p ${password} -u ${username} --quiet --gzip --archive=${BACKUP_PATH(DB_BACKUP_NAME)}`;
-      //}
-
-      exec(command, (err, stdout, stderr) => {
-          if (err) {
-              // Most likely, mongodump isn't installed or isn't accessible
-            console.log('errere', err);
-          } else {
-            const spacesEndpoint = new AWS.Endpoint(process.env.S3_ENDPOINT);
-
-            const created = moment().format('YYYY-MM-DD hh:mm:ss')
-            const fileContent = fs.readFileSync(tmpDbFile);
-
-            const s3 = new AWS.S3({
-                endpoint: spacesEndpoint,
-                accessKeyId: process.env.S3_KEY,
-                secretAccessKey: process.env.S3_SECRET
-            });
-
-            var params = {
-                Bucket: process.env.S3_BUCKET,
-                Key: "mongodb/mongo_" + created,
-                Body: fileContent,
-                ACL: "private"
-            };
-
-            s3.putObject(params, function(err, data) {
-                if (err) console.log(err, err.stack);
-                else     console.log(data);
-            });
-          }
-      });
-    }
+      try {
+        await s3.uploadFile(tempFile, fileNameInS3);
+        deleteTempFile();
+        console.log('successfully uploaded to s3');
+      } catch (e) {
+        deleteTempFile();
+        throw e;
+      }
+      
+    });
+  }
 }
 
 
@@ -89,6 +73,6 @@ module.exports = {
 	cronTime: '0 0 1 * * *',
 	runOnInit: true,
 	onTick: async function() {
-    backupMongoDBToS3();
+    return backupMongoDBToS3();
 	}
 };
