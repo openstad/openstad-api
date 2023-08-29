@@ -189,6 +189,29 @@ router.route('/')
       .create(data)
       .then(ideaInstance => {
 
+        // importing ideas with arguments, an arguments array will be available
+      (data.arguments || []).map(argument => {
+        db.Argument
+        .authorizeData(data, 'create', req.user)
+        .create({
+          userId: argument.userId, 
+          ideaId: ideaInstance.id,
+          description: argument.description,
+          sentiment: argument.sentiment,
+        }).then(() => console.log("Importing argument with idea successfull")).catch((e) => console.log("Could not import the argument", e));
+      });
+
+      // Importing ideas with votes, a votes array will be available
+      (data.votes || []).map(vote => {
+        db.Vote
+        .authorizeData(data, 'create', req.user)
+        .create({
+          userId: vote.userId, 
+          ideaId: ideaInstance.id,
+          opinion: vote.opinion,
+        }).then(() => console.log("Importing votes with idea successfull")).catch((e) => console.log("Could not import the vote", e));
+      });
+
         db.Idea
           .scope(...req.scope)
           .findByPk(ideaInstance.id)
