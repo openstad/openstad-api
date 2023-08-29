@@ -66,6 +66,10 @@ router
       req.scope.push({ method: ['includeArguments', req.user.id] });
     }
 
+    if (req.query.includeVotes) {
+      req.scope.push('includeVotes');
+    }
+    
     if (req.query.includeArgsCount) {
       req.scope.push('includeArgsCount');
     }
