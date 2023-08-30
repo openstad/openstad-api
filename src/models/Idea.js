@@ -762,7 +762,7 @@ module.exports = function (db, sequelize, DataTypes) {
       includeVotes: {
         include: [{
           model: db.Vote,
-          attributes: ['id'],
+          attributes: ['id', 'ideaId', 'userId', 'opinion'],
           as: 'votes',
         }]
       },
