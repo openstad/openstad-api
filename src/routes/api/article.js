@@ -257,9 +257,12 @@ router.route('/:articleId(\\d+)')
 
 // delete article
 // ---------
-	.delete(auth.can('Article', 'delete'))
+	.delete(auth.useReqUser)
 	.delete(function(req, res, next) {
-		req.results
+		const article = req.results;
+		if (!(article && article.can && article.can('delete'))) return next(new Error('You cannot delete this article'));
+
+		article
 			.destroy()
 			.then(() => {
 				res.json({ "article": "deleted" });
