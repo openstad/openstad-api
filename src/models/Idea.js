@@ -210,7 +210,7 @@ module.exports = function (db, sequelize, DataTypes) {
         validate: {
           textLength(value) {
             // We need to undo the sanitization before we can check the length
-            let len = htmlToText.fromString(value).length;
+            let len = htmlToText.fromString(value || '').length;
             let summaryMinLength =
               (this.config &&
                 this.config.ideas &&
@@ -241,7 +241,7 @@ module.exports = function (db, sequelize, DataTypes) {
         allowNull: !this.publishDate,
         validate: {
           textLength(value) {
-            let len = sanitize.summary(value.trim()).length;
+            let len = sanitize.summary(value || ''.trim()).length;
             let descriptionMinLength =
               (this.config &&
                 this.config.ideas &&
