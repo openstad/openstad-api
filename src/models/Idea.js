@@ -231,7 +231,7 @@ module.exports = function (db, sequelize, DataTypes) {
           },
         },
         set: function (text) {
-          text = text ? sanitize.summary(text.trim()) : null;
+          text = text ? sanitize.summary(text.trim()) : '';
           this.setDataValue('summary', text);
         },
       },
@@ -263,7 +263,7 @@ module.exports = function (db, sequelize, DataTypes) {
           },
         },
         set: function (text) {
-          text = text ? sanitize.content(text.trim()) : null;
+          text = text ? sanitize.content(text.trim()) : '';
           this.setDataValue('description', text);
         },
       },
@@ -318,7 +318,7 @@ module.exports = function (db, sequelize, DataTypes) {
         },
         allowNull: true,
         set: function (text) {
-          text = text ? sanitize.content(text.trim()) : null;
+          text = text ? sanitize.content(text.trim()) : '';
           this.setDataValue('modBreak', text);
         },
       },
