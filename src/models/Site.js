@@ -1105,7 +1105,7 @@ Wil je dit liever niet? Dan hoef je alleen een keer in te loggen op de website o
       for (const failedAnonimisation of failedAnonimisations) {
         externalUsrIds = externalUsrIds.filter(
           (extUsrId) =>
-            extUsrId === failedAnonimisation.reason.user.externalUserId
+            extUsrId !== failedAnonimisation.reason.user.externalUserId
         );
       }
 
