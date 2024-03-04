@@ -74,14 +74,17 @@ router.use( '/template', require('./template') );
 
 // output error as JSON only use this error handler middleware in "/api" based routes
 router.use("/site", function(err, req, res, next){
+  const env  = process.env.NODE_ENV;
+  const isProduction = env === 'production';
   console.log('->>> err', err);
+
   // use the error's status or default to 500
   res.status(err.status || 500);
 
   // send back json data
   res.send({
-    error:  err.message,
-    message: err.message
+    error:  isProduction ? null: err.message,
+    message: isProduction ? "Something went wrong, please try again" : err.message
   })
 });
 
