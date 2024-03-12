@@ -870,6 +870,14 @@ module.exports = function (db, sequelize, DataTypes) {
         ],
       },
 
+      includeVotes: {
+        include: [{
+          model: db.Vote,
+          attributes: ['id', 'ideaId', 'userId', 'opinion'],
+          as: 'votes',
+        }]
+      },
+
       includeUserVote: function (userId) {
         //this.hasOne(db.Vote, {as: 'userVote' });
         let result = {
